@@ -1,0 +1,9 @@
+node_modules/
+*.log
+backups/
+main.js.broken-*
+live-*.png
+test-*.png
+.DS_Store
+userData/
+*.tmp

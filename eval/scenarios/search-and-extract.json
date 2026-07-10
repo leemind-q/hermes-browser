@@ -1,0 +1,26 @@
+{
+  "name": "search-and-extract",
+  "description": "Agent performs a Google search and verifies the result.",
+  "setup": {},
+  "steps": [
+    {
+      "action": "search",
+      "params": {
+        "query": "BLDC driver IC"
+      },
+      "expect": "response => [ {ok: response.ok === true, message: `expected ok=true, got ${JSON.stringify(response)}`}, {ok: response.url && response.url.includes('google.com/search'), message: `expected Google search URL, got ${response.url}`}, {ok: response.query === 'BLDC driver IC', message: 'query should be echoed back'} ]",
+      "note": "Search action loads correct engine URL"
+    },
+    {
+      "action": "navigate",
+      "params": {
+        "url": "https://example.com/article"
+      },
+      "expect": "response => [ {ok: response.ok === true, message: 'expected ok=true'}, {ok: response.url.includes('example.com/article'), message: 'should navigate to target URL'} ]"
+    },
+    {
+      "action": "getVisibleText",
+      "expect": "response => [ {ok: response.ok === true, message: 'getVisibleText should succeed'}, {ok: typeof response.text === 'string', message: 'should return string text'} ]"
+    }
+  ]
+}

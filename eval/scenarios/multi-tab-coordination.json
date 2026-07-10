@@ -1,0 +1,28 @@
+{
+  "name": "multi-tab-coordination",
+  "description": "Agent opens multiple tabs and queries context across them.",
+  "setup": {},
+  "steps": [
+    {
+      "action": "openTab",
+      "params": {
+        "url": "https://google.com"
+      },
+      "expect": "response => [ {ok: response.ok === true, message: 'openTab should succeed'}, {ok: response.tabId !== undefined, message: 'should return tabId'} ]"
+    },
+    {
+      "action": "openTab",
+      "params": {
+        "url": "https://github.com"
+      },
+      "expect": "response => [ {ok: response.ok === true, message: 'second tab should also open'} ]"
+    },
+    {
+      "action": "switchTab",
+      "params": {
+        "tabId": 1
+      },
+      "expect": "response => [ {ok: response.ok === true, message: 'switchTab should succeed'}, {ok: response.tabId === 1, message: 'should return the switched tabId'} ]"
+    }
+  ]
+}

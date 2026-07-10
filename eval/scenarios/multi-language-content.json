@@ -1,0 +1,27 @@
+{
+  "name": "multi-language-content",
+  "description": "Agent handles Korean and English page content correctly.",
+  "setup": {
+    "pageContent": "안녕하세요. Hello world. 한국어 텍스트와 English text mixed.",
+    "headings": [
+      {
+        "level": "H1",
+        "text": "환영합니다 (Welcome)"
+      },
+      {
+        "level": "H2",
+        "text": "Documentation"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "action": "getVisibleText",
+      "expect": "response => [ {ok: response.ok === true, message: 'getVisibleText should succeed'}, {ok: response.text.includes('안녕하세요'), message: 'should preserve Korean text'}, {ok: response.text.includes('Hello'), message: 'should preserve English text'} ]"
+    },
+    {
+      "action": "inspect",
+      "expect": "response => [ {ok: response.context.headings.length === 2, message: 'should return 2 headings'}, {ok: response.context.headings[0].text.includes('환영합니다'), message: 'first heading should be Korean'} ]"
+    }
+  ]
+}

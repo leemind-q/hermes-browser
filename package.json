@@ -1,0 +1,25 @@
+{
+  "name": "hermes-browser",
+  "version": "1.0.0",
+  "description": "Agentic AI browser — Hermes Browser MVP",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "lint": "node --check main.js && node --check src/preload.js && node --check src/renderer.js",
+    "typecheck": "npm run lint",
+    "test": "node tests/agent.test.js && node tests/credentials.test.js && node tests/mcp-bridge.test.js && node tests/mcp-bridge-spawner.test.js && node tests/mcp-server.test.js && node tests/live-bridge.test.js && node tests/smoke.test.js && node eval/runner.js",
+    "test:unit": "node tests/agent.test.js && node tests/credentials.test.js && node tests/mcp-bridge.test.js && node tests/mcp-bridge-spawner.test.js && node tests/mcp-server.test.js",
+    "test:live": "node tests/live-bridge.test.js",
+    "test:eval": "node eval/runner.js",
+    "test:smoke": "node tests/smoke.test.js",
+    "build": "npm run lint"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
