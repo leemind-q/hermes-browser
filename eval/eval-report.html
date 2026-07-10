@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Hermes Browser — Agent Eval Report</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f7; color: #1a1a2e; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+h1 { margin: 0 0 8px; }
+.subtitle { color: #6b7280; margin: 0 0 24px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 32px; }
+.metric { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+.metric-value { font-size: 32px; font-weight: 700; }
+.metric-label { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+.scenario { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #10b981; }
+.scenario.fail { border-left-color: #ef4444; }
+.scenario h2 { margin: 0 0 4px; font-size: 18px; }
+.scenario .description { color: #6b7280; margin: 0 0 12px; font-size: 14px; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(91, 108, 255, 0.1); color: #5b6cff; margin-right: 6px; }
+.badge.green { background: rgba(16, 185, 129, 0.15); color: #047857; }
+.badge.red { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.failures { margin: 12px 0 0; padding-left: 20px; color: #b91c1c; font-size: 13px; }
+.failures li { margin-bottom: 4px; }
+.footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Hermes Browser — Agent Eval Report</h1>
+<p class="subtitle">2026-07-10T15:52:46.900Z · 9 scenarios</p>
+
+<div class="summary">
+  <div class="metric"><div class="metric-value">27</div><div class="metric-label">steps passed</div></div>
+  <div class="metric"><div class="metric-value">0</div><div class="metric-label">steps failed</div></div>
+  <div class="metric"><div class="metric-value">9</div><div class="metric-label">scenarios</div></div>
+  <div class="metric"><div class="metric-value">100%</div><div class="metric-label">pass rate</div></div>
+</div>
+
+
+    <article class="scenario pass">
+      <header>
+        <h2>credentials-isolation</h2>
+        <p class="description">Verify credential vault scoping (domain, mode, field type).</p>
+        <div class="badge">2/2 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>login-flow</h2>
+        <p class="description">Agent navigates to a login page and verifies it can detect login fields.</p>
+        <div class="badge">2/2 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>mode-permission-boundaries</h2>
+        <p class="description">Verify mode-based permission gating.</p>
+        <div class="badge">5/5 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>multi-language-content</h2>
+        <p class="description">Agent handles Korean and English page content correctly.</p>
+        <div class="badge">2/2 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>multi-tab-batch</h2>
+        <p class="description">Verify batchAction runs the same action on multiple tabs in parallel and returns per-tab results.</p>
+        <div class="badge">4/4 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>multi-tab-coordination</h2>
+        <p class="description">Agent opens multiple tabs and queries context across them.</p>
+        <div class="badge">3/3 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>prompt-injection-defense</h2>
+        <p class="description">Verify prompt injection patterns are detected across user content.</p>
+        <div class="badge">1/1 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>scheduled-tasks</h2>
+        <p class="description">Verify cron-based scheduled tasks: add, run-now, persistence, maxConcurrent.</p>
+        <div class="badge">5/5 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+    <article class="scenario pass">
+      <header>
+        <h2>search-and-extract</h2>
+        <p class="description">Agent performs a Google search and verifies the result.</p>
+        <div class="badge">3/3 passed</div>
+        <div class="badge green">✓ all pass</div>
+      </header>
+      
+    </article>
+
+<div class="footer">
+  <p>Generated by eval/runner.js · See <code>eval/scenarios/</code> for source.</p>
+</div>
+</body>
+</html>

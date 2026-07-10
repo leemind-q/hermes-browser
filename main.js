@@ -5,6 +5,7 @@ const { app, BrowserWindow, WebContentsView, ipcMain, shell, safeStorage, screen
 const path = require('path');
 const fs = require('fs');
 const { AgentService } = require('./src/agent');
+const { TaskScheduler } = require('./src/agent/scheduler');
 const { BridgeSpawner } = require('./src/mcp-bridge-spawner');
 
 const UI = {
@@ -211,7 +212,7 @@ function createWindow() {
 // Currently used only by the MCP bridge — does NOT replace any existing IPC handler.
 let agent = null;
 function buildAgent() {
-  return new AgentService({
+  const a = new AgentService({
     send: (channel, payload) => {
       try {
         if (!mainWindow || mainWindow.isDestroyed()) return false;
@@ -235,6 +236,13 @@ function buildAgent() {
     notifyAll: () => notifyAll(),
     userDataPath: app.getPath('userData'),
   });
+  // Attach scheduler (BrowserOS-style cron automation).
+  a.scheduler = new TaskScheduler(a, {
+    onTaskComplete: (r) => console.log('[scheduler] task', r.id, 'completed:', r.ok ? 'OK' : 'FAILED', r.error || ''),
+  });
+  a.scheduler.load().catch(err => console.warn('[scheduler] load failed:', err.message));
+  a.scheduler.start();
+  return a;
 }
 agent = buildAgent();
 

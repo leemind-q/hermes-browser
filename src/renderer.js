@@ -1308,4 +1308,59 @@ function autoResizePrompt() { const t = $('promptInput'); t.style.height = 'auto
 function safeStorageJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } }
 function domainOf(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } }
 
+
+// Dispatch command from palette to actual renderer.js logic.
+// Routes by intent name to existing renderer functions or sends IPC.
+window.dispatchCommand = function dispatchCommand(intent, value) {
+  try {
+    switch (intent) {
+      case 'navigate':
+        if (typeof setAddressBar === 'function' && value) setAddressBar(value);
+        break;
+      case 'createTab':
+        if (typeof createNewTab === 'function') createNewTab();
+        break;
+      case 'closeActiveTab':
+        if (typeof closeActiveTab === 'function') closeActiveTab();
+        break;
+      case 'setMode':
+        if (value && typeof setAgentMode === 'function') setAgentMode(value);
+        break;
+      case 'agent':
+        // Trigger agent action — uses existing agent run loop
+        if (value && typeof runAgentAction === 'function') runAgentAction(value);
+        break;
+      case 'credentialList':
+        if (typeof showCredentialList === 'function') showCredentialList();
+        break;
+      case 'zoomIn':
+      case 'zoomOut':
+      case 'zoomReset':
+        if (typeof adjustZoom === 'function') adjustZoom(intent === 'zoomReset' ? 0 : (intent === 'zoomIn' ? 0.1 : -0.1));
+        break;
+      case 'toggleDevTools':
+        // Send IPC — handled in main process
+        window.electronAPI?.toggleDevTools?.();
+        break;
+      case 'reloadPage':
+        if (typeof reloadActiveTab === 'function') reloadActiveTab();
+        break;
+      default:
+        console.warn('[dispatchCommand] unknown intent:', intent);
+    }
+  } catch (e) {
+    console.error('[dispatchCommand]', intent, e);
+  }
+};
+
+
+  // Initialize command palette (Ctrl+Shift+P)
+  try {
+    const { palette } = require('./renderer/command-palette');
+    palette.init();
+    console.log('[renderer] command palette ready (Ctrl+Shift+P)');
+  } catch (e) {
+    console.warn('[renderer] command palette init failed:', e.message);
+  }
+
 window.addEventListener('DOMContentLoaded', init);

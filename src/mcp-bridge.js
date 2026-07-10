@@ -218,6 +218,7 @@ function listTools() {
     { name: 'browser_search', description: 'Run web search', inputSchema: { type: 'object', properties: { query: { type: 'string' }, engine: { type: 'string', enum: ['google', 'naver', 'bing'] } }, required: ['query'] } },
     { name: 'browser_click', description: 'Click element', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, ref: { type: 'string' }, text: { type: 'string' } } } },
     { name: 'browser_fill', description: 'Fill input', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, ref: { type: 'string' }, value: { type: 'string' } } } },
+    { name: 'browser_autofill_form', description: 'Auto-fill all form fields on the current page using saved credentials. Detects username/password/email/name/address fields, looks up credential by domain, fills it.', inputSchema: { type: 'object', properties: {} } },
     { name: 'browser_get_visible_text', description: 'Read page text', inputSchema: { type: 'object' } },
     { name: 'browser_inspect_page', description: 'Get page context', inputSchema: { type: 'object' } },
     { name: 'browser_extract_search_results', description: 'Extract SERP results', inputSchema: { type: 'object', properties: { tabId: { type: 'number' } } } },
@@ -240,6 +241,7 @@ async function dispatchTool(agent, name, args) {
     case 'browser_search': return agent.runBrowserAction('search', { query: args.query, engine: args.engine });
     case 'browser_click': return agent.runBrowserAction('click', args);
     case 'browser_fill': return agent.runBrowserAction('fill', args);
+    case 'browser_autofill_form': return agent.autofillForm(args);
     case 'browser_get_visible_text': return agent.runBrowserAction('getVisibleText');
     case 'browser_inspect_page': return agent.runBrowserAction('inspectPage');
     case 'browser_extract_search_results': return agent.extractSearchResults(args.tabId);
@@ -248,6 +250,15 @@ async function dispatchTool(agent, name, args) {
     case 'browser_switch_tab': return agent.runBrowserAction('switchTab', { tabId: args.tabId });
     case 'browser_close_tab': return agent.runBrowserAction('closeTab', { tabId: args.tabId });
     case 'browser_get_tabs': return agent.getAllTabContexts();
+    case 'browser_batch_action': return await agent.batchAction(args.tabIds, args.action, { maxChars: args.maxChars });
+    case 'schedule_task': return agent.scheduler?.add({ id: args.id, cron: args.cron, action: args.action, args: args.args || {} });
+    case 'schedule_list': return { ok: true, tasks: agent.scheduler?.list() || [] };
+    case 'schedule_remove': return { ok: agent.scheduler?.remove(args.id) };
+    case 'schedule_run_now': {
+      const task = agent.scheduler?.list().find(t => t.id === args.id);
+      if (!task) return { ok: false, error: `task not found: ${args.id}` };
+      return await agent.scheduler._runOne(task, new Date());
+    }
     case 'browser_take_screenshot': return agent.runBrowserAction('takeScreenshot');
     case 'browser_scroll': return agent.runBrowserAction('scroll', args);
     case 'browser_check_injection': return agent.detectInjection(args.text);

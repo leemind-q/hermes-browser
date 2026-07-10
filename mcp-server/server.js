@@ -46,6 +46,13 @@ function makeInProcessDeps() {
         if (code.includes('MjjYud h3')) return [{ title: 'Result 1', url: 'https://example.com/1' }];
         if (code.includes('scrollBy')) return { ok: true, y: 100 };
         if (code.includes('getBoundingClientRect')) return { ok: true, text: 'btn', rect: { x: 100, y: 100, width: 80, height: 30 } };
+        // autofillForm field detection — return sample form
+        if (code.includes('data-hermesRef') || code.includes('offsetParent')) {
+          return [
+            { role: 'username', id: 'user', name: 'username', type: 'text', ref: 'ref-u', value: '' },
+            { role: 'password', id: 'pw',   name: 'password', type: 'password', ref: 'ref-p', value: '' },
+          ];
+        }
         return { ok: true };
       },
       sendInputEvent: () => {},
@@ -140,9 +147,13 @@ const TOOLS = [
         ref: { type: 'string' },
         text: { type: 'string' },
         value: { type: 'string' },
-        description: { type: 'string' },
       },
     },
+  },
+  {
+    name: 'browser_autofill_form',
+    description: 'Auto-fill all form fields on the current page using saved credentials. Detects username/password/email/name/address fields, looks up credential by domain, fills it.',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'browser_get_visible_text',
@@ -197,6 +208,52 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: { tabId: { type: 'number' } },
+    },
+  },
+  {
+    name: 'schedule_task',
+    description: 'Add a cron-scheduled browser action. BrowserOS-style automation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        cron: { type: 'string', description: '5-field cron expression' },
+        action: { type: 'string' },
+        args: { type: 'object' },
+      },
+      required: ['id', 'cron', 'action'],
+    },
+  },
+  {
+    name: 'schedule_list',
+    description: 'List scheduled tasks.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'schedule_remove',
+    description: 'Remove a scheduled task.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'schedule_run_now',
+    description: 'Run a task immediately.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'browser_batch_action',
+    description: 'Run a read-only action on multiple tabs in parallel. Actions: inspect | getVisibleText | extractSearchResults | readPage | takeScreenshot.',
+    inputSchema: {
+      type: 'object',
+      properties: { tabIds: { type: 'array', items: { type: 'number' } }, action: { type: 'string', enum: ['inspect', 'getVisibleText', 'extractSearchResults', 'readPage', 'takeScreenshot'] }, maxChars: { type: 'number' } },
+      required: ['tabIds', 'action'],
     },
   },
   {
@@ -284,6 +341,15 @@ async function dispatchTool(name, args = {}) {
     case 'browser_switch_tab': return agent.runBrowserAction('switchTab', { tabId: args.tabId });
     case 'browser_close_tab': return agent.runBrowserAction('closeTab', { tabId: args.tabId });
     case 'browser_get_tabs': return agent.getAllTabContexts();
+    case 'browser_batch_action': return await agent.batchAction(args.tabIds, args.action, { maxChars: args.maxChars });
+    case 'schedule_task': return agent.scheduler?.add({ id: args.id, cron: args.cron, action: args.action, args: args.args || {} });
+    case 'schedule_list': return { ok: true, tasks: agent.scheduler?.list() || [] };
+    case 'schedule_remove': return { ok: agent.scheduler?.remove(args.id) };
+    case 'schedule_run_now': {
+      const task = agent.scheduler?.list().find(t => t.id === args.id);
+      if (!task) return { ok: false, error: `task not found: ${args.id}` };
+      return await agent.scheduler._runOne(task, new Date());
+    }
     case 'browser_take_screenshot': return agent.runBrowserAction('takeScreenshot');
     case 'browser_scroll': return agent.runBrowserAction('scroll', args);
     case 'browser_check_injection': return agent.detectInjection(args.text);
