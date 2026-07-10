@@ -1,0 +1,158 @@
+# Hermes Browser Pages — minimal landing + live metrics
+# Updated daily by GitHub Actions. Source: ~/projects/hermes-browser/pages/
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes Browser</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1a1a2e;
+      margin: 0;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 36px; margin: 0 0 12px; color: #1a1a2e; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: #5b6cff; }
+    .tagline { color: #6b7280; font-size: 16px; margin-bottom: 32px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(91, 108, 255, 0.1);
+      color: #5b6cff;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .badge.gold { background: rgba(251, 191, 36, 0.15); color: #b45309; }
+    a { color: #5b6cff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: #1a1a2e;
+      color: #e6e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .metric {
+      background: linear-gradient(135deg, #5b6cff 0%, #818cf8 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value { font-size: 28px; font-weight: 700; }
+    .metric-label { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hermes Browser</h1>
+  <p class="tagline">AI 에이전트 + 자격증명 안전 저장 + 외부 MCP 통합이 가능한 Electron 기반 브라우저</p>
+
+  <div>
+    <span class="badge">Electron</span>
+    <span class="badge">MCP</span>
+    <span class="badge gold">safeStorage</span>
+    <span class="badge">143 tests</span>
+    <span class="badge">AGPL-free</span>
+  </div>
+
+  <div class="card">
+    <h2>Live Metrics</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" id="tests">143</div>
+        <div class="metric-label">tests passing</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="tools">20</div>
+        <div class="metric-label">MCP tools</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="scenarios">7</div>
+        <div class="metric-label">eval scenarios</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="modules">9</div>
+        <div class="metric-label">agent modules</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#6b7280">Last updated: <span id="updated">2026-07-10</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Quick Start</h2>
+    <pre>git clone https://github.com/leemind-q/hermes-browser.git
+cd hermes-browser
+npm install
+npm test    # 143 tests
+npm start   # launches Hermes Browser</pre>
+  </div>
+
+  <div class="card">
+    <h2>Use with Claude Code</h2>
+    <p>Add to <code>~/.claude/mcp.json</code>:</p>
+    <pre>{
+  "mcpServers": {
+    "hermes-browser": {
+      "command": "node",
+      "args": ["C:/Users/qqwer/Desktop/Hermes/hermes-browser/mcp-server/server.js"]
+    }
+  }
+}</pre>
+    <p>Then ask Claude Code: <em>"Hermes Browser로 네이버에서 고양이 사진 검색해줘"</em></p>
+  </div>
+
+  <div class="card">
+    <h2>Differentiator</h2>
+    <p>Aside/Atlas/Dia 다 공통 약점: <strong>로그인 필요한 사이트 작업 못 함</strong>.</p>
+    <p>Hermes Browser: <code>safeStorage</code>(OS 키체인) + 도메인 스코핑 + mode 검증 + audit log.</p>
+    <ul>
+      <li>Bearer token auth (localhost only)</li>
+      <li>Rate limit 60/min per token</li>
+      <li>30s tool timeout (no hangs)</li>
+      <li>Password never logged or exposed in list</li>
+      <li>Prompt injection detection (6 patterns)</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p><a href="https://github.com/leemind-q/hermes-browser">GitHub repo</a> · <a href="https://github.com/leemind-q/hermes-browser/blob/main/README.md">README</a></p>
+    <p>License: AGPL-3 compatible architecture (own implementation, no code copied from BrowserOS)</p>
+  </div>
+</body>
+</html>
