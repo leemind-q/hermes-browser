@@ -5,13 +5,19 @@
 
 const fs = require('fs').promises;
 const path = require('path');
-const { execFile } = require('child_process');
-const { promisify } = require('util');
-const execFileAsync = promisify(execFile);
 
 class CoworkService {
   constructor({ workspaceRoot, maxFileSize = 5 * 1024 * 1024, maxResults = 100 }) {
-    this.workspaceRoot = workspaceRoot || process.cwd();
+    this.workspaceRoot = (() => {
+      // Convert Windows-style workspaceRoot (C:\Users\...) to WSL (/mnt/c/Users/...)
+      if (typeof workspaceRoot === 'string' && /^[A-Z]:\\/.test(workspaceRoot)) {
+        const m = workspaceRoot.match(/^([A-Z]):\\(.+)/);
+        if (m) return `/mnt/${m[1].toLowerCase()}/${m[2].replace(/\\/g, '/')}`;
+      }
+      const result = workspaceRoot || process.cwd();
+      console.log('[CoworkService] workspaceRoot resolved to:', result, 'from input:', workspaceRoot);
+      return result;
+    })();
     this.maxFileSize = maxFileSize;
     this.maxResults = maxResults;
     // File extension → MIME hints for AI consumption
@@ -87,23 +93,52 @@ class CoworkService {
     const absDir = this._safePath(searchDir);
     if (!absDir) return { ok: false, error: 'unsafe path' };
     try {
-      const flags = ignoreCase ? '-irEn' : '-rEn';
-      const args2 = [flags, '--include=*', '--exclude-dir=node_modules', '--exclude-dir=.git', '--exclude-dir=dist', '--exclude-dir=build'];
-      if (includePattern) args2.push(`--include=${includePattern}`);
-      if (excludePattern) args2.push(`--exclude=${excludePattern}`);
-      args2.push(pattern);
-      args2.push(absDir);
-      const { stdout, stderr } = await execFileAsync('grep', args2, { maxBuffer: 10 * 1024 * 1024, timeout: 30000 });
-      const lines = stdout.split('\n').filter(Boolean).slice(0, maxResults);
-      const matches = lines.map(l => {
-        const m = l.match(/^(.+?):(\d+):(.*)$/);
-        if (m) return { file: path.relative(this.workspaceRoot, m[1]), line: parseInt(m[2]), content: m[3] };
-        return { raw: l };
-      });
-      return { ok: true, pattern, count: matches.length, matches, truncated: lines.length === maxResults };
+      const re = new RegExp(pattern, ignoreCase ? 'i' : '');
+      const matches = [];
+      const excludeDirs = new Set(['node_modules', '.git', 'dist', 'build']);
+      const includeRe = includePattern ? new RegExp(includePattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i') : null;
+      const excludeRe = excludePattern ? new RegExp(excludePattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i') : null;
+
+      const self = this;
+      async function walk(dir) {
+        if (matches.length >= maxResults) return;
+        let entries;
+        try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
+        for (const entry of entries) {
+          if (matches.length >= maxResults) return;
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            if (!excludeDirs.has(entry.name)) await walk(fullPath);
+          } else if (entry.isFile()) {
+            if (includeRe && !includeRe.test(entry.name)) continue;
+            if (excludeRe && excludeRe.test(entry.name)) continue;
+            let stat;
+            try { stat = await fs.stat(fullPath); } catch { continue; }
+            if (stat.size > 5 * 1024 * 1024) continue;
+            try {
+              const content = await fs.readFile(fullPath, 'utf8');
+              const lines = content.split('\n');
+              for (let i = 0; i < lines.length; i++) {
+                if (re.test(lines[i])) {
+                  matches.push({
+                    file: path.relative(self.workspaceRoot, fullPath),
+                    line: i + 1,
+                    content: lines[i].slice(0, 200),
+                  });
+                  if (matches.length >= maxResults) return;
+                }
+              }
+            } catch { /* skip binary */ }
+          }
+        }
+      }
+      try {
+        await walk(absDir);
+      } catch (e) {
+        return { ok: false, error: 'walk failed: ' + e.message };
+      }
+      return { ok: true, pattern, count: matches.length, matches, truncated: matches.length >= maxResults };
     } catch (e) {
-      // grep returns 1 when no match found — treat as ok with empty result
-      if (e.code === 1) return { ok: true, pattern, count: 0, matches: [] };
       return { ok: false, error: e.message };
     }
   }
@@ -114,37 +149,51 @@ class CoworkService {
     if (!absDir) return { ok: false, error: 'unsafe path' };
     if (!namePattern && !contentPattern) return { ok: false, error: 'namePattern or contentPattern required' };
     try {
-      let results = [];
-      if (namePattern) {
-        // Use find for name matching
-        const { stdout } = await execFileAsync('find', [
-          absDir,
-          recursive ? '' : '-maxdepth', recursive ? '' : '1',
-          ...(recursive ? [] : ['-maxdepth', '1']),
-          '-type', 'f',
-          '-name', namePattern,
-        ], { maxBuffer: 10 * 1024 * 1024 });
-        results = stdout.split('\n').filter(Boolean).map(p => ({
-          path: path.relative(this.workspaceRoot, p),
-          size: null,
-          matchType: 'name',
-        }));
-      }
-      if (contentPattern) {
-        const grepres = await this.grepFiles({ path: searchDir, pattern: contentPattern, maxResults });
-        if (grepres.ok) {
-          for (const m of grepres.matches) {
-            if (m.file) results.push({ path: m.file, line: m.line, content: m.content, matchType: 'content' });
+      const nameRe = namePattern ? new RegExp(namePattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i') : null;
+      const contentRe = contentPattern ? new RegExp(contentPattern, 'i') : null;
+      const results = [];
+      const seen = new Set();
+      const excludeDirs = new Set(['node_modules', '.git', 'dist', 'build']);
+      const self = this;
+      const maxDepth = recursive ? 10 : 1;
+
+      async function walk(dir, depth = 0) {
+        if (results.length >= maxResults || depth > maxDepth) return;
+        let entries;
+        try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
+        for (const entry of entries) {
+          if (results.length >= maxResults) return;
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            if (!excludeDirs.has(entry.name)) await walk(fullPath, depth + 1);
+          } else if (entry.isFile()) {
+            // Name match
+            if (nameRe && nameRe.test(entry.name)) {
+              const rel = path.relative(self.workspaceRoot, fullPath);
+              if (!seen.has(rel)) { seen.add(rel); results.push({ path: rel, matchType: 'name' }); }
+            }
+            // Content match
+            if (contentRe && results.length < maxResults) {
+              try {
+                const content = await fs.readFile(fullPath, 'utf8');
+                const lines = content.split('\n');
+                for (let i = 0; i < lines.length && results.length < maxResults; i++) {
+                  if (contentRe.test(lines[i])) {
+                    const rel = path.relative(self.workspaceRoot, fullPath);
+                    const key = rel + ':' + i;
+                    if (!seen.has(key)) {
+                      seen.add(key);
+                      results.push({ path: rel, line: i + 1, content: lines[i].slice(0, 200), matchType: 'content' });
+                    }
+                  }
+                }
+              } catch { /* skip binary */ }
+            }
           }
         }
       }
-      // Dedup by path
-      const seen = new Set();
-      const deduped = [];
-      for (const r of results) {
-        if (!seen.has(r.path)) { seen.add(r.path); deduped.push(r); }
-      }
-      return { ok: true, count: deduped.length, results: deduped.slice(0, maxResults) };
+      await walk(absDir);
+      return { ok: true, count: results.length, results: results.slice(0, maxResults) };
     } catch (e) {
       return { ok: false, error: e.message };
     }
@@ -174,26 +223,45 @@ class CoworkService {
 
   _safePath(p) {
     if (!p) return null;
-    const abs = path.isAbsolute(p) ? p : path.resolve(this.workspaceRoot, p);
-    const normalized = path.normalize(abs);
-    // Allow common safe paths (workspaces, projects, tmp)
+    let normalized = String(p);
+    // Replace Windows backslashes with forward slashes
+    normalized = normalized.split(String.fromCharCode(92)).join('/');
+    // Detect Windows drive prefix (C:/...) and convert to /mnt/c/...
+    if (normalized.length >= 3 && normalized[0] >= 'A' && normalized[0] <= 'Z' && normalized[1] === ':' && normalized[2] === '/') {
+      const drive = normalized[0].toLowerCase();
+      const rest = normalized.slice(3);
+      normalized = '/mnt/' + drive + '/' + rest;
+    }
+    if (!normalized.startsWith('/')) {
+      while (normalized.startsWith('./')) normalized = normalized.slice(2);
+      const wsRoot = String(this.workspaceRoot).split(String.fromCharCode(92)).join('/').replace(/\/$/, '');
+      normalized = wsRoot + '/' + normalized;
+    }
+    // Manual WSL normalize (path.normalize on Electron would convert / to \ due to Windows mode)
+    {
+      const parts = normalized.split('/').filter(p => p && p !== '.');
+      const stack = [];
+      for (const p of parts) {
+        if (p === '..') stack.pop();
+        else stack.push(p);
+      }
+      normalized = '/' + stack.join('/');
+    }
     const allowed = [
-      this.workspaceRoot,
-      path.normalize(this.workspaceRoot),
-      process.cwd(),
-      '/tmp', '/home/taewoo',
+      '/tmp',
+      '/home/taewoo',
       '/home/taewoo/projects',
       '/home/taewoo/projects/hermes-browser',
       '/mnt/c/Users/qqwer',
+      '/mnt/c/Users/qqwer/Desktop',
       '/mnt/c/Users/qqwer/Desktop/Hermes',
       '/mnt/c/Users/qqwer/Hermes-Workspace',
-      '/mnt/c/Users/qqwer/Desktop',
     ];
-    const ok = allowed.some(root => {
-      const r = path.normalize(root);
-      return normalized.startsWith(r) || r.startsWith(normalized);
-    });
+    const ok = allowed.some(root => normalized.startsWith(root));
     if (!ok) return null;
+    // Convert /mnt/<drive>/... to <Drive>:\\... for Windows fs operations
+    const wm = normalized.match(/^\/mnt\/([a-z])\/(.+)/);
+    if (wm) return wm[1].toUpperCase() + ':\\\\' + wm[2].split('/').join('\\\\');
     return normalized;
   }
 

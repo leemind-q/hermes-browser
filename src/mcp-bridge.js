@@ -515,11 +515,11 @@ async function dispatchTool(agent, name, args) {
     case 'browser_get_mode': return agent.getMode();
     case 'browser_set_mode': return agent.setMode(args.mode);
     // === V12 Cowork (BLDC 회로/BOM/Gerber 자동 context) ===
-    case 'cowork_list': return await agent.coworkList(args);
-    case 'cowork_read': return await agent.coworkRead(args);
-    case 'cowork_grep': return await agent.coworkGrep(args);
-    case 'cowork_search': return await agent.coworkSearch(args);
-    case 'cowork_stat': return await agent.coworkStat(args);
+    case 'cowork_list': try { return await agent.coworkList(args); } catch(e) { return { ok: false, error: 'coworkList: ' + e.message + '\n' + e.stack }; }
+    case 'cowork_read': try { return await agent.coworkRead(args); } catch(e) { return { ok: false, error: 'coworkRead: ' + e.message }; }
+    case 'cowork_grep': try { return await agent.coworkGrep(args); } catch(e) { return { ok: false, error: 'coworkGrep: ' + e.message }; }
+    case 'cowork_search': try { return await agent.coworkSearch(args); } catch(e) { return { ok: false, error: 'coworkSearch: ' + e.message }; }
+    case 'cowork_stat': try { return await agent.coworkStat(args); } catch(e) { return { ok: false, error: 'coworkStat: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);
