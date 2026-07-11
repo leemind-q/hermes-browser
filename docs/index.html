@@ -212,9 +212,9 @@
     <h2>Three Differentiators</h2>
     <div class="grid">
       <div class="card">
-        <div class="num">56</div>
+        <div class="num">65</div>
         <h3>MCP-First Architecture</h3>
-        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge.</p>
+        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks.</p>
       </div>
       <div class="card">
         <div class="num">12</div>
@@ -222,9 +222,9 @@
         <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS, <strong>Naver HyperCLOVA X</strong>. Zero provider lock-in. 30-second swap.</p>
       </div>
       <div class="card">
-        <div class="num">12</div>
+        <div class="num">21</div>
         <h3>Cowork for Engineers</h3>
-        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch (SSE streaming).</p>
+        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch + multi-agent locks + leases + task queue.</p>
       </div>
     </div>
 
@@ -256,6 +256,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <li><strong>Day 8:</strong> V14 UI polish (mesh bg + tab thumbnail) + Korean LLM (HyperCLOVA X)</li>
         <li><strong>Day 9:</strong> Cowork v3 SSE streaming watch + Real tab thumbnails + Pages auto</li>
         <li><strong>Day 10:</strong> V16 design polish (vertical tabs + split view + settings panel) + Cowork v4 (backup/exclude/diff)</li>
+        <li><strong>Day 11:</strong> V17 final polish (AI sidebar auto-expand + workspace tags + shortcut modal + font scale) + Cowork v5 (lock/lease/task queue/shared state) + Tab thumbnail gallery</li>
       </ul>
     </div>
 
@@ -321,11 +322,19 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
           <h3>🔄 Lock-in 없음</h3>
           <p>12 LLM providers — 30초 안에 swap, 데이터 외부 종속 0</p>
         </div>
+        <div class="card">
+          <h3>🤝 Multi-Agent Concurrency</h3>
+          <p>V17: advisory lock + lease + priority task queue + shared state. 여러 AI 에이전트가 동시에 같은 회로 작업해도 안전.</p>
+        </div>
+        <div class="card">
+          <h3>🎬 Tab Thumbnail Gallery</h3>
+          <p>V17: 자동 background 캡쳐 + hover preview 640x400 + 갤러리 모달. 모든 탭을 한눈에.</p>
+        </div>
       </div>
     </div>
 
     <div class="meta">
-      <span>version: v16.7 · Last updated 2026-07-11</span>
+      <span>version: v17.0 · Last updated 2026-07-11</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>

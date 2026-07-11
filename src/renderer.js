@@ -1,6 +1,21 @@
 // src/renderer.js — Miraecle V5 Renderer
 const $ = (id) => document.getElementById(id);
 
+// V16_SETTINGS — declared at top to avoid TDZ errors
+const V16_SETTINGS_KEY = 'v16_settings';
+let V16_SETTINGS = {
+  verticalTabs: false,
+  splitView: false,
+  darkMode: null,
+  mesh: true,
+  thumbnail: true,
+  aiAuto: true,
+  fontScale: 1,
+};
+function saveV16Settings() { try { localStorage.setItem(V16_SETTINGS_KEY, JSON.stringify(V16_SETTINGS)); } catch {} }
+function loadV16Settings() { try { const s = localStorage.getItem(V16_SETTINGS_KEY); if (s) V16_SETTINGS = { ...V16_SETTINGS, ...JSON.parse(s) }; } catch {} }
+function applyV16Settings() { /* placeholder — overridden later */ }
+
 const state = {
   mode: 'agent', running: false, stopRequested: false, planPaused: false,
   searchMode: 'normal', // quick | normal | deep
@@ -1315,29 +1330,163 @@ const SettingsPopover = (() => {
 })();
 
 // ============================================================
+// V16 FINAL — 4 features
+// 1. AI sidebar auto-expand (when tabs=0 + bento visible)
+// 2. Workspace tag pills (color-coded)
+// 3. Keystroke help modal (Ctrl+?)
+// 4. Font scale slider (in settings panel)
+// ============================================================
+
+// 1. AI sidebar auto-expand
+function updateAIAutoExpand() {
+  const tabsCount = parseInt(document.body.dataset.tabsCount || '0');
+  const bentoVisible = $('bentoEmpty')?.dataset?.show === 'true';
+  const aiAuto = V16_SETTINGS.aiAuto !== false; // default true
+  if (aiAuto && tabsCount === 0 && bentoVisible) {
+    document.body.dataset.aiAuto = 'true';
+  } else {
+    document.body.dataset.aiAuto = 'false';
+  }
+}
+
+// AI FAB click — toggle right panel
+$('aiFab')?.addEventListener('click', () => {
+  const right = $('rightPanel');
+  if (right) right.click();
+  $('rightToggle')?.click();
+});
+
+// 2. Workspace tag pills (color-coded)
+// Add sample workspace tags dynamically
+const WORKSPACE_TAGS = [
+  { id: 'all', label: '전체', color: '#fbbf24' },
+  { id: 'work', label: '업무', color: '#06b6d4' },
+  { id: 'research', label: '리서치', color: '#a78bfa' },
+  { id: 'personal', label: '개인', color: '#10b981' },
+  { id: 'shopping', label: '쇼핑', color: '#ec4899' },
+];
+
+function renderWorkspaceTags() {
+  const container = $('workspaceTagsContainer');
+  if (!container) return;
+  container.innerHTML = WORKSPACE_TAGS.map(tag => `
+    <div class="workspace-tag" data-tag="${tag.id}" style="--tag-color: ${tag.color}">
+      <span class="tag-dot"></span>
+      <span class="tag-label">${tag.label}</span>
+    </div>
+  `).join('');
+  // Click handler — toggle active state
+  container.querySelectorAll('.workspace-tag').forEach(el => {
+    el.addEventListener('click', () => {
+      const wasActive = el.dataset.active === 'true';
+      container.querySelectorAll('.workspace-tag').forEach(e => e.dataset.active = 'false');
+      if (!wasActive) el.dataset.active = 'true';
+    });
+  });
+}
+
+// 3. Keystroke help modal — Ctrl+? or ?
+function openShortcutModal() {
+  $('shortcutModal')?.setAttribute('data-open', 'true');
+}
+function closeShortcutModal() {
+  $('shortcutModal')?.removeAttribute('data-open');
+}
+$('shortcutClose')?.addEventListener('click', closeShortcutModal);
+$('shortcutModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'shortcutModal') closeShortcutModal();
+});
+
+// Global keyboard listener for "?" (Shift+/) opens shortcut modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+    openShortcutModal();
+  }
+  if (e.key === 'Escape') {
+    if ($('shortcutModal')?.getAttribute('data-open') === 'true') closeShortcutModal();
+  }
+});
+
+// 4. Font scale slider
+function applyFontScale(scale) {
+  document.documentElement.style.setProperty('--font-scale', String(scale));
+  V16_SETTINGS.fontScale = scale;
+  saveV16Settings();
+}
+
+// Inject font scale slider into settings panel
+function injectFontScaleSlider() {
+  const section = $('settingsPanel')?.querySelector('.settings-section');
+  if (!section) return;
+  if ($('fontScaleRow')) return; // already exists
+  const row = document.createElement('div');
+  row.className = 'settings-row';
+  row.id = 'fontScaleRow';
+  row.style.flexDirection = 'column';
+  row.style.alignItems = 'stretch';
+  row.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div>
+        <div class="settings-label">글자 크기</div>
+        <div class="settings-desc">UI 글자 크기 조절 (0.85x ~ 1.3x)</div>
+      </div>
+      <span id="fontScaleValue" style="font-weight: 600; color: var(--gold);">${(V16_SETTINGS.fontScale || 1).toFixed(2)}x</span>
+    </div>
+    <input type="range" class="font-scale-slider" id="fontScaleSlider" min="0.85" max="1.3" step="0.05" value="${V16_SETTINGS.fontScale || 1}" />
+    <div class="font-scale-label">
+      <span>작게</span>
+      <span>기본</span>
+      <span>크게</span>
+    </div>
+  `;
+  // Insert after "수직 탭" row
+  const firstRow = section.querySelector('.settings-row');
+  if (firstRow) firstRow.parentNode.insertBefore(row, firstRow.nextSibling);
+  // Wire up
+  const slider = $('fontScaleSlider');
+  const valueLabel = $('fontScaleValue');
+  slider?.addEventListener('input', (e) => {
+    const scale = parseFloat(e.target.value);
+    applyFontScale(scale);
+    if (valueLabel) valueLabel.textContent = scale.toFixed(2) + 'x';
+  });
+}
+
+// Cmd+K palette: add "단축키 도움말"
+const V16_FINAL_CMDS = [
+  { id: 'shortcuts', label: '키 단축키 도움말', icon: 'help', shortcut: '?', action: () => openShortcutModal() },
+  { id: 'ai_fab', label: 'AI 패널 (FAB 버튼)', icon: 'sparkle', shortcut: '', action: () => $('aiFab')?.click() },
+  { id: 'tags_all', label: '워크스페이스: 전체', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="all"]')?.click() },
+  { id: 'tags_work', label: '워크스페이스: 업무', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="work"]')?.click() },
+  { id: 'tags_research', label: '워크스페이스: 리서치', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="research"]')?.click() },
+];
+
+// Init on load
+setTimeout(() => {
+  injectFontScaleSlider();
+  renderWorkspaceTags();
+  applyFontScale(V16_SETTINGS.fontScale || 1);
+  // Update AI auto state when tabs change
+  updateAIAutoExpand();
+  // Listen for tab count changes via observer
+  const observer = new MutationObserver(() => updateAIAutoExpand());
+  observer.observe(document.body, { attributes: true, attributeFilter: ['data-tabs-count'] });
+  observer.observe($('bentoEmpty') || document.body, { attributes: true, attributeFilter: ['data-show'] });
+}, 200);
+
+// Update settings persistence for aiAuto + fontScale
+V16_SETTINGS.aiAuto = V16_SETTINGS.aiAuto !== false;
+V16_SETTINGS.fontScale = V16_SETTINGS.fontScale || 1;
+
+
+// ============================================================
 // V16 — Settings panel + vertical tabs + split view + modal
 // ============================================================
 
-const V16_SETTINGS_KEY = 'v16_settings';
-let V16_SETTINGS = {
-  verticalTabs: false,
-  splitView: false,
-  darkMode: null, // null = OS auto, true = force dark, false = force light
-  mesh: true,
-  thumbnail: true,
-};
-
-function loadV16Settings() {
-  try {
-    const stored = localStorage.getItem(V16_SETTINGS_KEY);
-    if (stored) V16_SETTINGS = { ...V16_SETTINGS, ...JSON.parse(stored) };
-  } catch {}
-  applyV16Settings();
-}
-
-function saveV16Settings() {
-  try { localStorage.setItem(V16_SETTINGS_KEY, JSON.stringify(V16_SETTINGS)); } catch {}
-}
+// (V16_SETTINGS already declared at top)
 
 function applyV16Settings() {
   document.body.dataset.tabsVertical = V16_SETTINGS.verticalTabs ? 'true' : 'false';
@@ -1354,6 +1503,7 @@ function applyV16Settings() {
   $('toggleDarkMode')?.setAttribute('data-on', V16_SETTINGS.darkMode === true ? 'true' : 'false');
   $('toggleMesh')?.setAttribute('data-on', V16_SETTINGS.mesh ? 'true' : 'false');
   $('toggleThumbnail')?.setAttribute('data-on', V16_SETTINGS.thumbnail ? 'true' : 'false');
+  $('toggleAIAuto')?.setAttribute('data-on', V16_SETTINGS.aiAuto ? 'true' : 'false');
 }
 
 // Wire up settings toggles
@@ -1376,6 +1526,11 @@ $('toggleMesh')?.addEventListener('click', () => {
   V16_SETTINGS.mesh = !V16_SETTINGS.mesh;
   document.body.dataset.mesh = V16_SETTINGS.mesh ? 'true' : 'false';
   saveV16Settings(); applyV16Settings();
+});
+$('toggleAIAuto')?.addEventListener('click', () => {
+  V16_SETTINGS.aiAuto = !V16_SETTINGS.aiAuto;
+  saveV16Settings(); applyV16Settings();
+  updateAIAutoExpand();
 });
 $('toggleThumbnail')?.addEventListener('click', () => {
   V16_SETTINGS.thumbnail = !V16_SETTINGS.thumbnail;
@@ -1427,7 +1582,13 @@ document.querySelectorAll('.icon-btn, .basics-btn, .sb-btn').forEach(btn => {
 
 // V16: Settings keyboard shortcut
 document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && (e.key === ',' || e.key === ',')) {
+  if ((e.ctrlKey || e.metaKey) && e.key === ',' && !e.shiftKey) {
+    e.preventDefault();
+    if ($('settingsPanel')?.getAttribute('data-open') === 'true') closeSettings();
+    else openSettings();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'S' || e.key === 's')) {
+    // Fallback: Ctrl+Shift+S opens settings
     e.preventDefault();
     if ($('settingsPanel')?.getAttribute('data-open') === 'true') closeSettings();
     else openSettings();
@@ -1445,6 +1606,7 @@ function updateSettingsBadge() {
   if (V16_SETTINGS.splitView) enabled.push('SP');
   if (V16_SETTINGS.mesh) enabled.push('ME');
   if (V16_SETTINGS.thumbnail) enabled.push('TH');
+  if (V16_SETTINGS.aiAuto) enabled.push('AI');
   if (V16_SETTINGS.darkMode === true) enabled.push('🌙');
   if (V16_SETTINGS.darkMode === false) enabled.push('☀');
   return enabled.join(' ');
@@ -1459,7 +1621,42 @@ setInterval(() => {
 // V14 — Tab thumbnail preview (hover popup) (Day 8)
 // ============================================================
 
-// V15: Real tab thumbnail capture (electron capturePage)
+// V17: Tab thumbnail v2 — auto background capture + side panel preview
+// V16 final: Update tabs count attribute for AI auto-expand
+function updateTabsCount() {
+  try {
+    const tabs = window.hermes?.tabs?.list?.() || [];
+    document.body.dataset.tabsCount = String(tabs.length);
+  } catch {}
+}
+setInterval(updateTabsCount, 1000);
+setTimeout(updateTabsCount, 500);
+
+// V17: Capture queue — process one tab at a time to avoid IPC spam
+const captureQueue = { active: false };
+async function enqueueCapture(tabId, quality = 70, width = 480, height = 300) {
+  if (captureQueue.active) return;
+  captureQueue.active = true;
+  try {
+    const tabEl = document.querySelector(`[data-tab-id="${tabId}"]`);
+    if (!tabEl) return;
+    const url = tabEl.querySelector('.tab-url')?.textContent || '';
+    if (url && (url.startsWith('about:') || url.startsWith('chrome:') || url.startsWith('chrome-extension:'))) return;
+    const result = await window.hermes?.api?.request?.('captureTab', { tabId, quality, width, height });
+    if (result?.ok && result.data) {
+      const dataUrl = `data:image/jpeg;base64,${result.data}`;
+      tabEl.style.setProperty('--thumb-bg', `url("${dataUrl}")`);
+      tabEl.dataset.thumb = '1';
+      tabEl.dataset.thumbTs = String(Date.now());
+      // Also store in map for side panel preview
+      tabThumbnails.set(tabId, { dataUrl, time: Date.now(), width: result.width, height: result.height });
+    }
+  } catch (e) { /* ignore */ }
+  finally { captureQueue.active = false; }
+}
+
+const tabThumbnails = new Map(); // tabId → { dataUrl, time, width, height }
+
 async function refreshTabThumbnails() {
   try {
     const tabs = window.hermes?.tabs?.list?.() || [];
@@ -1469,42 +1666,54 @@ async function refreshTabThumbnails() {
         if (!tabEl) continue;
         const url = tab.url || '';
         if (!url || url.startsWith('data:') || url.startsWith('about:') || url.startsWith('chrome-extension:')) continue;
-        // Skip if already captured within 30s
+        // Cache: skip if captured within 20s (V17: faster refresh)
         const lastCapture = parseInt(tabEl.dataset.thumbTs || '0');
-        if (Date.now() - lastCapture < 30000) continue;
-        // Call IPC to capture
-        const result = await window.hermes?.api?.request?.('captureTab', { tabId: tab.id, quality: 60, width: 240, height: 150 });
-        if (result?.ok && result.data) {
-          const dataUrl = `data:image/jpeg;base64,${result.data}`;
-          tabEl.style.setProperty('--thumb-bg', `url("${dataUrl}")`);
-          tabEl.dataset.thumb = '1';
-          tabEl.dataset.thumbTs = String(Date.now());
-        }
+        if (Date.now() - lastCapture < 20000) continue;
+        enqueueCapture(tab.id, 70, 480, 300);
       } catch {}
     }
   } catch (e) { console.warn('refreshTabThumbnails:', e.message); }
 }
 
-// Refresh thumbnails on tab focus + every 8 seconds (less load)
-setTimeout(refreshTabThumbnails, 2500);
-setInterval(refreshTabThumbnails, 8000);
-// Also capture on hover (after 500ms delay) for instant preview
+// V17: Auto background capture — every 5 seconds
+setTimeout(refreshTabThumbnails, 1500);
+setInterval(refreshTabThumbnails, 5000);
+
+// V17: Hover preview — 480x300 with high quality
 let _hoverTimer = null;
 document.addEventListener('mouseover', (e) => {
   const tab = e.target.closest('.tab');
   if (!tab) return;
   if (_hoverTimer) clearTimeout(_hoverTimer);
-  _hoverTimer = setTimeout(async () => {
+  _hoverTimer = setTimeout(() => {
     const tabId = tab.dataset.tabId;
     if (!tabId) return;
-    try {
-      const result = await window.hermes?.api?.request?.('captureTab', { tabId, quality: 70, width: 480, height: 300 });
-      if (result?.ok && result.data) {
-        tab.style.setProperty('--thumb-bg-hover', `url("data:image/jpeg;base64,${result.data}")`);
-      }
-    } catch {}
-  }, 500);
+    enqueueCapture(tabId, 80, 640, 400); // Higher quality for hover
+  }, 400);
 });
+
+// V17: Side panel preview — Tab thumbnail gallery
+function openTabGallery() {
+  openModal('탭 미리보기', `
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+      ${Array.from(tabThumbnails.entries()).map(([id, data]) => `
+        <div style="background: var(--bg-subtle); border-radius: 8px; overflow: hidden; border: 1px solid var(--border);">
+          <img src="${data.dataUrl}" style="width: 100%; height: 150px; object-fit: cover; object-position: top;" />
+          <div style="padding: 8px; font-size: 11px; color: var(--faint);">${id}</div>
+        </div>
+      `).join('')}
+      ${tabThumbnails.size === 0 ? '<div style="grid-column: 1/-1; padding: 24px; text-align: center; color: var(--faint);">아직 캡쳐된 탭 없음</div>' : ''}
+    </div>
+  `);
+}
+
+// Add Cmd+K entry
+const V17_CMDS = [
+  { id: 'tab_gallery', label: '탭 갤러리 (전체 썸네일)', icon: 'grid', shortcut: '', action: openTabGallery },
+]; // Will be merged via existing palette later
+
+// Also capture on hover (after 500ms delay) for instant preview
+
 
 
 // ============================================================
@@ -1525,6 +1734,8 @@ const V13_CMDS = [
   { id: 'reload', label: '페이지 새로고침', icon: 'reload', shortcut: 'F5', action: () => $('reloadBtn')?.click() },
   { id: 'cowork', label: 'Cowork 워크스페이스 열기', icon: 'folder', shortcut: '', action: () => window.hermes?.ui?.openCowork?.() },
   { id: 'reloadapp', label: '앱 다시 로드', icon: 'reset', shortcut: '', action: () => window.hermes?.window?.reload?.() },
+  // V17 — tab gallery
+  { id: 'tab_gallery', label: '탭 갤러리 (썸네일 그리드)', icon: 'grid', shortcut: '', action: () => openTabGallery?.() },
   // V16 design polish
   { id: 'settings_v16', label: '설정 (V16)', icon: 'gear', shortcut: 'Ctrl+,', action: () => openSettings?.() },
   { id: 'vertical_tabs', label: '수직 탭 토글 (Arc/AsIDE 스타일)', icon: 'sidebar', shortcut: '', action: () => { $('toggleVerticalTabs')?.click(); } },

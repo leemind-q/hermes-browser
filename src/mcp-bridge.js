@@ -450,6 +450,16 @@ function listTools() {
     { name: 'cowork_watch_list', description: 'List all active watchers (V15 streaming watch management).', inputSchema: { type: 'object' } },
     { name: 'cowork_watch_unsubscribe', description: 'Stop and clean up a watcher by ID (V15).', inputSchema: { type: 'object', properties: { watcherId: { type: 'string' } }, required: ['watcherId'] } },
     { name: 'cowork_watch_events', description: 'Poll recent events for a watcher (V15, fallback to SSE stream).', inputSchema: { type: 'object', properties: { watcherId: { type: 'string' }, since: { type: 'number' } }, required: ['watcherId'] } },
+    // === V17 Cowork v5 (multi-agent concurrency) ===
+    { name: 'cowork_acquire_lock', description: 'Acquire advisory file lock (V17: returns token + TTL).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, ttl: { type: 'number' }, wait: { type: 'boolean' }, agentId: { type: 'string' } }, required: ['path'] } },
+    { name: 'cowork_release_lock', description: 'Release file lock by token (V17).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, token: { type: 'string' } }, required: ['path', 'token'] } },
+    { name: 'cowork_list_locks', description: 'List all active file locks (V17).', inputSchema: { type: 'object' } },
+    { name: 'cowork_acquire_lease', description: 'Acquire named lease (V17: semaphore-style for distributed coordination).', inputSchema: { type: 'object', properties: { leaseName: { type: 'string' }, ttl: { type: 'number' }, agentId: { type: 'string' } }, required: ['leaseName'] } },
+    { name: 'cowork_release_lease', description: 'Release named lease (V17).', inputSchema: { type: 'object', properties: { leaseName: { type: 'string' }, agentId: { type: 'string' } }, required: ['leaseName'] } },
+    { name: 'cowork_enqueue_task', description: 'Enqueue task for an agent (V17: priority-sorted).', inputSchema: { type: 'object', properties: { agentId: { type: 'string' }, task: { type: 'object' }, priority: { type: 'number' } }, required: ['agentId', 'task'] } },
+    { name: 'cowork_dequeue_task', description: 'Dequeue next task(s) for an agent (V17: priority + FIFO).', inputSchema: { type: 'object', properties: { agentId: { type: 'string' }, max: { type: 'number' } } } },
+    { name: 'cowork_set_shared_state', description: 'Set shared state key (V17: cross-agent coordination).', inputSchema: { type: 'object', properties: { key: { type: 'string' }, value: { type: 'object' }, agentId: { type: 'string' } }, required: ['key'] } },
+    { name: 'cowork_get_shared_state', description: 'Get shared state (V17: cross-agent coordination).', inputSchema: { type: 'object', properties: { key: { type: 'string' } } } },
   ];
 }
 
@@ -605,6 +615,16 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_watch_list': try { return await agent.coworkWatchList(); } catch(e) { return { ok: false, error: 'coworkWatchList: ' + e.message }; }
     case 'cowork_watch_unsubscribe': try { return await agent.coworkWatchUnsubscribe(args); } catch(e) { return { ok: false, error: 'coworkWatchUnsubscribe: ' + e.message }; }
     case 'cowork_watch_events': try { return await agent.coworkWatchEvents(args); } catch(e) { return { ok: false, error: 'coworkWatchEvents: ' + e.message }; }
+    // === V17 Cowork v5 (multi-agent concurrency) ===
+    case 'cowork_acquire_lock': try { return await agent.coworkAcquireLock(args); } catch(e) { return { ok: false, error: 'coworkAcquireLock: ' + e.message }; }
+    case 'cowork_release_lock': try { return await agent.coworkReleaseLock(args); } catch(e) { return { ok: false, error: 'coworkReleaseLock: ' + e.message }; }
+    case 'cowork_list_locks': try { return await agent.coworkListLocks(); } catch(e) { return { ok: false, error: 'coworkListLocks: ' + e.message }; }
+    case 'cowork_acquire_lease': try { return await agent.coworkAcquireLease(args); } catch(e) { return { ok: false, error: 'coworkAcquireLease: ' + e.message }; }
+    case 'cowork_release_lease': try { return await agent.coworkReleaseLease(args); } catch(e) { return { ok: false, error: 'coworkReleaseLease: ' + e.message }; }
+    case 'cowork_enqueue_task': try { return await agent.coworkEnqueueTask(args); } catch(e) { return { ok: false, error: 'coworkEnqueueTask: ' + e.message }; }
+    case 'cowork_dequeue_task': try { return await agent.coworkDequeueTask(args); } catch(e) { return { ok: false, error: 'coworkDequeueTask: ' + e.message }; }
+    case 'cowork_set_shared_state': try { return await agent.coworkSetSharedState(args); } catch(e) { return { ok: false, error: 'coworkSetSharedState: ' + e.message }; }
+    case 'cowork_get_shared_state': try { return await agent.coworkGetSharedState(args); } catch(e) { return { ok: false, error: 'coworkGetSharedState: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);

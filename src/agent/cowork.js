@@ -620,6 +620,129 @@ class CoworkService {
     }
   }
 
+  // ============================================================
+  // V17: Cowork v5 — Multi-agent concurrency primitives
+  // ============================================================
+
+  /** Acquire a file lock (advisory lock) — returns lock token or null */
+  async acquireLock(args) {
+    const { path: filePath, ttl = 30000, wait = false } = args || {};
+    if (!filePath) return { ok: false, error: 'path required' };
+    const absPath = this._safePath(filePath);
+    if (!absPath) return { ok: false, error: 'unsafe path' };
+    if (!this._locks) this._locks = new Map(); // filePath → { token, expires, agentId }
+    const now = Date.now();
+    const existing = this._locks.get(absPath);
+    if (existing && existing.expires > now) {
+      if (!wait) return { ok: false, error: 'locked', lockedBy: existing.agentId, expiresIn: existing.expires - now };
+      // Wait up to 3s
+      await new Promise(r => setTimeout(r, Math.min(3000, existing.expires - now)));
+      return this.acquireLock(args);
+    }
+    const token = 'lock_' + Math.random().toString(36).slice(2, 10);
+    this._locks.set(absPath, { token, expires: now + ttl, agentId: args.agentId || 'unknown' });
+    return { ok: true, token, file: filePath, ttl, expiresAt: now + ttl };
+  }
+
+  /** Release a lock by token */
+  releaseLock(args) {
+    const { path: filePath, token } = args || {};
+    if (!filePath || !token) return { ok: false, error: 'path and token required' };
+    const absPath = this._safePath(filePath);
+    if (!absPath) return { ok: false, error: 'unsafe path' };
+    const existing = this._locks.get(absPath);
+    if (!existing) return { ok: false, error: 'not locked' };
+    if (existing.token !== token) return { ok: false, error: 'token mismatch' };
+    this._locks.delete(absPath);
+    return { ok: true, file: filePath };
+  }
+
+  /** List all current locks */
+  listLocks() {
+    const locks = [];
+    if (this._locks) {
+      const now = Date.now();
+      for (const [path, lock] of this._locks) {
+        if (lock.expires > now) {
+          locks.push({ path, token: lock.token, agentId: lock.agentId, expiresAt: lock.expires, expiresIn: lock.expires - now });
+        } else {
+          this._locks.delete(path); // GC expired
+        }
+      }
+    }
+    return { ok: true, locks, count: locks.length };
+  }
+
+  /** Acquire a named lease (semaphore-style, multi-key) */
+  async acquireLease(args) {
+    const { leaseName, ttl = 60000, agentId = 'unknown' } = args || {};
+    if (!leaseName) return { ok: false, error: 'leaseName required' };
+    if (!this._leases) this._leases = new Map(); // leaseName → { agentId, expires }
+    const now = Date.now();
+    const existing = this._leases.get(leaseName);
+    if (existing && existing.expires > now) {
+      return { ok: false, error: 'lease held', holder: existing.agentId, expiresIn: existing.expires - now };
+    }
+    this._leases.set(leaseName, { agentId, expires: now + ttl });
+    return { ok: true, leaseName, agentId, ttl, expiresAt: now + ttl };
+  }
+
+  /** Release a lease */
+  releaseLease(args) {
+    const { leaseName, agentId } = args || {};
+    if (!leaseName) return { ok: false, error: 'leaseName required' };
+    if (!this._leases?.has(leaseName)) return { ok: false, error: 'lease not held' };
+    const existing = this._leases.get(leaseName);
+    if (agentId && existing.agentId !== agentId) return { ok: false, error: 'not owner' };
+    this._leases.delete(leaseName);
+    return { ok: true, leaseName };
+  }
+
+  /** Enqueue a task for an agent */
+  enqueueTask(args) {
+    const { agentId, task, priority = 0 } = args || {};
+    if (!agentId || !task) return { ok: false, error: 'agentId and task required' };
+    if (!this._taskQueue) this._taskQueue = []; // [{agentId, task, priority, enqueuedAt, id}]
+    const taskId = 'task_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    this._taskQueue.push({ id: taskId, agentId, task, priority, enqueuedAt: Date.now() });
+    return { ok: true, taskId, queueSize: this._taskQueue.length };
+  }
+
+  /** Dequeue next task for an agent (priority sorted, oldest first within same priority) */
+  dequeueTask(args) {
+    const { agentId, max = 1 } = args || {};
+    if (!this._taskQueue || this._taskQueue.length === 0) return { ok: true, tasks: [] };
+    const eligible = this._taskQueue
+      .filter(t => !agentId || t.agentId === agentId || t.agentId === '*')
+      .sort((a, b) => (b.priority - a.priority) || (a.enqueuedAt - b.enqueuedAt))
+      .slice(0, max);
+    // Remove from queue
+    this._taskQueue = this._taskQueue.filter(t => !eligible.includes(t));
+    return { ok: true, tasks: eligible, remaining: this._taskQueue.length };
+  }
+
+  /** Set/Get shared state key (cross-agent coordination) */
+  setSharedState(args) {
+    const { key, value, agentId = 'unknown' } = args || {};
+    if (!key) return { ok: false, error: 'key required' };
+    if (!this._sharedState) this._sharedState = new Map();
+    this._sharedState.set(key, { value, agentId, updatedAt: Date.now() });
+    return { ok: true, key };
+  }
+
+  getSharedState(args) {
+    const { key } = args || {};
+    if (!this._sharedState) return { ok: true, value: null };
+    if (key) {
+      const entry = this._sharedState.get(key);
+      return { ok: true, key, value: entry?.value, agentId: entry?.agentId, updatedAt: entry?.updatedAt };
+    }
+    // Return all
+    const all = {};
+    for (const [k, v] of this._sharedState) all[k] = { ...v };
+    return { ok: true, count: Object.keys(all).length, state: all };
+  }
+
   /** Simple glob match: *.txt → /\.txt$/, *.{txt,md} → /\.(txt|md)$/ */
   _globMatch(name, glob) {
     if (!glob || glob === '*') return true;

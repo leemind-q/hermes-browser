@@ -346,6 +346,17 @@ class AgentService {
     return this.cowork.watchList();
   }
 
+  // V17: Cowork v5 — multi-agent concurrency
+  async coworkAcquireLock(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.acquireLock(args); }
+  async coworkReleaseLock(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.releaseLock(args); }
+  async coworkListLocks() { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.listLocks(); }
+  async coworkAcquireLease(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.acquireLease(args); }
+  async coworkReleaseLease(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.releaseLease(args); }
+  async coworkEnqueueTask(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.enqueueTask(args); }
+  async coworkDequeueTask(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.dequeueTask(args); }
+  async coworkSetSharedState(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.setSharedState(args); }
+  async coworkGetSharedState(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.getSharedState(args); }
+
   async coworkWatchUnsubscribe(args) {
     if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
     return this.cowork.watchUnsubscribe(args);

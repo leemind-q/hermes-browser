@@ -1670,7 +1670,239 @@ body[data-split-view="true"] .main::after:hover {
   color: var(--faint);
   margin-top: 2px;
 }
+
+/* ============================================================
+   V16 FINAL POLISH — 4 final features
+   - AI sidebar auto-expand
+   - Workspace tag pills (color sliders)
+   - Keystroke help modal
+   - Font scale slider (multi-tier)
+   ============================================================ */
+
+/* === 1. AI sidebar auto-expand === */
+body[data-ai-auto="true"] .right {
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+}
+body[data-ai-auto="true"][data-tabs-count="0"] .bento {
+  padding-right: 360px;
+  transition: padding-right 400ms cubic-bezier(.34,1.56,.64,1);
+}
+.right {
+  transition: transform 400ms cubic-bezier(.34,1.56,.64,1), opacity 400ms ease;
+}
+
+/* AI auto badge */
+.ai-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  margin-left: 8px;
+  animation: badge-glow 2s ease-in-out infinite;
+}
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+}
+
+/* === 2. Workspace tag pills (color sliders) === */
+.workspace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+.workspace-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--anim-fast);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--ink);
+}
+.workspace-tag:hover {
+  border-color: var(--tag-color, var(--gold));
+  background: var(--tag-color, var(--gold));
+  color: white;
+}
+.workspace-tag .tag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tag-color, var(--gold));
+}
+.workspace-tag[data-active="true"] {
+  background: var(--tag-color, var(--gold));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.workspace-tag[data-active="true"] .tag-dot {
+  background: white;
+}
+
+/* === 3. Keystroke help modal === */
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border-radius: 8px;
+}
+.shortcut-row .sc-label {
+  font-size: 12px;
+  color: var(--ink);
+}
+.shortcut-row .sc-keys {
+  display: flex;
+  gap: 3px;
+}
+.shortcut-row kbd {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--ink-strong);
+  box-shadow: 0 1px 0 var(--border);
+}
+.shortcut-row kbd.mod {
+  background: var(--ink-strong);
+  color: var(--bg-elevated);
+  border-color: var(--ink-strong);
+}
+
+/* === 4. Font scale === */
+:root { --font-scale: 1; }
+body { font-size: calc(14px * var(--font-scale)); }
+.tab-name { font-size: calc(12px * var(--font-scale)); }
+.address input, .url-input { font-size: calc(13px * var(--font-scale)); }
+h1, .modal-title, .settings-panel-header .modal-title { font-size: calc(1em * var(--font-scale)); }
+.font-scale-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  margin-top: 8px;
+}
+.font-scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.font-scale-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: none;
+}
+.font-scale-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+/* === AI sidebar floating action === */
+.ai-fab {
+  position: fixed;
+  bottom: 56px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.32), 0 2px 6px rgba(217, 119, 6, 0.18);
+  z-index: 100;
+  transition: var(--anim-spring);
+  border: none;
+}
+.ai-fab:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 12px 32px rgba(217, 119, 6, 0.40), 0 4px 8px rgba(217, 119, 6, 0.22);
+}
+.ai-fab:active {
+  transform: scale(0.96);
+}
+.ai-fab .fab-icon {
+  font-size: 22px;
+}
+.ai-fab .fab-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  animation: fab-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes fab-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* === Search highlight === */
+mark {
+  background: var(--gold-soft);
+  color: var(--ink-strong);
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+/* === Premium scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+  transition: var(--anim-fast);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+}
 </style>
+
 
 
 
@@ -1760,7 +1992,10 @@ body[data-split-view="true"] .main::after:hover {
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M16 15l-4 4-4-4"/></svg>
       </div>
-    </aside>
+    
+      <!-- V16 final: workspace tag pills -->
+      <div class="workspace-tags" id="workspaceTagsContainer"></div>
+</aside>
 
     <main class="browser-frame" aria-label="Rounded browser frame"></main>
 
@@ -1993,6 +2228,39 @@ body[data-split-view="true"] .main::after:hover {
         <button class="modal-close" id="modalClose">✕</button>
       </div>
       <div class="modal-body" id="modalBody">Body</div>
+    </div>
+  </div>
+
+  <!-- V16: AI FAB (floating action button) -->
+  <button class="ai-fab" id="aiFab" title="AI 패널 토글 (Ctrl+`)">
+    <div class="fab-pulse"></div>
+    <span class="fab-icon">✦</span>
+  </button>
+
+  <!-- V16: Keystroke help modal (custom) -->
+  <div class="modal" id="shortcutModal">
+    <div class="modal-card" style="width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">⌨️ 키 단축키</div>
+        <button class="modal-close" id="shortcutClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-grid">
+          <div class="shortcut-row"><span class="sc-label">새 탭</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>T</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">닫기</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>W</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">AI 패널 토글</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>`</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">사이드바 토글</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>B</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">커맨드 팔레트</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>K</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">설정</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>,</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">단축키 도움말</span><span class="sc-keys"><kbd>?</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">페이지 내 검색</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>F</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">방문 기록</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>H</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">다운로드</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>J</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">새로고침</span><span class="sc-keys"><kbd>F5</kbd></span></div>
+          <div class="shortcut-row"><span class="sc-label">개발자 도구</span><span class="sc-keys"><kbd class="mod">Ctrl</kbd><kbd>Shift</kbd><kbd>I</kbd></span></div>
+        </div>
+        <p style="margin-top: 16px; font-size: 12px; color: var(--faint);">단축키는 어디서든 작동. 모달은 ESC로 닫기.</p>
+      </div>
     </div>
   </div>
 </body>
