@@ -1384,7 +1384,294 @@ webview {
   border-color: var(--gold) !important;
   box-shadow: 0 0 0 3px var(--gold-soft) !important;
 }
+
+/* ============================================================
+   V16 DESIGN FINAL POLISH (Day 10) — AsIDE/Arc-grade
+   - Vertical tabs sidebar (toggle)
+   - Split view (2-pane comparison)
+   - Better tab groups (collapse + active glow)
+   - Premium modal dialogs
+   - Spring bounce micro-interactions
+   ============================================================ */
+
+/* === Vertical tabs layout === */
+body[data-tabs-vertical="true"] .tabs-row {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 4px;
+  padding: 8px 4px;
+}
+body[data-tabs-vertical="true"] .tabs-row .tab {
+  width: 100%;
+  height: auto;
+  min-height: 36px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border-bottom: none !important;
+  border-left: 3px solid transparent;
+}
+body[data-tabs-vertical="true"] .tabs-row .tab[data-active="true"] {
+  border-left-color: var(--gold) !important;
+  background: var(--gold-soft);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.12);
+}
+body[data-tabs-vertical="true"] .tabs-row .tab:hover:not([data-active="true"]) {
+  background: var(--accent-hover);
+  transform: translateX(2px);
+}
+body[data-tabs-vertical="true"] .tabs-row .tab .tab-name {
+  font-size: 13px;
+}
+
+/* === Tab group separator + collapse === */
+.tabs-row .tab-group-header {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-sm);
+  transition: var(--anim-fast);
+}
+.tabs-row .tab-group-header:hover { background: var(--accent-hover); color: var(--ink); }
+.tabs-row .tab-group-header .gh-chevron {
+  transition: transform 200ms var(--ease-spring);
+}
+.tabs-row .tab-group-header[data-collapsed="true"] .gh-chevron {
+  transform: rotate(-90deg);
+}
+.tabs-row .tab-group-header[data-collapsed="true"] + .tab-group-items {
+  display: none;
+}
+
+/* === Premium modal === */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 15, 30, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2000;
+}
+.modal[data-open="true"] {
+  display: flex;
+  animation: modal-bg 200ms ease both;
+}
+@keyframes modal-bg {
+  0% { background: rgba(15, 15, 30, 0); }
+  100% { background: rgba(15, 15, 30, 0.5); }
+}
+.modal-card {
+  width: 540px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 32px 80px rgba(20, 30, 50, 0.30), 0 12px 24px rgba(20, 30, 50, 0.14);
+  animation: modal-pop 280ms var(--ease-spring) both;
+}
+@keyframes modal-pop {
+  0% { opacity: 0; transform: translateY(-12px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--faint);
+  background: transparent;
+  border: none;
+  transition: var(--anim-fast);
+}
+.modal-close:hover { background: var(--accent-hover); color: var(--ink-strong); }
+.modal-body { padding: 16px 24px 24px; }
+
+/* === Split view === */
+body[data-split-view="true"] .main {
+  display: grid;
+  grid-template-columns: 1fr 4px 1fr;
+  gap: 0;
+}
+body[data-split-view="true"] .main::after {
+  content: "";
+  background: var(--border);
+  cursor: col-resize;
+  position: relative;
+}
+body[data-split-view="true"] .main::after:hover {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+/* === Spring bounce for actions === */
+.btn-spring {
+  transition: transform 200ms var(--ease-spring), box-shadow 200ms ease;
+}
+.btn-spring:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(20, 30, 50, 0.12); }
+.btn-spring:active { transform: translateY(0) scale(0.98); }
+
+/* === Sparkle (AI) icon === */
+.sparkle {
+  position: relative;
+  display: inline-flex;
+}
+.sparkle::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-soft) 0%, transparent 70%);
+  opacity: 0;
+  animation: sparkle-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* === Stronger focus ring (final) === */
+*:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg-elevated),
+    0 0 0 4px var(--gold),
+    0 0 24px rgba(251, 191, 36, 0.45);
+  border-radius: var(--radius-control);
+}
+
+/* === Loading dots (AI typing indicator) === */
+@keyframes loading-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-6px); }
+}
+.loading-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: loading-dot 1.4s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* === Toggle switch (settings) === */
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--anim-fast);
+}
+.toggle-switch[data-on="true"] {
+  background: var(--gold);
+}
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: var(--anim-fast);
+}
+.toggle-switch[data-on="true"]::after {
+  left: 18px;
+}
+
+/* === Settings panel (slide from right) === */
+.settings-panel {
+  position: fixed;
+  top: 0; right: -420px;
+  width: 400px;
+  height: 100vh;
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: -8px 0 32px rgba(20, 30, 50, 0.10);
+  z-index: 1500;
+  transition: right 280ms var(--ease-spring);
+  display: flex;
+  flex-direction: column;
+}
+.settings-panel[data-open="true"] {
+  right: 0;
+}
+.settings-panel-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.settings-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-section h3 {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 13px;
+  color: var(--ink-strong);
+}
+.settings-row .settings-label {
+  flex: 1;
+}
+.settings-row .settings-desc {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 2px;
+}
 </style>
+
 
 
 </head>
@@ -1637,6 +1924,75 @@ webview {
         <span><kbd>↑</kbd> <kbd>↓</kbd> navigate · <kbd>Enter</kbd> select</span>
         <span><kbd>Esc</kbd> close</span>
       </div>
+    </div>
+  </div>
+
+  <!-- V16: Settings panel (slide from right) -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-panel-header">
+      <div class="modal-title">설정</div>
+      <button class="modal-close" id="settingsClose">✕</button>
+    </div>
+    <div class="settings-section">
+      <h3>외관</h3>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">수직 탭</div>
+          <div class="settings-desc">사이드바에 탭을 세로로 배치 (Arc/AsIDE 스타일)</div>
+        </div>
+        <div class="toggle-switch" id="toggleVerticalTabs" data-on="false"></div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">분할 화면</div>
+          <div class="settings-desc">2-pane 비교 뷰</div>
+        </div>
+        <div class="toggle-switch" id="toggleSplitView" data-on="false"></div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">다크 모드</div>
+          <div class="settings-desc">OS 자동 / 강제 라이트 / 강제 다크</div>
+        </div>
+        <div class="toggle-switch" id="toggleDarkMode" data-on="false"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>실험실</h3>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">V14 메시 백그라운드</div>
+          <div class="settings-desc">subtle gradient blobs</div>
+        </div>
+        <div class="toggle-switch" id="toggleMesh" data-on="true"></div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">탭 썸네일 캡쳐</div>
+          <div class="settings-desc">hover 시 screenshot 표시</div>
+        </div>
+        <div class="toggle-switch" id="toggleThumbnail" data-on="true"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>정보</h3>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Hermes Browser</div>
+          <div class="settings-desc">V16 · AsIDE/Arc-grade · 56 MCP tools · 12 LLM providers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V16: Modal template -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Title</div>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody">Body</div>
     </div>
   </div>
 </body>

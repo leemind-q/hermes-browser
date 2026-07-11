@@ -520,9 +520,19 @@ class CoworkService {
     return { ok: true, watcherId, dir: entry.dir, total: entry.events.length, events };
   }
 
-  /** Search + replace across files (with confirmation token if no-pretend flag) */
+  /** V15: Search + replace across files (V16: --backup, --exclude, maxFiles up to 200) */
   async searchReplace(args) {
-    const { path: dir, pattern, replacement, glob = '*.{txt,md,json,csv,ts,js,gd}', maxFiles = 50, pretend = true } = args || {};
+    const {
+      path: dir,
+      pattern,
+      replacement,
+      glob = '*.{txt,md,json,csv,ts,js,gd}',
+      maxFiles = 200,
+      pretend = true,
+      backup = false,
+      exclude = ['node_modules', '.git', 'dist'],
+      writeOnly = false,
+    } = args || {};
     if (!pattern || !replacement) return { ok: false, error: 'pattern and replacement required' };
     const absDir = this._safePath(dir);
     if (!absDir) return { ok: false, error: 'unsafe path' };
@@ -540,7 +550,7 @@ class CoworkService {
         for (const entry of entries) {
           if (filePaths.length >= maxFiles) return;
           const fullPath = require('path').join(dir, entry.name);
-          if (entry.isDirectory() && !['node_modules', '.git', 'dist'].includes(entry.name)) {
+          if (entry.isDirectory() && !exclude.includes(entry.name)) {
             await walk(fullPath);
           } else if (entry.isFile() && globCheck(entry.name, glob)) {
             filePaths.push(fullPath);
@@ -561,20 +571,50 @@ class CoworkService {
       }
       // Phase 2: apply replacements (only if !pretend)
       const applied = [];
+      const backups = [];
+      const diffs = [];
       if (!pretend) {
         for (const fp of filePaths) {
           try {
             const content = await require('fs').promises.readFile(fp, 'utf8');
             const newContent = content.replace(re, replacement);
             if (newContent !== content) {
+              const relPath = require('path').relative(self.workspaceRoot, fp);
+              const hits = [...content.matchAll(re)].length;
+              // Backup if requested
+              if (backup) {
+                const backupPath = fp + '.bak';
+                await require('fs').promises.copyFile(fp, backupPath);
+                backups.push(backupPath);
+              }
+              if (!writeOnly) {
+                applied.push({ file: relPath, hits, bytesChanged: newContent.length - content.length });
+              }
+              // Diff preview: first 200 chars before + after
+              diffs.push({
+                file: relPath,
+                hits,
+                before: content.slice(0, 200),
+                after: newContent.slice(0, 200),
+                sizeBefore: content.length,
+                sizeAfter: newContent.length,
+              });
               await require('fs').promises.writeFile(fp, newContent, 'utf8');
-              applied.push({ file: require('path').relative(self.workspaceRoot, fp), hits: [...content.matchAll(re)].length });
             }
           } catch {}
         }
         self.invalidateCache();
       }
-      return { ok: true, mode: pretend ? 'preview' : 'apply', filesScanned: filePaths.length, matches, applied };
+      return {
+        ok: true,
+        mode: pretend ? 'preview' : 'apply',
+        filesScanned: filePaths.length,
+        matches,
+        applied: writeOnly ? [] : applied,
+        diffs: writeOnly ? [] : diffs,
+        backupCount: backups.length,
+        backupPaths: writeOnly ? [] : backups,
+      };
     } catch (e) {
       return { ok: false, error: e.message };
     }

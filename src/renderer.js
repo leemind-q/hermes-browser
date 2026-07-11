@@ -1315,6 +1315,147 @@ const SettingsPopover = (() => {
 })();
 
 // ============================================================
+// V16 — Settings panel + vertical tabs + split view + modal
+// ============================================================
+
+const V16_SETTINGS_KEY = 'v16_settings';
+let V16_SETTINGS = {
+  verticalTabs: false,
+  splitView: false,
+  darkMode: null, // null = OS auto, true = force dark, false = force light
+  mesh: true,
+  thumbnail: true,
+};
+
+function loadV16Settings() {
+  try {
+    const stored = localStorage.getItem(V16_SETTINGS_KEY);
+    if (stored) V16_SETTINGS = { ...V16_SETTINGS, ...JSON.parse(stored) };
+  } catch {}
+  applyV16Settings();
+}
+
+function saveV16Settings() {
+  try { localStorage.setItem(V16_SETTINGS_KEY, JSON.stringify(V16_SETTINGS)); } catch {}
+}
+
+function applyV16Settings() {
+  document.body.dataset.tabsVertical = V16_SETTINGS.verticalTabs ? 'true' : 'false';
+  document.body.dataset.splitView = V16_SETTINGS.splitView ? 'true' : 'false';
+  document.documentElement.dataset.theme = V16_SETTINGS.darkMode === null
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : (V16_SETTINGS.darkMode ? 'dark' : 'light');
+  document.body.dataset.mesh = V16_SETTINGS.mesh ? 'true' : 'false';
+  document.body.dataset.thumbnail = V16_SETTINGS.thumbnail ? 'true' : 'false';
+
+  // Update toggle switches
+  $('toggleVerticalTabs')?.setAttribute('data-on', V16_SETTINGS.verticalTabs ? 'true' : 'false');
+  $('toggleSplitView')?.setAttribute('data-on', V16_SETTINGS.splitView ? 'true' : 'false');
+  $('toggleDarkMode')?.setAttribute('data-on', V16_SETTINGS.darkMode === true ? 'true' : 'false');
+  $('toggleMesh')?.setAttribute('data-on', V16_SETTINGS.mesh ? 'true' : 'false');
+  $('toggleThumbnail')?.setAttribute('data-on', V16_SETTINGS.thumbnail ? 'true' : 'false');
+}
+
+// Wire up settings toggles
+$('toggleVerticalTabs')?.addEventListener('click', () => {
+  V16_SETTINGS.verticalTabs = !V16_SETTINGS.verticalTabs;
+  saveV16Settings(); applyV16Settings();
+});
+$('toggleSplitView')?.addEventListener('click', () => {
+  V16_SETTINGS.splitView = !V16_SETTINGS.splitView;
+  saveV16Settings(); applyV16Settings();
+});
+$('toggleDarkMode')?.addEventListener('click', () => {
+  // null → force dark → force light → null
+  if (V16_SETTINGS.darkMode === null) V16_SETTINGS.darkMode = true;
+  else if (V16_SETTINGS.darkMode === true) V16_SETTINGS.darkMode = false;
+  else V16_SETTINGS.darkMode = null;
+  saveV16Settings(); applyV16Settings();
+});
+$('toggleMesh')?.addEventListener('click', () => {
+  V16_SETTINGS.mesh = !V16_SETTINGS.mesh;
+  document.body.dataset.mesh = V16_SETTINGS.mesh ? 'true' : 'false';
+  saveV16Settings(); applyV16Settings();
+});
+$('toggleThumbnail')?.addEventListener('click', () => {
+  V16_SETTINGS.thumbnail = !V16_SETTINGS.thumbnail;
+  document.body.dataset.thumbnail = V16_SETTINGS.thumbnail ? 'true' : 'false';
+  saveV16Settings(); applyV16Settings();
+});
+
+// Settings panel open/close
+function openSettings() {
+  $('settingsPanel')?.setAttribute('data-open', 'true');
+}
+function closeSettings() {
+  $('settingsPanel')?.setAttribute('data-open', 'false');
+}
+$('settingsClose')?.addEventListener('click', closeSettings);
+$('settingsBtn')?.addEventListener('click', openSettings);
+$('statusSettings')?.addEventListener('click', openSettings);
+
+// Modal helpers
+function openModal(title, bodyHTML) {
+  const m = $('modal'); if (!m) return;
+  $('modalTitle').textContent = title;
+  $('modalBody').innerHTML = bodyHTML;
+  m.setAttribute('data-open', 'true');
+}
+function closeModal() {
+  $('modal')?.setAttribute('data-open', 'false');
+}
+$('modalClose')?.addEventListener('click', closeModal);
+$('modal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+// Load on init
+setTimeout(loadV16Settings, 100);
+
+// Update status bar button handlers to use new settings
+$('themeToggle')?.addEventListener('click', () => {
+  if (V16_SETTINGS.darkMode === null) V16_SETTINGS.darkMode = true;
+  else if (V16_SETTINGS.darkMode === true) V16_SETTINGS.darkMode = false;
+  else V16_SETTINGS.darkMode = null;
+  saveV16Settings(); applyV16Settings();
+});
+
+// V16: Spring bounce on primary actions
+document.querySelectorAll('.icon-btn, .basics-btn, .sb-btn').forEach(btn => {
+  btn.classList.add('btn-spring');
+});
+
+// V16: Settings keyboard shortcut
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === ',' || e.key === ',')) {
+    e.preventDefault();
+    if ($('settingsPanel')?.getAttribute('data-open') === 'true') closeSettings();
+    else openSettings();
+  }
+  if (e.key === 'Escape') {
+    if ($('settingsPanel')?.getAttribute('data-open') === 'true') closeSettings();
+    if ($('modal')?.getAttribute('data-open') === 'true') closeModal();
+  }
+});
+
+// V16: Live settings badge in status bar
+function updateSettingsBadge() {
+  const enabled = [];
+  if (V16_SETTINGS.verticalTabs) enabled.push('VT');
+  if (V16_SETTINGS.splitView) enabled.push('SP');
+  if (V16_SETTINGS.mesh) enabled.push('ME');
+  if (V16_SETTINGS.thumbnail) enabled.push('TH');
+  if (V16_SETTINGS.darkMode === true) enabled.push('🌙');
+  if (V16_SETTINGS.darkMode === false) enabled.push('☀');
+  return enabled.join(' ');
+}
+setInterval(() => {
+  const badge = $('settingsBadge');
+  if (badge) badge.textContent = updateSettingsBadge();
+}, 1000);
+
+
+// ============================================================
 // V14 — Tab thumbnail preview (hover popup) (Day 8)
 // ============================================================
 
@@ -1384,6 +1525,10 @@ const V13_CMDS = [
   { id: 'reload', label: '페이지 새로고침', icon: 'reload', shortcut: 'F5', action: () => $('reloadBtn')?.click() },
   { id: 'cowork', label: 'Cowork 워크스페이스 열기', icon: 'folder', shortcut: '', action: () => window.hermes?.ui?.openCowork?.() },
   { id: 'reloadapp', label: '앱 다시 로드', icon: 'reset', shortcut: '', action: () => window.hermes?.window?.reload?.() },
+  // V16 design polish
+  { id: 'settings_v16', label: '설정 (V16)', icon: 'gear', shortcut: 'Ctrl+,', action: () => openSettings?.() },
+  { id: 'vertical_tabs', label: '수직 탭 토글 (Arc/AsIDE 스타일)', icon: 'sidebar', shortcut: '', action: () => { $('toggleVerticalTabs')?.click(); } },
+  { id: 'split_view', label: '분할 화면 토글', icon: 'split', shortcut: '', action: () => { $('toggleSplitView')?.click(); } },
 ];
 
 function openCmdK() {

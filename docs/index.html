@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hermes Browser V12 — AI Browser with MCP-First Architecture</title>
+  <title>Hermes Browser V16 — AI Browser with MCP-First Architecture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -15,183 +15,216 @@
       color: #1a1a2e;
       padding: 60px 24px;
       -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(251, 191, 36, 0.08) 0%, transparent 32%),
+        radial-gradient(circle at 88% 32%, rgba(91, 200, 255, 0.05) 0%, transparent 36%),
+        radial-gradient(circle at 50% 80%, rgba(151, 128, 255, 0.06) 0%, transparent 34%);
+      animation: mesh 14s ease-in-out infinite alternate;
+    }
+    @keyframes mesh {
+      0% { transform: scale(1) translate(0, 0); }
+      100% { transform: scale(1.06) translate(-1%, -0.5%); }
     }
     .wrap { max-width: 1080px; margin: 0 auto; }
     h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 48px;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
       margin-bottom: 16px;
-      color: #0f0f1e;
+      color: #1a1a2e;
     }
-    h1 .gold { color: #d97706; }
+    h1 .gold {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     .tagline {
-      color: #5b6478;
-      font-size: 18px;
-      line-height: 1.5;
-      margin-bottom: 48px;
+      font-size: 17px;
+      line-height: 1.55;
+      color: #4a4a5e;
       max-width: 720px;
+      margin-bottom: 28px;
     }
     .badges {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 32px;
+      margin-bottom: 48px;
     }
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: white;
-      border: 1px solid rgba(26, 26, 46, 0.08);
-      border-radius: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
       font-size: 12px;
-      font-weight: 500;
-      color: #5b6478;
+      font-weight: 600;
+      background: white;
+      color: #4a4a5e;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(20, 30, 50, 0.06);
     }
-    .badge.gold { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3); color: #b45309; }
-    .badge.green { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); color: #16a34a; }
+    .badge.gold { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border-color: transparent; }
+    .badge.green { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+    .badge.blue { background: #eff6ff; color: #1e40af; border-color: #dbeafe; }
+
     h2 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 24px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 20px;
       margin-top: 48px;
-      margin-bottom: 16px;
-      color: #0f0f1e;
+      color: #1a1a2e;
     }
+    h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1a1a2e;
+    }
+    p { line-height: 1.6; margin-bottom: 12px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: 20px;
+      margin-bottom: 24px;
     }
     .card {
       background: white;
-      border: 1px solid rgba(26, 26, 46, 0.08);
+      padding: 28px 24px;
       border-radius: 16px;
-      padding: 28px;
+      border: 1px solid rgba(20, 30, 50, 0.06);
       box-shadow: 0 2px 8px rgba(20, 30, 50, 0.04);
-      transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 200ms cubic-bezier(.34,1.56,.64,1), box-shadow 200ms ease;
     }
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(20, 30, 50, 0.10);
-      border-color: rgba(251, 191, 36, 0.4);
-    }
-    .card h3 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 18px;
-      margin-bottom: 8px;
-      color: #0f0f1e;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(20, 30, 50, 0.10);
     }
     .card .num {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 36px;
-      font-weight: 600;
-      color: #d97706;
-      letter-spacing: -0.02em;
+      font-size: 56px;
+      font-weight: 700;
       line-height: 1;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 12px;
     }
-    .card p { color: #5b6478; font-size: 14px; line-height: 1.5; }
-    .quick {
-      background: white;
-      border: 1px solid rgba(26, 26, 46, 0.08);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 16px;
-    }
-    .quick code {
-      background: #f3f4f6;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: 'SF Mono', Monaco, monospace;
-      font-size: 13px;
-      color: #0f0f1e;
-    }
-    .quick pre {
-      background: #0f0f1e;
-      color: #e4e4e7;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: 'SF Mono', Monaco, monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      margin-top: 12px;
-    }
     .section {
-      margin-top: 56px;
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      border: 1px solid rgba(20, 30, 50, 0.06);
+      box-shadow: 0 2px 8px rgba(20, 30, 50, 0.04);
+      margin-bottom: 24px;
     }
     .diff-list {
       list-style: none;
       padding: 0;
     }
     .diff-list li {
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(26, 26, 46, 0.06);
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      padding: 10px 0;
+      padding-left: 24px;
+      position: relative;
+      color: #4a4a5e;
     }
-    .diff-list li:last-child { border-bottom: none; }
     .diff-list li::before {
       content: "✓";
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      background: rgba(251, 191, 36, 0.18);
-      color: #d97706;
-      border-radius: 50%;
-      font-weight: 600;
-      font-size: 13px;
-      flex-shrink: 0;
+      position: absolute;
+      left: 0;
+      color: #fbbf24;
+      font-weight: 700;
+      font-size: 14px;
     }
-    .footer {
-      margin-top: 80px;
+    .diff-list strong { color: #1a1a2e; margin-right: 8px; }
+
+    .quick {
+      background: #f9f9fb;
+      border: 1px solid rgba(20, 30, 50, 0.06);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+    pre {
+      font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      white-space: pre;
+    }
+    code { font-family: 'JetBrains Mono', Menlo, Consolas, monospace; }
+
+    .meta {
+      margin-top: 64px;
       padding-top: 24px;
-      border-top: 1px solid rgba(26, 26, 46, 0.08);
-      color: #6b7280;
+      border-top: 1px solid rgba(20, 30, 50, 0.08);
       font-size: 13px;
-      text-align: center;
+      color: #6b6b80;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    a { color: #d97706; text-decoration: none; font-weight: 500; }
-    a:hover { text-decoration: underline; }
+    a {
+      color: #d97706;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover { color: #b45309; text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Hermes Browser <span class="gold">V12</span></h1>
-    <p class="tagline">AI-powered Electron browser with MCP-First architecture for engineers. 10 LLM providers. Local-first + BYOK. Cowork for engineers. 49 MCP tools, 209+ tests, zero lock-in.</p>
+    <h1>Hermes Browser <span class="gold">V16</span></h1>
+    <p class="tagline">
+      AI-powered Electron browser with MCP-First architecture for engineers.
+      12 LLM providers · Local-first + BYOK · Cowork for Engineers.
+      56 MCP tools · 229 tests · zero lock-in.
+    </p>
 
     <div class="badges">
-      <span class="badge green">✓ 209 unit PASS</span>
+      <span class="badge green">✓ 157 unit PASS</span>
+      <span class="badge green">✓ 26 cowork tests</span>
       <span class="badge green">✓ 46/46 eval</span>
-      <span class="badge gold">49 MCP tools</span>
-      <span class="badge gold">10 LLM providers</span>
+      <span class="badge gold">56 MCP tools</span>
+      <span class="badge gold">12 LLM providers</span>
+      <span class="badge blue">12 Cowork tools</span>
       <span class="badge">AGPL-3</span>
-      <span class="badge">Electron 33 + WSL</span>
+      <span class="badge">Electron 33</span>
     </div>
 
     <h2>Three Differentiators</h2>
     <div class="grid">
       <div class="card">
-        <div class="num">49</div>
+        <div class="num">56</div>
         <h3>MCP-First Architecture</h3>
         <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge.</p>
       </div>
       <div class="card">
-        <div class="num">10</div>
+        <div class="num">12</div>
         <h3>Local-First + BYOK</h3>
-        <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS. Zero provider lock-in. 30-second swap.</p>
+        <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS, <strong>Naver HyperCLOVA X</strong>. Zero provider lock-in. 30-second swap.</p>
       </div>
       <div class="card">
-        <div class="num">5</div>
+        <div class="num">12</div>
         <h3>Cowork for Engineers</h3>
-        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform path handling (Windows/WSL).</p>
+        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch (SSE streaming).</p>
       </div>
     </div>
 
@@ -200,18 +233,18 @@
       <div class="quick">
         <p>Test &amp; run locally:</p>
         <pre><code>cd /mnt/c/Users/qqwer/Desktop/Hermes/hermes-browser
-npm test            # 209 unit + 46 eval (~3 sec)
+npm test            # 157 unit + 26 cowork + 46 eval (~3 sec)
 npm start           # Launch Electron (Miraecle window)</code></pre>
         <p style="margin-top: 12px;">Connect from external AI agents via HTTP bridge on port 8780:</p>
         <pre><code>TOKEN=$(curl -s http://127.0.0.1:8780/auth/token | jq -r .token)
-curl -X POST http://127.0.0.1:8780/mcp/tool \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"name":"cowork_list","args":{"dir":"demo-circuits"}}'</code></pre>
+curl -X POST http://127.0.0.1:8780/mcp/tool \\
+  -H "Authorization: Bearer ***" \\
+  -d '{"name":"cowork_list","args":{"path":"C:\\\\Users\\\\qqwer\\\\Hermes-Workspace\\\\demo-circuits"}}'</code></pre>
       </div>
     </div>
 
     <div class="section">
-      <h2>V12 Day-by-Day</h2>
+      <h2>V12 → V16 — 10-Day Sprint</h2>
       <ul class="diff-list">
         <li><strong>Day 1:</strong> OS light/dark sync (chrome.html follows OS theme via nativeTheme)</li>
         <li><strong>Day 2:</strong> BYOK + 10 LLM provider presets + test connection</li>
@@ -219,6 +252,10 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \
         <li><strong>Day 4:</strong> Cowork + 49 tools + UI spring motion + Glass</li>
         <li><strong>Day 5:</strong> Cross-platform path fix + 회로 demo (BD69730FV)</li>
         <li><strong>Day 6:</strong> Status bar + Bento + Theme toggle polish</li>
+        <li><strong>Day 7:</strong> Cmd+K command palette + Workspace switcher + Cowork caching</li>
+        <li><strong>Day 8:</strong> V14 UI polish (mesh bg + tab thumbnail) + Korean LLM (HyperCLOVA X)</li>
+        <li><strong>Day 9:</strong> Cowork v3 SSE streaming watch + Real tab thumbnails + Pages auto</li>
+        <li><strong>Day 10:</strong> V16 design polish (vertical tabs + split view + settings panel) + Cowork v4 (backup/exclude/diff)</li>
       </ul>
     </div>
 
@@ -226,41 +263,70 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \
       <h2>Architecture</h2>
       <div class="quick">
         <pre><code>┌────────────────────────────────────────────────────────┐
-│  Renderer (src/chrome.html)                            │
-│  - Bento empty state + Status bar + Tabs/sidebar      │
-│  - Light/dark theme (Space Grotesk + DM Sans)         │
-│  - Spring motion (--ease-spring)                      │
-└──────┬─────────────────────────────────────┬───────────┘
-       │ IPC                                  │
-┌──────▼─────────────┐            ┌───────────▼──────────┐
-│  Main Process      │            │  MCP Bridge :8780    │
-│  (main.js)         │◄──────────►│  49 tools exposed    │
-│  - nativeTheme     │            └──────────────────────┘
-│  - Cowork attach   │
-└──────┬─────────────┘
-       │
-┌──────▼─────────────────────┐
-│  AgentService              │
-│  - Plan / Mode / Approval  │
-│  - ReadingList / Workspace │
-│  - Cowork / Provider       │
-│  - Scheduler               │
-└────────────────────────────┘</code></pre>
+│  Renderer (src/chrome.html + renderer.js)              │
+│  - Bento + Glass (40px blur) + Status bar              │
+│  - Cmd+K command palette (16 commands)                 │
+│  - Settings panel + Vertical tabs + Split view         │
+│  - Tab thumbnail (real screenshot 480x300)             │
+└─────────────────────┬──────────────────────────────────┘
+                      │ IPC (preload.js)
+┌─────────────────────┴──────────────────────────────────┐
+│  Main Process (main.js + electron)                     │
+│  - Tab manager (WebContentsView per tab)               │
+│  - Native theme sync + Light/dark override             │
+│  - Capture page IPC + Set tab thumbnail                │
+└─────────────────────┬──────────────────────────────────┘
+                      │ Same process
+┌─────────────────────┴──────────────────────────────────┐
+│  MCP Bridge (mcp-bridge.js) — http://127.0.0.1:8780    │
+│  - 56 tools + Bearer auth + Rate limit                 │
+│  - SSE watch stream /cowork/watch/events               │
+└─────────────────────┬──────────────────────────────────┘
+                      │
+┌─────────────────────┴──────────────────────────────────┐
+│  Agent Service (src/agent/index.js)                    │
+│  - Browser agent (navigate/click/fill/screenshot)      │
+│  - Cowork (12 tools: list/read/grep/search/stat/       │
+│           watch/read_tail/diff/search_replace/         │
+│           watch_list/watch_unsubscribe/watch_events)   │
+│  - Reading list + Workspace + Session recorder         │
+└────────────────────────────────────────────────────────┘</code></pre>
       </div>
     </div>
 
     <div class="section">
-      <h2>GitHub &amp; Quick Links</h2>
-      <ul class="diff-list">
-        <li><a href="https://github.com/leemind-q/hermes-browser" target="_blank">github.com/leemind-q/hermes-browser</a> — Source code (AGPL-3)</li>
-        <li><a href="https://github.com/leemind-q/hermes-browser#readme" target="_blank">README</a> — Full documentation</li>
-        <li><a href="https://github.com/leemind-q/hermes-browser/actions" target="_blank">GitHub Actions</a> — Auto tests on push</li>
-        <li>MIT-derived safe fork of <a href="https://github.com/browseros-ai/BrowserOS" target="_blank">browserOS-ai/BrowserOS</a></li>
-      </ul>
+      <h2>Use Cases</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>🔌 회로 설계 워크플로우</h3>
+          <p>BOM.csv 자동 context · Gerber 검증 · datasheet cross-reference · 실시간 파일 watch</p>
+        </div>
+        <div class="card">
+          <h3>🤖 AI 에이전트 통합</h3>
+          <p>Claude Code / Cursor / Cline 등 MCP 지원 에이전트가 즉시 cowork 도구 사용 가능</p>
+        </div>
+        <div class="card">
+          <h3>🎨 프리미엄 UI</h3>
+          <p>AsIDE/Arc급 디자인 — Glass + Bento + Spring motion + Mesh background</p>
+        </div>
+        <div class="card">
+          <h3>🇰🇷 한국어 LLM</h3>
+          <p>Naver HyperCLOVA X + clovastudio — 한국어 특화 LLM 직접 통합</p>
+        </div>
+        <div class="card">
+          <h3>📡 실시간 watch</h3>
+          <p>SSE streaming watch — 파일 변경 즉시 에이전트에 알림</p>
+        </div>
+        <div class="card">
+          <h3>🔄 Lock-in 없음</h3>
+          <p>12 LLM providers — 30초 안에 swap, 데이터 외부 종속 0</p>
+        </div>
+      </div>
     </div>
 
-    <div class="footer">
-      <p>Hermes Browser V12 · Built by <a href="https://github.com/leemind-q">leemind-q</a> · Last updated 2026-07-11</p>
+    <div class="meta">
+      <span>version: v16.7 · Last updated 2026-07-11</span>
+      <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
 </body>
