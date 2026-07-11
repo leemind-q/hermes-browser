@@ -74,6 +74,9 @@ function bindEvents() {
   $('settingsClose').addEventListener('click', () => SettingsPopover.close());
   $('settingsCancel').addEventListener('click', () => SettingsPopover.close());
   $('settingsSave').addEventListener('click', saveSettings);
+  // V12: provider presets + test
+  $('providerSelect').addEventListener('change', applyProviderPreset);
+  if ($('providerTestBtn')) $('providerTestBtn').addEventListener('click', testProviderConnection);
   $('autoApproveToggle').addEventListener('change', async (e) => {
     state.autoApprove = e.target.checked;
     await window.hermes.settings.setAutoApprove(state.autoApprove);
@@ -149,12 +152,127 @@ function handleGlobalShortcuts(e) {
   if (e.key === 'F12') { e.preventDefault(); window.hermes.browser.devTools(); }
 }
 
+// V12: Provider presets — gatewayUrl + model 자동 채우기
+const PROVIDER_PRESETS = {
+  mock: {
+    gatewayUrl: 'https://opencode.ai/zen/go/v1',
+    model: 'deepseek-v4-flash',
+    apiKeyPlaceholder: '(any)',
+    description: 'Mock provider for testing — uses opencode-go proxy',
+  },
+  lmstudio: {
+    gatewayUrl: 'http://127.0.0.1:1234/v1',
+    model: 'qwen2.5-3b-instruct',
+    apiKeyPlaceholder: 'lm-studio (any)',
+    description: 'LM Studio local server (port 1234)',
+  },
+  ollama: {
+    gatewayUrl: 'http://127.0.0.1:11434/v1',
+    model: 'qwen2.5:3b',
+    apiKeyPlaceholder: 'ollama (any)',
+    description: 'Ollama local server (port 11434)',
+  },
+  openai: {
+    gatewayUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o-mini',
+    apiKeyPlaceholder: 'sk-...',
+    description: 'OpenAI cloud API',
+  },
+  anthropic: {
+    // Note: Anthropic native uses /v1/messages, NOT /chat/completions.
+    // Renderer strips the /v1 suffix before POST → URL becomes {base}/messages.
+    // See sendChat() below.
+    gatewayUrl: 'https://api.anthropic.com',
+    model: 'claude-3-5-haiku-20241022',
+    apiKeyPlaceholder: 'sk-ant-...',
+    description: 'Anthropic Claude (native /v1/messages)',
+    nativeAnthropic: true,
+  },
+  google: {
+    gatewayUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    model: 'gemini-2.5-flash',
+    apiKeyPlaceholder: 'AIza...',
+    description: 'Google Gemini (Native REST, NOT OpenAI-compat)',
+    nativeGoogle: true,
+  },
+  openrouter: {
+    gatewayUrl: 'https://openrouter.ai/api/v1',
+    model: 'deepseek/deepseek-chat-v3-0324',
+    apiKeyPlaceholder: 'sk-or-...',
+    description: 'OpenRouter aggregator',
+  },
+  minimax: {
+    // Memory patch: base_url must end with /anthropic (NOT /v1).
+    // Endpoint rewriting handled in sendChat via rewriteBaseUrl().
+    gatewayUrl: 'https://api.minimax.io/anthropic',
+    model: 'MiniMax-M3',
+    apiKeyPlaceholder: '(from HERMES env)',
+    description: 'MiniMax M3 (anthropic-compatible endpoint)',
+    needsAnthropicHeader: true,
+  },
+  browseros: {
+    gatewayUrl: 'https://browseros.com/api/v1',
+    model: 'kimi-k2-0711',
+    apiKeyPlaceholder: '(BYOK or OAuth)',
+    description: 'BrowserOS — open-source Chromium AI browser',
+  },
+  'openai-compatible': {
+    gatewayUrl: '',
+    model: '',
+    apiKeyPlaceholder: '(per provider)',
+    description: 'Custom OpenAI-compatible endpoint',
+  },
+};
+
+// V12: Test provider connection
+async function testProviderConnection() {
+  const provider = $('providerSelect').value;
+  const url = $('gatewayInput').value.trim();
+  const apiKey = $('apiKeyInput').value.trim();
+  const model = $('modelInput').value.trim();
+  $('connText').textContent = `Testing ${provider}...`;
+  $('connText').title = 'Testing connection';
+  try {
+    const result = await window.hermes.browser.testProvider({ provider, gatewayUrl: url, apiKey, model });
+    if (result.ok) {
+      $('connText').textContent = `${provider} ✓ ${result.model || ''}`;
+      $('connText').title = `Connected: ${result.model || ''} (${result.latencyMs || 0}ms)`;
+      log('provider-test', `OK ${provider} ${result.latencyMs || 0}ms`);
+    } else {
+      $('connText').textContent = `${provider} ✗ ${result.error || 'failed'}`;
+      $('connText').title = result.error || 'failed';
+      log('provider-test', `FAIL ${provider}: ${result.error}`, 'error');
+    }
+  } catch (e) {
+    $('connText').textContent = `${provider} ✗ ${e.message}`;
+    log('provider-test', `EXC ${provider}: ${e.message}`, 'error');
+  }
+}
+
+// V12: Auto-fill gatewayUrl + model when provider changes
+function applyProviderPreset() {
+  const provider = $('providerSelect').value;
+  const preset = PROVIDER_PRESETS[provider];
+  if (!preset) return;
+  $('gatewayInput').value = preset.gatewayUrl;
+  $('modelInput').value = preset.model;
+  const desc = preset.description;
+  $('providerDesc').textContent = desc;
+  $('apiKeyInput').placeholder = preset.apiKeyPlaceholder || '';
+}
+
 async function loadSettings() {
   try {
     state.settings = { ...state.settings, ...(await window.hermes.settings.get()) };
     $('providerSelect').value = state.settings.provider || 'mock';
     $('gatewayInput').value = state.settings.gatewayUrl || '';
     $('modelInput').value = state.settings.model || '';
+    $('apiKeyInput').value = state.settings.apiKey || '';
+    applyProviderPreset();
+    // After preset, restore user values
+    $('gatewayInput').value = state.settings.gatewayUrl || '';
+    $('modelInput').value = state.settings.model || '';
+    $('apiKeyInput').value = state.settings.apiKey || '';
     $('connText').textContent = `${state.settings.provider || 'mock'} · ${state.settings.model || 'model'}`;
     $('connText').title = `${state.settings.provider || 'mock'} · ${state.settings.gatewayUrl || ''} · ${state.settings.model || 'model'}`;
   } catch (e) { log('settings', e.message, 'error'); }
@@ -653,14 +771,82 @@ ${memorySnippets.length ? 'Memory:\n' + memorySnippets.join('\n---\n') : ''}`;
   addMessage('assistant', '최대 실행 횟수 완료. 필요하면 추가 요청해주세요.');
 }
 
+// V12: Provider-aware LLM call — dispatches to native or OpenAI-compat based on provider
 async function callOpenAICompatible(messages) {
+  const provider = state.settings.provider || 'mock';
+  const preset = PROVIDER_PRESETS[provider] || {};
   const base = state.settings.gatewayUrl.replace(/\/+$/, '');
+  const model = state.settings.model || preset.model || 'deepseek-v4-flash';
+  const apiKey = state.settings.apiKey || '';
+
+  // === Native Anthropic endpoint (used by MiniMax too via /anthropic) ===
+  if (preset.nativeAnthropic || provider === 'minimax' || provider === 'anthropic') {
+    // Anthropic native: POST {base}/v1/messages
+    // base = https://api.anthropic.com or https://api.minimax.io/anthropic
+    // Strip trailing /v1 or /anthropic then build {base}/v1/messages
+    let url;
+    if (provider === 'minimax') {
+      // MiniMax: base already ends with /anthropic. Strip it, then add /v1/messages
+      const stripped = base.replace(/\/anthropic$/, '');
+      url = `${stripped}/v1/messages`;
+    } else {
+      // Anthropic: base = https://api.anthropic.com. Add /v1/messages
+      url = `${base}/v1/messages`;
+    }
+    log('llm', `POST ${url} (anthropic-native) model=${model}`);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',  // browser-side call
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2048,
+        messages: messages.filter(m => m.role !== 'system'),
+        system: messages.find(m => m.role === 'system')?.content || undefined,
+      }),
+    });
+    if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`Anthropic ${res.status}: ${body.slice(0, 200)}`); }
+    const json = await res.json();
+    return json.content?.[0]?.text || '';
+  }
+
+  // === Native Google Gemini REST ===
+  if (preset.nativeGoogle || provider === 'google') {
+    // Google: POST {base}/models/{model}:generateContent?key={apiKey}
+    const url = `${base}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    log('llm', `POST ${url} (google-native) model=${model}`);
+    // Convert OpenAI messages → Google contents
+    const systemMsg = messages.find(m => m.role === 'system')?.content;
+    const contents = messages.filter(m => m.role !== 'system').map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content || '' }],
+    }));
+    const body = { contents, generationConfig: { maxOutputTokens: 2048 } };
+    if (systemMsg) body.systemInstruction = { parts: [{ text: systemMsg }] };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`Google ${res.status}: ${body.slice(0, 200)}`); }
+    const json = await res.json();
+    return json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  // === OpenAI-compatible (default) ===
   const url = base + '/chat/completions';
-  log('llm', `POST ${url} model=${state.settings.model}`);
+  log('llm', `POST ${url} model=${model}`);
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.settings.apiKey}` },
-    body: JSON.stringify({ model: state.settings.model || 'deepseek-v4-flash', messages, stream: false, max_tokens: 2048 }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ model, messages, stream: false, max_tokens: 2048 }),
   });
   if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`Provider ${res.status}: ${body.slice(0, 200)}`); }
   const json = await res.json();

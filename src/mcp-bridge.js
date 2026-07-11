@@ -250,7 +250,79 @@ function listTools() {
     { name: 'browser_check_injection', description: 'Check for prompt injection', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
     { name: 'browser_get_mode', description: 'Get agent mode', inputSchema: { type: 'object' } },
     { name: 'browser_set_mode', description: 'Set agent mode', inputSchema: { type: 'object', properties: { mode: { type: 'string', enum: ['ask', 'assist', 'agent', 'auto'] } }, required: ['mode'] } },
+    { name: 'browser_provider_list', description: 'List all supported LLM provider presets (mock, lmstudio, ollama, openai, anthropic, google, openrouter, minimax, browseros, openai-compatible).', inputSchema: { type: 'object' } },
+    { name: 'browser_test_provider', description: 'Test connection to a provider. Verifies reachability, returns latency in ms. Supports OpenAI-compat, Anthropic-native, and Google-native endpoints.', inputSchema: { type: 'object', properties: { provider: { type: 'string' }, gatewayUrl: { type: 'string' }, apiKey: { type: 'string' }, model: { type: 'string' } }, required: ['provider', 'gatewayUrl'] } },
   ];
+}
+
+// V12: Provider presets + test — dispatched via MCP
+async function getProviderPresets() {
+  return [
+    { id: 'mock', gatewayUrl: 'https://opencode.ai/zen/go/v1', model: 'deepseek-v4-flash', description: 'Mock — uses opencode-go proxy' },
+    { id: 'lmstudio', gatewayUrl: 'http://127.0.0.1:1234/v1', model: 'qwen2.5-3b-instruct', description: 'LM Studio local (:1234)' },
+    { id: 'ollama', gatewayUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:3b', description: 'Ollama local (:11434)' },
+    { id: 'openai', gatewayUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', description: 'OpenAI cloud' },
+    { id: 'anthropic', gatewayUrl: 'https://api.anthropic.com', model: 'claude-3-5-haiku-20241022', description: 'Anthropic native /v1/messages', nativeAnthropic: true },
+    { id: 'google', gatewayUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash', description: 'Google Gemini native REST', nativeGoogle: true },
+    { id: 'openrouter', gatewayUrl: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat-v3-0324', description: 'OpenRouter aggregator' },
+    { id: 'minimax', gatewayUrl: 'https://api.minimax.io/anthropic', model: 'MiniMax-M3', description: 'MiniMax M3 (anthropic-compat)', nativeAnthropic: true },
+    { id: 'browseros', gatewayUrl: 'https://browseros.com/api/v1', model: 'kimi-k2-0711', description: 'BrowserOS — open-source Chromium AI browser' },
+    { id: 'openai-compatible', gatewayUrl: '', model: '', description: 'Custom OpenAI-compatible endpoint' },
+  ];
+}
+
+async function testProviderConnection(args) {
+  const { provider, gatewayUrl, apiKey, model } = args || {};
+  if (!provider || !gatewayUrl) return { ok: false, error: 'provider and gatewayUrl required' };
+  const start = Date.now();
+  try {
+    const base = gatewayUrl.replace(/\/+$/, '');
+    const presets = await getProviderPresets();
+    const preset = presets.find(p => p.id === provider) || {};
+    let url, headers, body;
+    if (preset.nativeAnthropic || provider === 'anthropic' || provider === 'minimax') {
+      const stripped = provider === 'minimax' ? base.replace(/\/anthropic$/, '') : base;
+      url = `${stripped}/v1/messages`;
+      headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey || '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      };
+      body = JSON.stringify({
+        model: model || preset.model || 'claude-3-5-haiku-20241022',
+        max_tokens: 4,
+        messages: [{ role: 'user', content: 'hi' }],
+      });
+    } else if (preset.nativeGoogle || provider === 'google') {
+      url = `${base}/models/${encodeURIComponent(model || preset.model || 'gemini-2.5-flash')}:generateContent?key=${encodeURIComponent(apiKey || '')}`;
+      headers = { 'Content-Type': 'application/json' };
+      body = JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+        generationConfig: { maxOutputTokens: 4 },
+      });
+    } else {
+      url = `${base}/chat/completions`;
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey || ''}`,
+      };
+      body = JSON.stringify({
+        model: model || preset.model || 'deepseek-v4-flash',
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 4,
+      });
+    }
+    const res = await fetch(url, { method: 'POST', headers, body });
+    const latencyMs = Date.now() - start;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return { ok: false, error: `${res.status} ${errText.slice(0, 150)}`, latencyMs };
+    }
+    return { ok: true, latencyMs, model: model || preset.model, provider };
+  } catch (e) {
+    return { ok: false, error: e.message, latencyMs: Date.now() - start };
+  }
 }
 
 async function dispatchTool(agent, name, args) {
@@ -301,6 +373,8 @@ async function dispatchTool(agent, name, args) {
     case 'credential_save': return agent.saveCredential(args.domain, args.username, args.password);
     case 'credential_list': return agent.listCredentials();
     case 'credential_remove': return agent.removeCredential(args.domain);
+    case 'browser_provider_list': return await getProviderPresets();
+    case 'browser_test_provider': return await testProviderConnection(args);
     default: throw new Error(`Unknown tool: ${name}`);
   }
 }

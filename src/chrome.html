@@ -803,7 +803,24 @@
     <div class="popover-section"><div class="popover-label">화면 설정</div><div class="settings-menu" id="settingsDisplayList"></div></div>
     <div class="popover-section"><div class="popover-label">브라우저 데이터</div><div class="settings-menu" id="settingsDataList"></div></div>
     <div class="popover-section"><div class="popover-label">AI 연결</div><div class="popover-fields">
-      <div class="field"><label>Provider</label><select id="providerSelect"><option value="mock">Mock Provider</option><option value="openai-compatible">OpenAI-compatible</option></select></div>
+      <div class="field"><label>Provider</label><select id="providerSelect">
+  <option value="mock">Mock Provider (default)</option>
+  <option value="lmstudio">LM Studio (local, :1234)</option>
+  <option value="ollama">Ollama (local, :11434)</option>
+  <option value="openai">OpenAI (api.openai.com)</option>
+  <option value="anthropic">Anthropic Claude (api.anthropic.com)</option>
+  <option value="google">Google Gemini (generativelanguage.googleapis.com)</option>
+  <option value="openrouter">OpenRouter (openrouter.ai)</option>
+  <option value="minimax">MiniMax M3 (api.minimax.io)</option>
+  <option value="browseros">BrowserOS (browseros.com/api)</option>
+  <option value="openai-compatible">OpenAI-compatible (custom URL)</option>
+</select>
+  <div id="providerDesc" class="small-muted" style="margin-top:4px;line-height:1.4">Select a provider — gateway URL and model auto-fill.</div>
+</div>
+      <div class="field" style="display:flex;gap:6px">
+        <button class="secondary" id="providerTestBtn" style="flex:1;font-size:11px;padding:6px 8px">Test connection</button>
+        <span id="connStatus" class="small-muted" style="flex:1;text-align:right;line-height:28px"></span>
+      </div>
       <div class="field"><label>Gateway URL</label><input id="gatewayInput" placeholder="https://.../v1" /></div>
       <div class="field"><label>API Key</label><input id="apiKeyInput" type="password" placeholder="저장된 키가 있으면 비워둬도 됩니다" /></div>
       <div class="field"><label>Model</label><input id="modelInput" placeholder="deepseek-v4-flash" /></div>

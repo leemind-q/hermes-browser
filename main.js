@@ -1075,6 +1075,90 @@ ipcMain.handle('settings:set', (_e, settings) => {
   return { ok: true };
 });
 
+// V12: Provider presets (mirror of renderer.js + bridge)
+const PROVIDER_PRESETS = {
+  mock: { gatewayUrl: 'https://opencode.ai/zen/go/v1', model: 'deepseek-v4-flash', description: 'Mock — uses opencode-go proxy' },
+  lmstudio: { gatewayUrl: 'http://127.0.0.1:1234/v1', model: 'qwen2.5-3b-instruct', description: 'LM Studio local (:1234)' },
+  ollama: { gatewayUrl: 'http://127.0.0.1:11434/v1', model: 'qwen2.5:3b', description: 'Ollama local (:11434)' },
+  openai: { gatewayUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', description: 'OpenAI cloud' },
+  anthropic: { gatewayUrl: 'https://api.anthropic.com', model: 'claude-3-5-haiku-20241022', description: 'Anthropic native', nativeAnthropic: true },
+  google: { gatewayUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash', description: 'Google Gemini native REST', nativeGoogle: true },
+  openrouter: { gatewayUrl: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat-v3-0324', description: 'OpenRouter aggregator' },
+  minimax: { gatewayUrl: 'https://api.minimax.io/anthropic', model: 'MiniMax-M3', description: 'MiniMax M3 (anthropic-compat)', nativeAnthropic: true },
+  browseros: { gatewayUrl: 'https://browseros.com/api/v1', model: 'kimi-k2-0711', description: 'BrowserOS — open-source Chromium AI browser' },
+  'openai-compatible': { gatewayUrl: '', model: '', description: 'Custom OpenAI-compatible endpoint' },
+};
+
+ipcMain.handle('browser:providerList', () => {
+  return Object.entries(PROVIDER_PRESETS).map(([id, p]) => ({ id, ...p }));
+});
+
+ipcMain.handle('browser:testProvider', async (_e, args) => {
+  const start = Date.now();
+  const { provider, gatewayUrl, apiKey, model } = args || {};
+  if (!provider || !gatewayUrl) return { ok: false, error: 'provider and gatewayUrl required' };
+  try {
+    const base = gatewayUrl.replace(/\/+$/, '');
+    const preset = PROVIDER_PRESETS[provider] || {};
+    let url, headers, body;
+    if (provider === 'anthropic') {
+      url = `${base}/v1/messages`;
+      headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey || '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      };
+      body = JSON.stringify({
+        model: model || preset.model || 'claude-3-5-haiku-20241022',
+        max_tokens: 4,
+        messages: [{ role: 'user', content: 'hi' }],
+      });
+    } else if (provider === 'minimax') {
+      // Per Hermes memory: base ends with /anthropic — that IS the endpoint
+      url = `${base}`;
+      headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey || '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      };
+      body = JSON.stringify({
+        model: model || preset.model || 'MiniMax-M3',
+        max_tokens: 4,
+        messages: [{ role: 'user', content: 'hi' }],
+      });
+    } else if (preset.nativeGoogle || provider === 'google') {
+      url = `${base}/models/${encodeURIComponent(model || preset.model || 'gemini-2.5-flash')}:generateContent?key=${encodeURIComponent(apiKey || '')}`;
+      headers = { 'Content-Type': 'application/json' };
+      body = JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+        generationConfig: { maxOutputTokens: 4 },
+      });
+    } else {
+      url = `${base}/chat/completions`;
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey || ''}`,
+      };
+      body = JSON.stringify({
+        model: model || preset.model || 'deepseek-v4-flash',
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 4,
+      });
+    }
+    const res = await fetch(url, { method: 'POST', headers, body });
+    const latencyMs = Date.now() - start;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return { ok: false, error: `${res.status} ${errText.slice(0, 150)}`, latencyMs };
+    }
+    return { ok: true, latencyMs, model, provider };
+  } catch (e) {
+    return { ok: false, error: e.message, latencyMs: Date.now() - start };
+  }
+});
+
 ipcMain.handle('memory:get', (_e, type) => {
   const allowed = new Set(['profile', 'preferences', 'tasks', 'workspace']);
   const name = allowed.has(type) ? type : 'workspace';
