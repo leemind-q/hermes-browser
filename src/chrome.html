@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-        :root {
+            /* === Default = light tokens === */
+    :root {
       /* === Layout — high-density compact panels === */
       --left: 144px; --right: 248px; --top: 54px;
       --gutter: 12px; --gap: 10px; --bottom: 12px;
-      /* Sidebar spacing */
       --sb-pad: 10px; --sb-gap: 10px; --sb-sec-gap: 16px;
       --sb-row-h: 28px; --sb-card-pad: 8px 10px;
       --sb-title: 11px; --sb-body: 11px; --sb-muted: 10px;
@@ -29,7 +29,7 @@
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
 
-      /* === Color System: Light + Gold === */
+      /* === Color tokens — LIGHT theme (default) === */
       --bg: #f5f5f7;
       --bg-elevated: #ffffff;
       --bg-subtle: #fafafa;
@@ -41,7 +41,7 @@
       --border: rgba(26, 26, 46, 0.08);
       --border-strong: rgba(26, 26, 46, 0.14);
 
-      /* Gold accent (AsIDE quality tone) */
+      /* Gold accent (premium tone, both themes) */
       --gold: #fbbf24;
       --gold-soft: rgba(251, 191, 36, 0.12);
       --gold-hover: rgba(251, 191, 36, 0.22);
@@ -57,7 +57,7 @@
       --warn: #f59e0b;
       --success: #22c55e;
 
-      /* === Glass Material System — premium light glass === */
+      /* === Glass Material — LIGHT === */
       --glass-bg: rgba(255, 255, 255, 0.72);
       --glass-bg-strong: rgba(255, 255, 255, 0.88);
       --glass-bg-edge: rgba(255, 255, 255, 0.95);
@@ -71,12 +71,21 @@
       --glass-refraction-violet: rgba(151, 128, 255, 0.05);
       --glass-refraction-gold: rgba(251, 191, 36, 0.05);
 
-      /* Popover glass — strongest */
       --glass-pop-bg: rgba(255, 255, 255, 0.92);
       --glass-pop-blur: blur(28px) saturate(180%) brightness(1.05);
       --glass-pop-shadow: 0 24px 64px rgba(20, 30, 50, 0.18), 0 8px 24px rgba(20, 30, 50, 0.08);
 
-      /* Radius scale */
+      /* === Motion: spring/쫀득 === */
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+      --ease-spring-soft: cubic-bezier(.22, 1.3, .36, 1);
+      --ease-out: cubic-bezier(.2, .9, .2, 1);
+      --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+      --anim-fast: .14s var(--ease-spring);
+      --anim: .22s var(--ease-spring-soft);
+      --anim-slow: .42s var(--ease-out);
+      --anim-spring: .55s var(--ease-spring);
+
+      /* Radius */
       --radius-webview: 16px;
       --radius-sidebar: 18px;
       --radius-card: 14px;
@@ -92,12 +101,90 @@
       --sp-xs: 4px; --sp-sm: 6px; --sp-md: 8px; --sp-lg: 12px; --sp-xl: 16px;
       --btn-size: 32px; --icon-size: 16px;
       --btn-gap: 6px; --group-gap: 10px;
-      --ease: cubic-bezier(.2, .9, .2, 1);
-      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
-      --anim: .18s ease-out;
-      --anim-slow: .32s cubic-bezier(.2, .9, .2, 1);
 
-      /* Force light scheme */
+      color-scheme: light;
+    }
+
+    /* === Dark theme overrides (OS dark mode or manual toggle) === */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f0f1e;
+        --bg-elevated: #1a1a2e;
+        --bg-subtle: #14141f;
+        --bg-panel: rgba(20, 20, 35, 0.78);
+        --ink: #f5f5f7;
+        --ink-strong: #ffffff;
+        --muted: rgba(245, 245, 247, 0.7);
+        --faint: rgba(245, 245, 247, 0.45);
+        --border: rgba(245, 245, 247, 0.08);
+        --border-strong: rgba(245, 245, 247, 0.14);
+
+        --gold: #fbbf24;
+        --gold-soft: rgba(251, 191, 36, 0.18);
+        --gold-hover: rgba(251, 191, 36, 0.28);
+        --gold-glow: 0 0 28px rgba(251, 191, 36, 0.45);
+
+        --glass-bg: rgba(26, 26, 46, 0.72);
+        --glass-bg-strong: rgba(26, 26, 46, 0.88);
+        --glass-bg-edge: rgba(26, 26, 46, 0.95);
+        --glass-blur: blur(28px) saturate(150%) brightness(0.92);
+        --glass-edge-light: rgba(245, 245, 247, 0.1);
+        --glass-edge-dark: rgba(0, 0, 0, 0.5);
+        --glass-inner-highlight: inset 0 1px 0 rgba(245, 245, 247, 0.12), inset 1px 0 0 rgba(245, 245, 247, 0.06);
+        --glass-inner-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2), var(--glass-inner-highlight), var(--glass-inner-shadow);
+        --glass-refraction-cyan: rgba(91, 200, 255, 0.08);
+        --glass-refraction-violet: rgba(151, 128, 255, 0.07);
+        --glass-refraction-gold: rgba(251, 191, 36, 0.1);
+
+        --glass-pop-bg: rgba(26, 26, 46, 0.92);
+        --glass-pop-blur: blur(28px) saturate(150%) brightness(0.95);
+        --glass-pop-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.3);
+
+        color-scheme: dark;
+      }
+    }
+
+    /* Manual override via data-theme="dark" (independent of OS) */
+    :root[data-theme="dark"] {
+      --bg: #0f0f1e;
+      --bg-elevated: #1a1a2e;
+      --bg-subtle: #14141f;
+      --bg-panel: rgba(20, 20, 35, 0.78);
+      --ink: #f5f5f7;
+      --ink-strong: #ffffff;
+      --muted: rgba(245, 245, 247, 0.7);
+      --faint: rgba(245, 245, 247, 0.45);
+      --border: rgba(245, 245, 247, 0.08);
+      --border-strong: rgba(245, 245, 247, 0.14);
+
+      --gold: #fbbf24;
+      --gold-soft: rgba(251, 191, 36, 0.18);
+      --gold-hover: rgba(251, 191, 36, 0.28);
+      --gold-glow: 0 0 28px rgba(251, 191, 36, 0.45);
+
+      --glass-bg: rgba(26, 26, 46, 0.72);
+      --glass-bg-strong: rgba(26, 26, 46, 0.88);
+      --glass-bg-edge: rgba(26, 26, 46, 0.95);
+      --glass-blur: blur(28px) saturate(150%) brightness(0.92);
+      --glass-edge-light: rgba(245, 245, 247, 0.1);
+      --glass-edge-dark: rgba(0, 0, 0, 0.5);
+      --glass-inner-highlight: inset 0 1px 0 rgba(245, 245, 247, 0.12), inset 1px 0 0 rgba(245, 245, 247, 0.06);
+      --glass-inner-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2), var(--glass-inner-highlight), var(--glass-inner-shadow);
+      --glass-refraction-cyan: rgba(91, 200, 255, 0.08);
+      --glass-refraction-violet: rgba(151, 128, 255, 0.07);
+      --glass-refraction-gold: rgba(251, 191, 36, 0.1);
+
+      --glass-pop-bg: rgba(26, 26, 46, 0.92);
+      --glass-pop-blur: blur(28px) saturate(150%) brightness(0.95);
+      --glass-pop-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.3);
+
+      color-scheme: dark;
+    }
+
+    /* Manual light override (force light regardless of OS) */
+    :root[data-theme="light"] {
       color-scheme: light;
     }
     * { box-sizing: border-box; }
@@ -105,28 +192,24 @@
       margin: 0; width: 100%; height: 100%; overflow: hidden; 
       color: var(--ink); 
       background: var(--bg); 
-      color-scheme: light;
+      transition: background var(--anim-slow), color var(--anim-slow);
     }
-    html { background: #f5f5f7; }
     body::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
-        radial-gradient(1100px 700px at 8% 5%, rgba(251, 191, 36, 0.06), transparent 55%),
-        radial-gradient(900px 600px at 92% 95%, rgba(91, 200, 255, 0.05), transparent 50%),
-        radial-gradient(700px 500px at 50% 50%, rgba(251, 191, 36, 0.025), transparent 60%),
-        linear-gradient(155deg, #f5f5f7 0%, #ffffff 50%, #fafafa 100%);
+        radial-gradient(1100px 700px at 8% 5%, var(--glass-refraction-gold), transparent 55%),
+        radial-gradient(900px 600px at 92% 95%, var(--glass-refraction-cyan), transparent 50%),
+        radial-gradient(700px 500px at 50% 50%, var(--glass-refraction-gold), transparent 60%),
+        linear-gradient(155deg, var(--bg) 0%, var(--bg-elevated) 50%, var(--bg-subtle) 100%);
+      transition: background var(--anim-slow);
     }
     body::after {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.04), transparent 40%);
+      background: radial-gradient(circle at 50% 0%, var(--glass-refraction-gold), transparent 40%);
+      transition: background var(--anim-slow);
     }
     button, input, textarea, select { font: inherit; }
     button { border: 0; color: inherit; cursor: pointer; }
-    /* Strong !important force light for any chromium auto-dark override */
-    html, body, *:not(input):not(textarea):not(select) {
-      -webkit-color-scheme: light;
-      color-scheme: light;
-    }
     .app { position: relative; width: 100vw; height: 100vh; }
 
     /* === Animations === */
@@ -578,15 +661,19 @@
 .save-toast.error { color: #ff4d6d; }
 .save-toast.info { color: #5b8bf7; }
 
-    /* === NUCLEAR LIGHT OVERRIDE — force light on all chromium dark-mode artifacts === */
-    html, body, .app, body::before, body::after {
-      background-color: #f5f5f7 !important;
-      background-image: none !important;
-      filter: none !important;
-    }
-    /* If chromium paints webview bg dark, this stops it */
+    /* === Theme-aware base === */
+    /* Color scheme metadata — set by main.js via data-theme */
+    html { color-scheme: light dark; }
+
+    /* Webview bg follows theme so the in-page bg looks like the chrome shell */
     webview, .webview-container, [class*="webview"] {
-      background-color: #f5f5f7 !important;
+      background-color: var(--bg);
+    }
+
+    /* Smooth cross-fade on theme change */
+    *, *::before, *::after {
+      transition-property: background-color, color, border-color, box-shadow;
+      transition-duration: var(--anim);
     }
 </style>
 </head>

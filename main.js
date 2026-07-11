@@ -1,7 +1,7 @@
 // main.js — Hermes Browser v1
 // Clean Electron + WebContentsView browser shell with agent tool bridge.
 
-const { app, BrowserWindow, WebContentsView, ipcMain, shell, safeStorage, screen } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, shell, safeStorage, screen, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { AgentService } = require('./src/agent');
@@ -267,14 +267,16 @@ if (process.env.HERMES_MCP_BRIDGE !== 'off') {
   }
 }
 
-// Force Chromium to use light color scheme regardless of OS setting
-const { nativeTheme } = require('electron');
-app.commandLine.appendSwitch('disable-features', 'WebContentsForceDark,ForceDark,AutoDarkMode,WebUIDarkMode');
-app.commandLine.appendSwitch('force-prefers-color-scheme', 'light');
+// Let OS drive theme via nativeTheme; toggleDarkMode is the manual override
+app.commandLine.appendSwitch('disable-features', 'WebContentsForceDark,ForceDark');
 app.whenReady().then(async () => {
-  // Belt-and-suspenders: force light theme at Electron API level
-  nativeTheme.themeSource = 'light';
+  // Belt-and-suspenders: don't override themeSource — let OS drive chrome.html via sync
+  // (User can still manually override via toggleDarkMode 3-state)
+  nativeTheme.themeSource = 'system';
   createWindow();
+  // Sync OS theme to chrome.html once renderer is ready
+  setTimeout(syncNativeThemeToUI, 1500);
+  nativeTheme.on('updated', syncNativeThemeToUI);
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
@@ -1440,25 +1442,43 @@ ipcMain.handle('browser:toggleReadMode', async () => {
 
 // Dark mode for websites — inverts page colors
 ipcMain.handle('browser:toggleDarkMode', async () => {
+  // V11+: 3-state theme (auto → light → dark → auto)
   const view = getActiveView();
   if (!view) return { ok: false };
   const result = await view.webContents.executeJavaScript(`(() => {
-    if (document.getElementById('miracle-darkmode')) {
-      document.getElementById('miracle-darkmode').remove();
-      return { ok: true, enabled: false };
+    const root = document.documentElement;
+    const cur = root.dataset.theme || 'auto';
+    const next = cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto';
+    if (next === 'auto') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', next);
     }
-    const style = document.createElement('style');
-    style.id = 'miracle-darkmode';
-    style.textContent = \`
-      html { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.92) !important; }
-      img, video, picture, canvas, svg, iframe { filter: invert(1) hue-rotate(180deg) !important; }
-      * { text-shadow: none !important; box-shadow: none !important; }
-    \`;
-    document.head.appendChild(style);
-    return { ok: true, enabled: true };
+    return { ok: true, theme: next };
   })()`);
   return result;
 });
+
+// Sync OS theme changes to chrome.html data-theme
+// nativeTheme updates when OS color scheme changes (e.g. Windows dark→light)
+function syncNativeThemeToUI() {
+  try {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const shouldUseDark = nativeTheme.shouldUseDarkColors;
+    // Sync to chrome.html shell (mainWindow.webContents)
+    mainWindow.webContents.executeJavaScript(`(() => {
+      try {
+        const root = document.documentElement;
+        if (!root.dataset.theme) {
+          // auto mode: set data-theme explicitly so chrome.html follows OS
+          const theme = ${shouldUseDark ? "'dark'" : "'light'"};
+          root.setAttribute('data-theme', theme);
+          root.style.colorScheme = theme;
+        }
+      } catch (e) {}
+    })()`).catch(() => null);
+  } catch (e) {}
+}
 
 // Cookie consent auto-dismiss
 ipcMain.handle('browser:dismissCookieConsent', async () => {
