@@ -14,6 +14,7 @@ class PersistenceStore {
   constructor({ userDataPath, maskSecrets }) {
     if (!userDataPath) throw new Error('PersistenceStore: userDataPath required');
     this.userDataPath = userDataPath;
+    this.dir = userDataPath;  // legacy alias used by KV store
     this.maskSecrets = maskSecrets || (v => v);
     this.actionLog = [];
     this.sessionMemory = [];
@@ -39,6 +40,42 @@ class PersistenceStore {
 
   _loadActionLog() {
     this.actionLog = this._readJSON(path.join(this.userDataPath, 'action-log.json'), []) || [];
+  }
+
+  // ============ Generic key-value store ============
+  // Use for misc persistent settings/workspaces/etc. NOT for sensitive data.
+  _kvPath() { return path.join(this.dir, 'kv.json'); }
+
+  _readKV() {
+    return this._readJSON(this._kvPath(), {});
+  }
+
+  _writeKV(data) {
+    this._writeJSON(this._kvPath(), data);
+  }
+
+  set(key, value) {
+    const kv = this._readKV();
+    kv[key] = { value, savedAt: new Date().toISOString() };
+    this._writeKV(kv);
+  }
+
+  get(key) {
+    const kv = this._readKV();
+    return kv[key]?.value || null;
+  }
+
+  list(prefix = '') {
+    const kv = this._readKV();
+    return Object.keys(kv).filter(k => k.startsWith(prefix));
+  }
+
+  remove(key) {
+    const kv = this._readKV();
+    if (!(key in kv)) return false;
+    delete kv[key];
+    this._writeKV(kv);
+    return true;
   }
 
   appendAction(entry) {

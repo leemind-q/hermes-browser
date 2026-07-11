@@ -1,0 +1,31 @@
+{
+  "name": "reading-list",
+  "description": "Save page to offline reading list, list, mark read, cleanup.",
+  "setup": {},
+  "steps": [
+    {
+      "action": "rl_add",
+      "expect": "async (response, ctx) => { const item = await ctx.agent.readingListAdd({ url: 'https://example.com/news/1', title: 'News 1' }); return [ {ok: item.id.startsWith('r-'), message: 'id assigned'}, {ok: item.url === 'https://example.com/news/1', message: 'url stored'}, {ok: item.read === false, message: 'initially unread'} ]; }"
+    },
+    {
+      "action": "rl_dedupe",
+      "expect": "async (response, ctx) => { const a = await ctx.agent.readingListAdd({ url: 'https://dedup.com', title: 'A' }); const b = await ctx.agent.readingListAdd({ url: 'https://dedup.com', title: 'B' }); return [ {ok: a.id === b.id, message: 'same id for duplicate URL'}, {ok: a.title === 'B', message: 'updated to new title'} ]; }"
+    },
+    {
+      "action": "rl_list",
+      "expect": "async (response, ctx) => { await ctx.agent.readingListAdd({ url: 'https://list.com', tags: ['work'] }); const r = await ctx.agent.readingListList({ tag: 'work' }); return [ {ok: r.ok === true, message: 'list ok'}, {ok: r.count >= 1, message: 'has work-tagged items'}, {ok: r.items.length === r.count, message: 'count matches items'} ]; }"
+    },
+    {
+      "action": "rl_mark_read",
+      "expect": "async (response, ctx) => { const item = await ctx.agent.readingListAdd({ url: 'https://markread.com' }); const r = await ctx.agent.readingListMarkRead({ id: item.id }); return [ {ok: r.ok === true, message: 'mark read returned ok'}, {ok: r.item.read === true, message: 'item marked read'} ]; }"
+    },
+    {
+      "action": "rl_unread_filter",
+      "expect": "async (response, ctx) => { await ctx.agent.readingListAdd({ url: 'https://filter1.com' }); await ctx.agent.readingListAdd({ url: 'https://filter2.com' }); const r = await ctx.agent.readingListList({ unreadOnly: true }); return [ {ok: Array.isArray(r.items), message: 'items is array'}, {ok: r.items.every(i => i.read === false), message: 'all items are unread'} ]; }"
+    },
+    {
+      "action": "rl_cleanup",
+      "expect": "async (response, ctx) => { const item = await ctx.agent.readingListAdd({ url: 'https://cleanup.com' }); item.addedAt = new Date(Date.now() - 100 * 86400000).toISOString(); item.read = true; item.readAt = new Date().toISOString(); await ctx.agent._readingList().save(); const r = await ctx.agent.readingListCleanup({ maxAgeDays: 30 }); return [ {ok: r.ok === true, message: 'cleanup ok'}, {ok: r.removed >= 1, message: 'removed at least 1 old read item'} ]; }"
+    }
+  ]
+}

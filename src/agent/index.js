@@ -7,6 +7,7 @@
 // run inside Electron AND inside a standalone MCP server process.
 
 const path = require('path');
+const { ReadingList } = require('./reading-list');
 const MAX_ACTION_QUEUE = 100;  // bounded: drop oldest when over limit
 const { ModeManager, getActionRisk } = require('./mode');
 const { maskSecrets, detectInjection, isRiskyAction } = require('./safety');
@@ -51,6 +52,7 @@ class AgentService {
       userDataPath: deps.userDataPath || path.join(process.cwd(), 'userData'),
       maskSecrets,
     });
+    this.persistence = this.store;  // alias for workspace save/list/etc.
     this.actionQueue = [];
     this.tabContextCache = new Map();
     this.credentials = new CredentialVault({ userDataPath: deps.userDataPath || path.join(process.cwd(), 'userData') });
@@ -142,6 +144,8 @@ class AgentService {
 
     const perms = this.mode.getPermissions();
     const structAction = createStructuredAction(action, params, '', this.mode);
+    // Record BEFORE dispatch (captures intent even if blocked/failed)
+    this._recordAction(action, params, null);
     this.actionQueue.push(structAction);
     // Bounded queue: drop oldest when over limit so memory stays predictable
     if (this.actionQueue.length > MAX_ACTION_QUEUE) {
@@ -186,6 +190,13 @@ class AgentService {
     structAction.completedAt = new Date().toISOString();
     this._logAction(action, params, result);
     this.deps.notifyAll?.();
+    // Update last recorded entry with the result (rather than push a new one)
+    if (this._recorder?.active && this._recorder.actions.length > 0) {
+      const last = this._recorder.actions[this._recorder.actions.length - 1];
+      if (last.ts && Date.now() - new Date(last.ts).getTime() < 5000) {
+        last.result = result ? { ok: result.ok !== false } : { ok: false };
+      }
+    }
     return result;
   }
 
@@ -452,6 +463,259 @@ class AgentService {
       filled,
       detectedFields: fields.length,
     };
+  }
+
+
+  // ============ Reading list ============
+  /** @returns {ReadingList} */
+  _readingList() {
+    if (!this._readingListInstance) {
+      this._readingListInstance = new ReadingList({ userDataPath: this.deps.userDataPath });
+    }
+    return this._readingListInstance;
+  }
+
+  async _ensureReadingListLoaded() {
+    const rl = this._readingList();
+    if (!rl._loaded) await rl.load();
+    return rl;
+  }
+
+  async readingListAdd(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    const view = this.deps.getActiveView?.();
+    let html = null;
+    if (args.snapshot !== false && view?.webContents) {
+      try {
+        html = await view.webContents.executeJavaScript(`document.documentElement.outerHTML`);
+      } catch (e) { /* no snapshot */ }
+    }
+    return await rl.add({
+      url: args.url,
+      title: args.title,
+      description: args.description,
+      tags: args.tags,
+      html,
+    });
+  }
+
+  async readingListList(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    return { ok: true, count: rl.list(args).length, items: rl.list(args) };
+  }
+
+  async readingListRemove(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    return { ok: await rl.remove(args.id) };
+  }
+
+  async readingListMarkRead(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    const item = rl.markRead(args.id, args.read !== false);
+    return { ok: !!item, item };
+  }
+
+  async readingListOpen(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    const offlineUrl = rl.getOfflineUrl(args.id);
+    if (!offlineUrl) return { ok: false, error: 'no offline snapshot for this item' };
+    // Open in new tab
+    const view = this.deps.createTab?.(offlineUrl, true);
+    return { ok: !!view, offlineUrl };
+  }
+
+  async readingListCleanup(args = {}) {
+    const rl = await this._ensureReadingListLoaded();
+    const removed = await rl.cleanup({ maxAgeDays: args.maxAgeDays || 30, keepUnread: args.keepUnread !== false });
+    return { ok: true, removed };
+  }
+
+
+  // ============ Tab workspaces ============
+  /** Save current tab set as a named workspace. */
+  async workspaceSave(args = {}) {
+    if (!args.name) return { ok: false, error: 'name required' };
+    const tabs = this.deps.getTabs ? this.deps.getTabs() : [];
+    const activeTabId = this.deps.getActiveTab?.()?.id;
+    const snapshot = tabs.map(t => ({
+      url: t.url,
+      title: t.title || '',
+      pinned: !!t.pinned,
+    }));
+    // Persist via PersistenceStore (existing mechanism)
+    this.persistence.set(`workspace:${args.name}`, { tabs: snapshot, activeTabId });
+    return { ok: true, name: args.name, tabCount: snapshot.length, activeTabId };
+  }
+
+  /** List all saved workspaces. */
+  async workspaceList() {
+    const list = (this.persistence.list?.() || []).filter(k => k.startsWith('workspace:'));
+    const workspaces = list.map(k => {
+      const data = this.persistence.get(k) || {};
+      return {
+        name: k.slice('workspace:'.length),
+        tabCount: (data.tabs || []).length,
+        savedAt: data.savedAt || null,
+      };
+    });
+    return { ok: true, count: workspaces.length, workspaces };
+  }
+
+  /** Open a saved workspace: re-open all tabs, switch to active. */
+  async workspaceOpen(args = {}) {
+    if (!args.name) return { ok: false, error: 'name required' };
+    const data = this.persistence.get(`workspace:${args.name}`);
+    if (!data) return { ok: false, error: `workspace not found: ${args.name}` };
+    const tabs = data.tabs || [];
+    const newTabIds = [];
+    for (const t of tabs) {
+      const created = this.deps.createTab?.(t.url, false);
+      if (created) newTabIds.push(created.id);
+    }
+    // Switch to originally active tab if it exists in the new set
+    if (data.activeTabId != null && newTabIds[data.activeTabId]) {
+      this.deps.switchTab?.(newTabIds[data.activeTabId]);
+    } else if (newTabIds.length > 0) {
+      this.deps.switchTab?.(newTabIds[0]);
+    }
+    return { ok: true, name: args.name, openedCount: newTabIds.length, newTabIds };
+  }
+
+  /** Delete a saved workspace. */
+  async workspaceDelete(args = {}) {
+    if (!args.name) return { ok: false, error: 'name required' };
+    const removed = this.persistence.remove(`workspace:${args.name}`);
+    return { ok: removed, name: args.name };
+  }
+
+
+  // ============ Session recording ============
+  _recorderState() {
+    if (!this._recorder) {
+      this._recorder = {
+        active: false,
+        sessionId: null,
+        startTime: null,
+        actions: [],
+        label: '',
+      };
+    }
+    return this._recorder;
+  }
+
+  /** Start recording all subsequent browser actions. */
+  sessionRecordStart(args = {}) {
+    const state = this._recorderState();
+    state.active = true;
+    state.sessionId = 'sess-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    state.startTime = new Date().toISOString();
+    state.label = args.label || '';
+    state.actions = [];
+    return { ok: true, sessionId: state.sessionId, startedAt: state.startTime };
+  }
+
+  /** Stop recording. Returns the recorded session. */
+  sessionRecordStop() {
+    const state = this._recorderState();
+    if (!state.active) return { ok: false, error: 'no active recording' };
+    const session = {
+      sessionId: state.sessionId,
+      label: state.label,
+      startedAt: state.startTime,
+      stoppedAt: new Date().toISOString(),
+      actionCount: state.actions.length,
+      actions: [...state.actions],
+    };
+    state.active = false;
+    return { ok: true, ...session };
+  }
+
+  /** Record an action (called internally by runBrowserAction wrapper). */
+  _recordAction(action, params, result) {
+    const state = this._recorderState();
+    if (!state.active) return;
+    // Skip record-related actions to avoid recursion
+    if (action && action.startsWith('session_')) return;
+    state.actions.push({
+      ts: new Date().toISOString(),
+      action,
+      params: JSON.parse(JSON.stringify(params || {})),  // deep clone, strip secrets
+      result: result ? { ok: result.ok !== false } : { ok: false },
+    });
+  }
+
+  /** List all saved sessions on disk. */
+  async sessionRecordList() {
+    if (!this.persistence) return { ok: true, count: 0, sessions: [] };
+    const keys = this.persistence.list('session:');
+    const sessions = keys.map(k => {
+      const data = this.persistence.get(k) || {};
+      return {
+        sessionId: k.slice('session:'.length),
+        label: data.label || '',
+        startedAt: data.startedAt,
+        stoppedAt: data.stoppedAt,
+        actionCount: (data.actions || []).length,
+      };
+    });
+    return { ok: true, count: sessions.length, sessions };
+  }
+
+  /** Save a recorded session to disk. If no session provided, saves current. */
+  async sessionRecordSave(args = {}) {
+    let session;
+    if (args.sessionId) {
+      // Load existing
+      session = this.persistence?.get(`session:${args.sessionId}`);
+      if (!session) return { ok: false, error: `session not found: ${args.sessionId}` };
+    } else {
+      // Stop and use current
+      const stop = this.sessionRecordStop();
+      if (!stop.ok) return stop;
+      session = {
+        sessionId: stop.sessionId,
+        label: stop.label,
+        startedAt: stop.startedAt,
+        stoppedAt: stop.stoppedAt,
+        actions: stop.actions,
+      };
+    }
+    if (this.persistence) {
+      this.persistence.set(`session:${session.sessionId}`, session);
+    }
+    return { ok: true, ...session, saved: !!this.persistence };
+  }
+
+  /** Play a recorded session by re-running each action. */
+  async sessionRecordPlay(args = {}) {
+    if (!args.sessionId) return { ok: false, error: 'sessionId required' };
+    const session = this.persistence?.get(`session:${args.sessionId}`);
+    if (!session) return { ok: false, error: `session not found: ${args.sessionId}` };
+    const actions = session.actions || [];
+    const results = [];
+    for (const a of actions) {
+      try {
+        const r = await this.runBrowserAction(a.action, a.params || {});
+        results.push({ ts: new Date().toISOString(), action: a.action, ok: r?.ok !== false });
+      } catch (e) {
+        results.push({ ts: new Date().toISOString(), action: a.action, ok: false, error: e.message });
+      }
+    }
+    return {
+      ok: true,
+      sessionId: args.sessionId,
+      totalActions: actions.length,
+      successCount: results.filter(r => r.ok).length,
+      results,
+    };
+  }
+
+  /** Delete a saved session. */
+  async sessionRecordDelete(args = {}) {
+    if (!args.sessionId) return { ok: false, error: 'sessionId required' };
+    if (!this.persistence) return { ok: false, error: 'no persistence' };
+    const removed = this.persistence.remove(`session:${args.sessionId}`);
+    return { ok: removed, sessionId: args.sessionId };
   }
 
   // ============ Persistence shortcuts ============

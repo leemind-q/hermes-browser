@@ -56,6 +56,7 @@ function makeEvalDeps({ pageContent = '', links = [], headings = [], tables = []
         if (code.includes('document.body.innerText.slice')) return pageContent;
         // Fallback for older code paths.
         if (code.includes('document.body.innerText')) return pageContent;
+        if (code.includes('document.documentElement.outerHTML')) return '<html><body>' + pageContent + '</body></html>';
         if (code.includes('MjjYud h3')) return [];
         if (code.includes('scrollBy')) return { ok: true, y: 100 };
         if (code.includes('getBoundingClientRect')) return { ok: true, text: 'btn', rect: { x: 100, y: 100, width: 80, height: 30 } };

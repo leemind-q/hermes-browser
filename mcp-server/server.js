@@ -153,8 +153,91 @@ const TOOLS = [
   {
     name: 'browser_autofill_form',
     description: 'Auto-fill all form fields on the current page using saved credentials. Detects username/password/email/name/address fields, looks up credential by domain, fills it.',
+    inputSchema: { type: 'object', properties: {} } },
+  {
+    name: 'reading_list_add',
+    description: 'Add current page to offline reading list.',
+    inputSchema: { type: 'object', properties: { url: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, snapshot: { type: 'boolean' } } },
+  },
+  {
+    name: 'reading_list_list',
+    description: 'List reading list items.',
+    inputSchema: { type: 'object', properties: { unreadOnly: { type: 'boolean' }, tag: { type: 'string' } } },
+  },
+  {
+    name: 'reading_list_remove',
+    description: 'Remove reading list item.',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'reading_list_mark_read',
+    description: 'Mark reading list item read/unread.',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' }, read: { type: 'boolean' } }, required: ['id'] },
+  },
+  {
+    name: 'reading_list_open',
+    description: 'Open offline snapshot in new tab.',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'reading_list_cleanup',
+    description: 'Cleanup old read items.',
+    inputSchema: { type: 'object', properties: { maxAgeDays: { type: 'number' }, keepUnread: { type: 'boolean' } } },
+  },
+  {
+    name: 'workspace_save',
+    description: 'Save current tabs as a named workspace.',
+    inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+  },
+  {
+    name: 'workspace_list',
+    description: 'List all saved workspaces.',
     inputSchema: { type: 'object', properties: {} },
   },
+  {
+    name: 'workspace_open',
+    description: 'Re-open a saved workspace (restores its tabs).',
+    inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+  },
+  {
+    name: 'workspace_delete',
+    description: 'Delete a saved workspace.',
+    inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+  },
+  {
+    name: 'session_record_start',
+    description: 'Start recording browser actions.',
+    inputSchema: { type: 'object', properties: { label: { type: 'string' } } },
+  },
+  {
+    name: 'session_record_stop',
+    description: 'Stop recording.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'session_record_save',
+    description: 'Save recording to disk.',
+    inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } } },
+  },
+  {
+    name: 'session_record_list',
+    description: 'List saved sessions.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'session_record_play',
+    description: 'Re-run a saved session.',
+    inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] },
+  },
+  {
+    name: 'session_record_delete',
+    description: 'Delete a saved session.',
+    inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] },
+  },
+
+
+
+
   {
     name: 'browser_get_visible_text',
     description: 'Read the visible text of the active page (up to 12000 chars).',

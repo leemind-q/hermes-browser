@@ -219,6 +219,24 @@ function listTools() {
     { name: 'browser_click', description: 'Click element', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, ref: { type: 'string' }, text: { type: 'string' } } } },
     { name: 'browser_fill', description: 'Fill input', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, ref: { type: 'string' }, value: { type: 'string' } } } },
     { name: 'browser_autofill_form', description: 'Auto-fill all form fields on the current page using saved credentials. Detects username/password/email/name/address fields, looks up credential by domain, fills it.', inputSchema: { type: 'object', properties: {} } },
+    { name: 'reading_list_add', description: 'Add current page (or given URL) to offline reading list.', inputSchema: { type: 'object', properties: { url: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, snapshot: { type: 'boolean' } } } },
+    { name: 'reading_list_list', description: 'List reading list items.', inputSchema: { type: 'object', properties: { unreadOnly: { type: 'boolean' }, tag: { type: 'string' } } } },
+    { name: 'reading_list_remove', description: 'Remove item by id.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+    { name: 'reading_list_mark_read', description: 'Mark item read/unread.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, read: { type: 'boolean' } }, required: ['id'] } },
+    { name: 'reading_list_open', description: 'Open the offline snapshot of an item in a new tab.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+    { name: 'reading_list_cleanup', description: 'Remove old read items.', inputSchema: { type: 'object', properties: { maxAgeDays: { type: 'number' }, keepUnread: { type: 'boolean' } } } },
+    { name: 'workspace_save', description: 'Save current tabs as a named workspace.', inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+    { name: 'workspace_list', description: 'List all saved workspaces.', inputSchema: { type: 'object', properties: {} } },
+    { name: 'workspace_open', description: 'Re-open all tabs of a saved workspace.', inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+    { name: 'workspace_delete', description: 'Delete a saved workspace.', inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+    { name: 'session_record_start', description: 'Start recording browser actions.', inputSchema: { type: 'object', properties: { label: { type: 'string' } } } },
+    { name: 'session_record_stop', description: 'Stop recording.', inputSchema: { type: 'object', properties: {} } },
+    { name: 'session_record_save', description: 'Save recording to disk.', inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } } } },
+    { name: 'session_record_list', description: 'List saved sessions.', inputSchema: { type: 'object', properties: {} } },
+    { name: 'session_record_play', description: 'Re-run a saved session.', inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] } },
+    { name: 'session_record_delete', description: 'Delete a saved session.', inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] } },
+
+
     { name: 'browser_get_visible_text', description: 'Read page text', inputSchema: { type: 'object' } },
     { name: 'browser_inspect_page', description: 'Get page context', inputSchema: { type: 'object' } },
     { name: 'browser_extract_search_results', description: 'Extract SERP results', inputSchema: { type: 'object', properties: { tabId: { type: 'number' } } } },
@@ -242,6 +260,22 @@ async function dispatchTool(agent, name, args) {
     case 'browser_click': return agent.runBrowserAction('click', args);
     case 'browser_fill': return agent.runBrowserAction('fill', args);
     case 'browser_autofill_form': return agent.autofillForm(args);
+    case 'reading_list_add': return await agent.readingListAdd(args);
+    case 'reading_list_list': return await agent.readingListList(args);
+    case 'reading_list_remove': return await agent.readingListRemove(args);
+    case 'reading_list_mark_read': return await agent.readingListMarkRead(args);
+    case 'reading_list_open': return await agent.readingListOpen(args);
+    case 'reading_list_cleanup': return await agent.readingListCleanup(args);
+    case 'workspace_save': return await agent.workspaceSave(args);
+    case 'workspace_list': return await agent.workspaceList();
+    case 'workspace_open': return await agent.workspaceOpen(args);
+    case 'workspace_delete': return await agent.workspaceDelete(args);
+    case 'session_record_start': return agent.sessionRecordStart(args);
+    case 'session_record_stop': return agent.sessionRecordStop();
+    case 'session_record_save': return await agent.sessionRecordSave(args);
+    case 'session_record_list': return await agent.sessionRecordList();
+    case 'session_record_play': return await agent.sessionRecordPlay(args);
+    case 'session_record_delete': return await agent.sessionRecordDelete(args);
     case 'browser_get_visible_text': return agent.runBrowserAction('getVisibleText');
     case 'browser_inspect_page': return agent.runBrowserAction('inspectPage');
     case 'browser_extract_search_results': return agent.extractSearchResults(args.tabId);
