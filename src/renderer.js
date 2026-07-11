@@ -1318,35 +1318,52 @@ const SettingsPopover = (() => {
 // V14 — Tab thumbnail preview (hover popup) (Day 8)
 // ============================================================
 
+// V15: Real tab thumbnail capture (electron capturePage)
 async function refreshTabThumbnails() {
   try {
     const tabs = window.hermes?.tabs?.list?.() || [];
-    tabs.forEach(async (tab, idx) => {
+    for (const tab of tabs) {
       try {
         const tabEl = document.querySelector(`[data-tab-id="${tab.id}"]`);
-        if (!tabEl || tabEl.dataset.thumb) return;
-        const url = tab.url || tab.webContents?.getURL?.() || '';
-        if (!url || url.startsWith('data:') || url.startsWith('about:')) return;
-        // Capture thumbnail via IPC
-        const img = await window.hermes?.api?.request?.('captureTabThumbnail', { tabId: tab.id });
-        if (img) tabEl.dataset.thumb = '1';
+        if (!tabEl) continue;
+        const url = tab.url || '';
+        if (!url || url.startsWith('data:') || url.startsWith('about:') || url.startsWith('chrome-extension:')) continue;
+        // Skip if already captured within 30s
+        const lastCapture = parseInt(tabEl.dataset.thumbTs || '0');
+        if (Date.now() - lastCapture < 30000) continue;
+        // Call IPC to capture
+        const result = await window.hermes?.api?.request?.('captureTab', { tabId: tab.id, quality: 60, width: 240, height: 150 });
+        if (result?.ok && result.data) {
+          const dataUrl = `data:image/jpeg;base64,${result.data}`;
+          tabEl.style.setProperty('--thumb-bg', `url("${dataUrl}")`);
+          tabEl.dataset.thumb = '1';
+          tabEl.dataset.thumbTs = String(Date.now());
+        }
       } catch {}
-    });
-  } catch {}
+    }
+  } catch (e) { console.warn('refreshTabThumbnails:', e.message); }
 }
 
-async function captureTabThumbnail(tabId) {
-  try {
-    const view = (typeof getActiveView === 'function') ? null : null; // Optional optimization
-    return await window.hermes?.api?.request?.('captureTabThumbnail', { tabId });
-  } catch {
-    return null;
-  }
-}
-
-// Refresh thumbnails on tab focus + every 5 seconds
-setTimeout(refreshTabThumbnails, 2000);
-setInterval(refreshTabThumbnails, 5000);
+// Refresh thumbnails on tab focus + every 8 seconds (less load)
+setTimeout(refreshTabThumbnails, 2500);
+setInterval(refreshTabThumbnails, 8000);
+// Also capture on hover (after 500ms delay) for instant preview
+let _hoverTimer = null;
+document.addEventListener('mouseover', (e) => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  if (_hoverTimer) clearTimeout(_hoverTimer);
+  _hoverTimer = setTimeout(async () => {
+    const tabId = tab.dataset.tabId;
+    if (!tabId) return;
+    try {
+      const result = await window.hermes?.api?.request?.('captureTab', { tabId, quality: 70, width: 480, height: 300 });
+      if (result?.ok && result.data) {
+        tab.style.setProperty('--thumb-bg-hover', `url("data:image/jpeg;base64,${result.data}")`);
+      }
+    } catch {}
+  }, 500);
+});
 
 
 // ============================================================

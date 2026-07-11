@@ -4,6 +4,7 @@
 // BLDC 회로 데이터, BOM, datasheet, Gerber, CAD 자동 context.
 
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 
 class CoworkService {
@@ -339,8 +340,8 @@ class CoworkService {
       // Use fs.watch with debounce for performance
       const debounceMap = new Map(); // filename -> timer
       const events = [];
-      const { fs: nodeFs } = require('fs');
-      const watcher = nodeFs.watch(absDir, { recursive: true, persistent: false }, (eventType, filename) => {
+      // using fsSync
+      const watcher = fsSync.watch(absDir, { recursive: true, persistent: false }, (eventType, filename) => {
         if (!filename) return;
         if (pattern && !new RegExp(pattern.replace(/\*/g, '.*'), 'i').test(filename)) return;
         if (ignored.some(ig => filename.includes(ig))) return;
@@ -479,6 +480,44 @@ class CoworkService {
       else i--;
     }
     return lcs;
+  }
+
+  /** V15: List all active watchers */
+  watchList() {
+    const list = [];
+    if (this._watchers) {
+      for (const [id, w] of this._watchers) {
+        list.push({
+          watcherId: id,
+          dir: w.dir,
+          eventCount: w.events.length,
+          lastEvent: w.events[w.events.length - 1] || null,
+          ttl: 'auto-cleanup 10min',
+        });
+      }
+    }
+    return { ok: true, watchers: list };
+  }
+
+  /** V15: Unsubscribe a watcher */
+  watchUnsubscribe(args) {
+    const { watcherId } = args || {};
+    if (!watcherId) return { ok: false, error: 'watcherId required' };
+    if (!this._watchers?.has(watcherId)) return { ok: false, error: 'watcher not found', watcherId };
+    const entry = this._watchers.get(watcherId);
+    try { entry.watcher.close(); } catch {}
+    this._watchers.delete(watcherId);
+    return { ok: true, watcherId, eventsDelivered: entry.events.length };
+  }
+
+  /** V15: Get recent events for a watcher (polling fallback for SSE) */
+  watchEvents(args) {
+    const { watcherId, since = 0 } = args || {};
+    if (!watcherId) return { ok: false, error: 'watcherId required' };
+    if (!this._watchers?.has(watcherId)) return { ok: false, error: 'watcher not found' };
+    const entry = this._watchers.get(watcherId);
+    const events = entry.events.slice(since);
+    return { ok: true, watcherId, dir: entry.dir, total: entry.events.length, events };
   }
 
   /** Search + replace across files (with confirmation token if no-pretend flag) */

@@ -1244,7 +1244,7 @@ body::before {
   100% { transform: scale(1) translate(0, 0); }
 }
 
-/* Tab hover thumbnail preview — V14 signature */
+/* Tab hover thumbnail preview — V15 (real screenshot capture) */
 .tab[data-thumb]:hover::after {
   content: "";
   position: absolute;
@@ -1253,22 +1253,60 @@ body::before {
   transform: translateX(-50%);
   width: 240px;
   height: 150px;
-  background: var(--bg-elevated);
+  background-color: var(--bg-elevated);
+  background-image: var(--thumb-bg, none);
+  background-size: cover;
+  background-position: top center;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: 0 12px 32px rgba(20, 30, 50, 0.18), 0 4px 8px rgba(20, 30, 50, 0.08);
-  background-image: var(--thumb-bg, none);
-  background-size: cover;
-  background-position: top;
   pointer-events: none;
   z-index: 1000;
   opacity: 0;
   animation: thumb-pop 200ms var(--ease-spring) forwards;
-  animation-delay: 400ms;
+  animation-delay: 300ms;
+}
+.tab:hover::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  height: 300px;
+  background-color: var(--bg-elevated);
+  background-image: var(--thumb-bg-hover, var(--thumb-bg, none));
+  background-size: cover;
+  background-position: top center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 48px rgba(20, 30, 50, 0.24), 0 8px 16px rgba(20, 30, 50, 0.12);
+  pointer-events: none;
+  z-index: 1001;
+  opacity: 0;
+  animation: thumb-pop 220ms var(--ease-spring) forwards;
+  animation-delay: 600ms;
 }
 @keyframes thumb-pop {
   0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.96); }
   100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+/* V15: capture indicator — subtle pulse on capture */
+.tab[data-thumb] { transition: var(--anim-fast); }
+.tab[data-thumb][data-capturing="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
+  background-size: 200% 100%;
+  animation: capture-flash 0.6s linear;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes capture-flash {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Better focus rings — gold glow */

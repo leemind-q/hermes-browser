@@ -1,10 +1,13 @@
-name: Update Pages with V12/V13 content
+name: Update Pages with V14/V15 content
 
 on:
   push:
     branches: [main]
-    paths: ['docs/index.html', 'README.md', '.github/workflows/pages-update.yml']
+    paths: ['docs/**', 'README.md', '.github/workflows/pages-update.yml']
   workflow_dispatch: {}
+
+permissions:
+  contents: write  # needed for gh-pages branch push
 
 jobs:
   build:
@@ -13,26 +16,51 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Inject V13 release info
+      - name: Setup Node.js (for any preprocessing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Inject V14/V15 release info
+        id: meta
         run: |
           TODAY=$(date -u +"%Y-%m-%d")
           COMMITS=$(git rev-list --count HEAD)
-          sed -i "s|version: 'v12'|version: 'v${COMMITS}'|" docs/index.html || true
+          echo "commits=${COMMITS}" >> $GITHUB_OUTPUT
+          echo "today=${TODAY}" >> $GITHUB_OUTPUT
+          sed -i "s|version: 'v[0-9]*'|version: 'v14.${COMMITS}'|g" docs/index.html || true
           sed -i "s|Last updated [0-9-]*|Last updated ${TODAY}|g" docs/index.html || true
           echo "Updated with commits=${COMMITS}, date=${TODAY}"
 
       - name: Show updated index.html (first 30 lines)
         run: head -30 docs/index.html
 
-      - name: Commit to gh-pages branch
+      - name: Configure git
         run: |
-          git config user.email "actions@hermes-browser.local"
+          git config user.email "[email protected]"
           git config user.name "Hermes Bot"
-          git checkout --orphan gh-pages --force
-          git rm -rf . 2>/dev/null || true
-          cp -r docs/* .
+
+      - name: Push to gh-pages branch
+        run: |
+          # Use git push with explicit refspec — works even if branch doesn't exist yet
+          git checkout -b gh-pages 2>/dev/null || git checkout gh-pages
+          # Clean everything except .git
+          find . -mindepth 1 -not -path './.git*' -delete 2>/dev/null || true
+          # Restore docs/ + WORKFLOW.md + index.html
+          git checkout main -- docs/ || true
+          # Move docs content to root
+          if [ -d docs ]; then
+            cp -r docs/* .
+            rm -rf docs
+          fi
+          # Add CNAME
           echo "leemind-q.github.io" > CNAME
+          # Stage and commit
           git add -A
-          git commit -m "V12/V13 Pages deploy: $(date -u +%FT%TZ)" --allow-empty
-          git push -f origin gh-pages || echo "gh-pages push failed (may need manual setup)"
+          git diff --cached --quiet || git commit -m "V14/V15 Pages deploy: $(date -u +%FT%TZ) [skip ci]"
+          # Push with force (overwrite)
+          git push -f origin gh-pages || (echo "Push failed, trying push with upstream" && git push -u origin gh-pages --force)
+          echo "gh-pages pushed"

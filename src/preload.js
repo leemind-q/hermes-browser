@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('hermes', {
     testProvider: (args) => ipcRenderer.invoke('browser:testProvider', args),
     providerList: () => ipcRenderer.invoke('browser:providerList'),
     providerGet: () => ipcRenderer.invoke('browser:providerGet'),
+    captureTab: (args) => ipcRenderer.invoke('browser:captureTab', args),
+    setTabThumbnail: (args) => ipcRenderer.invoke('browser:setTabThumbnail', args),
     togglePanel: () => ipcRenderer.invoke('browser:togglePanel'),
     toggleLeftPanel: () => ipcRenderer.invoke('browser:toggleLeftPanel'),
     toggleRightPanel: () => ipcRenderer.invoke('browser:toggleRightPanel'),

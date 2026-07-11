@@ -304,9 +304,57 @@ function createBridge({ agent, port = 8780, host = '127.0.0.1', log = () => {}, 
       return;
     }
 
+    // === V15: Cowork v3 — SSE watch stream ===
+    // GET /cowork/watch/events?watcherId=... — Server-Sent Events stream
+    if (req.method === 'GET' && req.url.startsWith('/cowork/watch/events')) {
+      if (!checkAuth(req, res)) return;
+      const urlObj = new URL(req.url, `http://${host}:${port}`);
+      const watcherId = urlObj.searchParams.get('watcherId');
+      if (!watcherId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'watcherId required' }));
+        return;
+      }
+      const watcherEntry = agent.cowork?._watchers?.get(watcherId);
+      if (!watcherEntry) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'watcher not found', watcherId }));
+        return;
+      }
+      // SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
+      const send = (event, data) => {
+        res.write(`event: ${event}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
+      // Initial snapshot — last 10 events
+      const recent = watcherEntry.events.slice(-10);
+      send('snapshot', { watcherId, dir: watcherEntry.dir, recent });
+      // Send each new event as it arrives
+      const onChange = setInterval(() => {
+        if (watcherEntry.events.length > recent.length) {
+          const newEvents = watcherEntry.events.slice(recent.length);
+          for (const ev of newEvents) send('change', ev);
+          recent.length = watcherEntry.events.length;
+        }
+      }, 500);
+      // Keep-alive ping every 30s
+      const keepAlive = setInterval(() => res.write(`: ping\n\n`), 30_000);
+      req.on('close', () => {
+        clearInterval(onChange);
+        clearInterval(keepAlive);
+      });
+      return;
+    }
+
     // Unknown route
     res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'not found', routes: ['GET /health', 'GET /mcp/tools', 'GET /auth/token (localhost only)', 'POST /mcp/tool (requires Bearer token)'] }));
+    res.end(JSON.stringify({ error: 'not found', routes: ['GET /health', 'GET /mcp/tools', 'GET /auth/token (localhost only)', 'POST /mcp/tool (requires Bearer token)', 'GET /cowork/watch/events?watcherId=... (SSE)'] }));
   });
 
   return new Promise((resolve) => {
@@ -398,6 +446,10 @@ function listTools() {
     { name: 'cowork_read_tail', description: 'Read last N lines of file (V14: real-time log tail).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, lines: { type: 'number' } }, required: ['path'] } },
     { name: 'cowork_diff', description: 'Diff two files line-by-line (V14: LCS-based, unified format).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, path2: { type: 'string' }, context: { type: 'number' } }, required: ['path', 'path2'] } },
     { name: 'cowork_search_replace', description: 'Search + replace regex across files (V14: pretend=true = preview only, dry-run safe).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, replacement: { type: 'string' }, glob: { type: 'string' }, maxFiles: { type: 'number' }, pretend: { type: 'boolean' } }, required: ['pattern', 'replacement'] } },
+    // === V15 Cowork v3 (streaming watch) ===
+    { name: 'cowork_watch_list', description: 'List all active watchers (V15 streaming watch management).', inputSchema: { type: 'object' } },
+    { name: 'cowork_watch_unsubscribe', description: 'Stop and clean up a watcher by ID (V15).', inputSchema: { type: 'object', properties: { watcherId: { type: 'string' } }, required: ['watcherId'] } },
+    { name: 'cowork_watch_events', description: 'Poll recent events for a watcher (V15, fallback to SSE stream).', inputSchema: { type: 'object', properties: { watcherId: { type: 'string' }, since: { type: 'number' } }, required: ['watcherId'] } },
   ];
 }
 
@@ -549,6 +601,10 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_read_tail': try { return await agent.coworkReadTail(args); } catch(e) { return { ok: false, error: 'coworkReadTail: ' + e.message }; }
     case 'cowork_diff': try { return await agent.coworkDiff(args); } catch(e) { return { ok: false, error: 'coworkDiff: ' + e.message }; }
     case 'cowork_search_replace': try { return await agent.coworkSearchReplace(args); } catch(e) { return { ok: false, error: 'coworkSearchReplace: ' + e.message }; }
+    // === V15 Cowork v3 (streaming) ===
+    case 'cowork_watch_list': try { return await agent.coworkWatchList(); } catch(e) { return { ok: false, error: 'coworkWatchList: ' + e.message }; }
+    case 'cowork_watch_unsubscribe': try { return await agent.coworkWatchUnsubscribe(args); } catch(e) { return { ok: false, error: 'coworkWatchUnsubscribe: ' + e.message }; }
+    case 'cowork_watch_events': try { return await agent.coworkWatchEvents(args); } catch(e) { return { ok: false, error: 'coworkWatchEvents: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);

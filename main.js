@@ -1054,6 +1054,41 @@ ipcMain.handle('diag:webview', async () => {
   };
 });
 ipcMain.handle('browser:getState', () => ({ tabs: visibleTabs(), activeTabId, sidePanelVisible }));
+
+// V15: Tab thumbnail capture — real screenshot via webContents.capturePage
+ipcMain.handle('browser:captureTab', async (_e, { tabId, quality = 60, width = 240, height = 150 } = {}) => {
+  try {
+    const view = tabViews.get(tabId);
+    if (!view || !view.webContents) return { ok: false, error: 'tab not found' };
+    const image = await view.webContents.capturePage();
+    if (!image || image.isEmpty()) return { ok: false, error: 'empty capture' };
+    // Resize to thumbnail (keep aspect ratio)
+    const nativeImg = image.toBitmap ? image : image;
+    const originalSize = image.getSize();
+    const factor = Math.min(width / originalSize.width, height / originalSize.height);
+    const targetW = Math.round(originalSize.width * factor);
+    const targetH = Math.round(originalSize.height * factor);
+    // Use electron's built-in thumbnail via setThumbnailQuality
+    const jpeg = image.toJPEG(quality);
+    return { ok: true, format: 'jpeg', width: targetW, height: targetH, originalWidth: originalSize.width, originalHeight: originalSize.height, size: jpeg.length, data: jpeg.toString('base64') };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// V15: Set tab as thumbnail (Chromium native) for window thumbnails
+ipcMain.handle('browser:setTabThumbnail', async (_e, { tabId, quality = 80 } = {}) => {
+  try {
+    const view = tabViews.get(tabId);
+    if (!view) return { ok: false, error: 'tab not found' };
+    const image = await view.webContents.capturePage();
+    if (!image || image.isEmpty()) return { ok: false, error: 'empty capture' };
+    view.webContents.setThumbnailImage(image);
+    return { ok: true, width: image.getSize().width, height: image.getSize().height };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
 ipcMain.handle('browser:newTab', (_e, url) => createTab(url || 'https://www.google.com', { activate: true }).id);
 ipcMain.handle('browser:switchTab', (_e, id) => !!switchTab(id));
 ipcMain.handle('browser:closeTab', (_e, id) => closeTab(id));

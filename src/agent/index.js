@@ -340,6 +340,22 @@ class AgentService {
     return this.cowork.searchReplace(args);
   }
 
+  // V15: Cowork v3 — streaming watch
+  async coworkWatchList() {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.watchList();
+  }
+
+  async coworkWatchUnsubscribe(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.watchUnsubscribe(args);
+  }
+
+  async coworkWatchEvents(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.watchEvents(args);
+  }
+
 
   // ============ Multi-tab batch actions ============
   /**
