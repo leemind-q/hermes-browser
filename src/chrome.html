@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
   <title>Miraecle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -750,6 +750,196 @@ button:focus-visible, .tab:focus-visible {
   animation: gentle-pulse 1.4s var(--ease-spring-out, cubic-bezier(0.16, 1, 0.3, 1)) infinite;
 }
 
+/* ============================================================
+   V12 STATUS BAR + BENTO EMPTY STATE + FINAL POLISH (Day 6)
+   ============================================================ */
+
+/* Status bar — bottom pill */
+.status-bar {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 6px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge-dark);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 12px rgba(20, 30, 50, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  color: var(--muted);
+  z-index: 90;
+  pointer-events: auto;
+  animation: sb-fade-up .42s var(--ease-spring-soft) both;
+}
+@keyframes sb-fade-up { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+
+.status-bar .sb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  transition: var(--anim-fast);
+  cursor: pointer;
+}
+.status-bar .sb-pill:hover {
+  background: var(--gold-soft);
+  color: var(--ink);
+  transform: translateY(-0.5px);
+}
+.status-bar .sb-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px currentColor;
+}
+.status-bar .sb-dot.warn { background: var(--warn); }
+.status-bar .sb-dot.err { background: var(--danger); }
+.status-bar .sb-spacer { flex: 1; }
+.status-bar .sb-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  border-radius: 6px;
+  transition: var(--anim-fast);
+}
+.status-bar .sb-btn:hover { background: var(--gold-soft); color: var(--ink); }
+
+/* Bento empty state — shown when no tabs */
+.bento {
+  position: absolute;
+  inset: var(--top) var(--gutter) var(--bottom) var(--gutter);
+  display: none;
+  align-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 28px 36px;
+  overflow-y: auto;
+  z-index: 1;
+}
+.bento[data-show="true"] {
+  display: flex;
+  animation: bento-fade .5s var(--ease-spring) both;
+}
+@keyframes bento-fade {
+  0% { opacity: 0; transform: scale(0.97); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.bento-card {
+  flex: 1 1 200px;
+  min-height: 120px;
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: 0 4px 16px rgba(20, 30, 50, 0.06), 0 1px 2px rgba(20, 30, 50, 0.04);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: var(--anim);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(20, 30, 50, 0.10), 0 4px 8px rgba(20, 30, 50, 0.06);
+  border-color: var(--gold);
+}
+.bento-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 80px; height: 80px;
+  background: var(--glass-refraction-gold);
+  border-radius: 50%;
+  filter: blur(20px);
+  opacity: 0;
+  transition: var(--anim);
+}
+.bento-card:hover::before { opacity: 1; }
+.bento-card .bento-icon {
+  width: 36px; height: 36px;
+  background: var(--gold-soft);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
+.bento-card .bento-icon svg { width: 18px; height: 18px; }
+.bento-card .bento-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+.bento-card .bento-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.bento-card .bento-cta {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.bento-card.featured {
+  flex: 2 1 420px;
+  background: linear-gradient(135deg, var(--bg-elevated), var(--gold-soft));
+  border-color: var(--gold);
+}
+
+/* Tab drag-over glow */
+.tabs-row { transition: var(--anim); }
+.tabs-row[data-drop-target="true"] {
+  background: var(--gold-soft);
+  border-radius: var(--radius-control);
+}
+
+/* Glass enhancement — Chat sidebar */
+.chat-scroll {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Page-load flash (loading bar) */
+.progress-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 280ms var(--ease-out);
+  z-index: 120;
+  pointer-events: none;
+}
+.progress-bar[data-loading="true"] {
+  animation: progress 1.6s var(--ease-out) infinite;
+}
+@keyframes progress {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(0.95); transform-origin: left; }
+  51% { transform: scaleX(0.95); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
 </style>
 </head>
 <body>
@@ -923,6 +1113,61 @@ button:focus-visible, .tab:focus-visible {
     <div class="sheet-actions"><button class="danger-btn" id="clearHistoryBtn">전체 삭제</button><button class="secondary" id="historyCancel">닫기</button></div>
   </div></div>
 
-  <script src="renderer.js"></script>
+    <!-- ============================================================
+       V12 Status Bar (Cowork status + Provider + Theme + Search)
+       ============================================================ -->
+  <div class="status-bar" id="statusBar">
+    <span class="sb-pill" id="statusProvider" title="LLM provider"><span class="sb-dot"></span><span id="sbProviderName">mock</span></span>
+    <span class="sb-pill" id="statusCowork" title="Cowork status"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg><span>Ready</span></span>
+    <span class="sb-pill" id="statusTabs" title="Open tabs"><span id="sbTabsCount">0</span> tabs</span>
+    <span class="sb-pill" id="statusBridge" title="MCP bridge"><span class="sb-dot" id="sbBridgeDot"></span><span id="sbBridgePort">:8780</span></span>
+    <span class="sb-spacer"></span>
+    <button class="sb-btn" id="themeToggle" title="라이트/다크 토글">라이트</button>
+    <button class="sb-btn" id="quickFind" title="빠른 검색 (Ctrl+K)">⌘K</button>
+    <button class="sb-btn" id="statusSettings" title="설정 열기">⚙</button>
+  </div>
+
+  <!-- ============================================================
+       V12 Bento Empty State (shown when no active tabs)
+       ============================================================ -->
+  <div class="bento" id="bentoEmpty" data-show="false">
+    <div class="bento-card featured" data-action="newtab">
+      <div class="bento-icon" style="background:#fbbf2433; color:#d97706;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <div class="bento-title">새 탭 만들기</div>
+      <div class="bento-desc">아무 페이지나 열어 시작하세요. Ctrl+T 단축키도 가능.</div>
+      <div class="bento-cta">Open new tab →</div>
+    </div>
+    <div class="bento-card" data-action="cowork">
+      <div class="bento-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+      </div>
+      <div class="bento-title">Cowork</div>
+      <div class="bento-desc">BLDC 회로/BOM/Gerber 자동 context</div>
+      <div class="bento-cta">Open workspace →</div>
+    </div>
+    <div class="bento-card" data-action="provider">
+      <div class="bento-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M4.22 4.22l4.24 4.24m7.07 7.07l4.25 4.25M1 12h6m6 0h10M4.22 19.78l4.24-4.24m7.07-7.07l4.25-4.25"/></svg>
+      </div>
+      <div class="bento-title">BYOK</div>
+      <div class="bento-desc">10개 LLM provider 지원 (LM Studio/Ollama 포함)</div>
+      <div class="bento-cta">Configure providers →</div>
+    </div>
+    <div class="bento-card" data-action="workspace">
+      <div class="bento-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+      </div>
+      <div class="bento-title">Workspace</div>
+      <div class="bento-desc">탭 세션 저장 / 복원</div>
+      <div class="bento-cta">Open workspaces →</div>
+    </div>
+  </div>
+
+  <!-- V12 loading progress bar -->
+  <div class="progress-bar" id="progressBar"></div>
+
+<script src="renderer.js"></script>
 </body>
 </html>

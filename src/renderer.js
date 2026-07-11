@@ -133,6 +133,69 @@ function bindEvents() {
   $('goalEditInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveGoalEdit(); } if (e.key === 'Escape') { state.goalEditing = false; toggleGoalEdit(); } });
   $('goalEditInput')?.addEventListener('blur', saveGoalEdit);
   document.addEventListener('keydown', handleGlobalShortcuts);
+
+  // ============================================================
+  // V12 Status bar + Bento + Theme toggle handlers
+  // ============================================================
+  $('statusSettings')?.addEventListener('click', () => $('settingsBtn').click());
+  $('quickFind')?.addEventListener('click', () => $('findBtn')?.click());
+
+  $('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const cur = html.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    const label = $('themeToggle');
+    if (label) label.textContent = next === 'dark' ? '라이트' : '다크';
+  });
+
+  function refreshStatusBarProvider() {
+    const sel = $('providerSelect');
+    const name = sel?.value || 'mock';
+    const el = $('sbProviderName');
+    if (el) el.textContent = name;
+  }
+  $('providerSelect')?.addEventListener('change', refreshStatusBarProvider);
+  setTimeout(refreshStatusBarProvider, 100);
+
+  function refreshStatusBarTabs() {
+    try {
+      const tabs = window.hermes?.tabs?.list?.() || [];
+      const el = $('sbTabsCount');
+      if (el) el.textContent = String(tabs.length);
+      const bento = $('bentoEmpty');
+      if (bento) bento.dataset.show = tabs.length === 0 ? 'true' : 'false';
+    } catch {}
+  }
+  setTimeout(refreshStatusBarTabs, 200);
+
+  async function refreshBridgeHealth() {
+    try {
+      const auth = await fetch('http://127.0.0.1:8780/auth/token');
+      const dot = $('sbBridgeDot');
+      if (auth.ok && dot) {
+        dot.style.background = 'var(--success)';
+      } else if (dot) {
+        dot.style.background = 'var(--warn)';
+      }
+    } catch {
+      const dot = $('sbBridgeDot');
+      if (dot) dot.style.background = 'var(--danger)';
+    }
+  }
+  setTimeout(refreshBridgeHealth, 1000);
+  setInterval(refreshBridgeHealth, 10000);
+
+  // Bento card click handlers
+  document.querySelectorAll('.bento-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const action = card.dataset.action;
+      if (action === 'newtab') $('newTabBtn')?.click();
+      else if (action === 'cowork') $('settingsBtn')?.click();
+      else if (action === 'provider') $('settingsBtn')?.click();
+      else if (action === 'workspace') $('settingsBtn')?.click();
+    });
+  });
 }
 
 function handleGlobalShortcuts(e) {

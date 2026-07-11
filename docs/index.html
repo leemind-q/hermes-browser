@@ -1,158 +1,267 @@
-# Hermes Browser Pages — minimal landing + live metrics
-# Updated daily by GitHub Actions. Source: ~/projects/hermes-browser/pages/
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hermes Browser</title>
+  <title>Hermes Browser V12 — AI Browser with MCP-First Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f5f5f7;
       color: #1a1a2e;
-      margin: 0;
-      padding: 40px 20px;
-      max-width: 900px;
-      margin: 0 auto;
+      padding: 60px 24px;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 36px; margin: 0 0 12px; color: #1a1a2e; }
-    h2 { font-size: 20px; margin: 32px 0 12px; color: #5b6cff; }
-    .tagline { color: #6b7280; font-size: 16px; margin-bottom: 32px; }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
       margin-bottom: 16px;
+      color: #0f0f1e;
+    }
+    h1 .gold { color: #d97706; }
+    .tagline {
+      color: #5b6478;
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 48px;
+      max-width: 720px;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
     }
     .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      background: rgba(91, 108, 255, 0.1);
-      color: #5b6cff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid rgba(26, 26, 46, 0.08);
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
-      margin-right: 6px;
+      font-weight: 500;
+      color: #5b6478;
     }
-    .badge.gold { background: rgba(251, 191, 36, 0.15); color: #b45309; }
-    a { color: #5b6cff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    code {
+    .badge.gold { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3); color: #b45309; }
+    .badge.green { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); color: #16a34a; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      color: #0f0f1e;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: white;
+      border: 1px solid rgba(26, 26, 46, 0.08);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(20, 30, 50, 0.04);
+      transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(20, 30, 50, 0.10);
+      border-color: rgba(251, 191, 36, 0.4);
+    }
+    .card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #0f0f1e;
+    }
+    .card .num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 36px;
+      font-weight: 600;
+      color: #d97706;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .card p { color: #5b6478; font-size: 14px; line-height: 1.5; }
+    .quick {
+      background: white;
+      border: 1px solid rgba(26, 26, 46, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .quick code {
       background: #f3f4f6;
-      padding: 2px 6px;
+      padding: 2px 8px;
       border-radius: 4px;
       font-family: 'SF Mono', Monaco, monospace;
       font-size: 13px;
+      color: #0f0f1e;
     }
-    pre {
-      background: #1a1a2e;
-      color: #e6e8f0;
+    .quick pre {
+      background: #0f0f1e;
+      color: #e4e4e7;
       padding: 16px;
       border-radius: 8px;
       overflow-x: auto;
+      font-family: 'SF Mono', Monaco, monospace;
       font-size: 13px;
+      line-height: 1.5;
+      margin-top: 12px;
     }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    .section {
+      margin-top: 56px;
+    }
+    .diff-list {
+      list-style: none;
+      padding: 0;
+    }
+    .diff-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(26, 26, 46, 0.06);
+      display: flex;
+      align-items: flex-start;
       gap: 12px;
-      margin: 16px 0;
     }
-    .metric {
-      background: linear-gradient(135deg, #5b6cff 0%, #818cf8 100%);
-      color: white;
-      padding: 16px;
-      border-radius: 8px;
+    .diff-list li:last-child { border-bottom: none; }
+    .diff-list li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: rgba(251, 191, 36, 0.18);
+      color: #d97706;
+      border-radius: 50%;
+      font-weight: 600;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .footer {
+      margin-top: 80px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(26, 26, 46, 0.08);
+      color: #6b7280;
+      font-size: 13px;
       text-align: center;
     }
-    .metric-value { font-size: 28px; font-weight: 700; }
-    .metric-label { font-size: 12px; opacity: 0.9; margin-top: 4px; }
-    .footer {
-      margin-top: 48px;
-      padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 14px;
-    }
+    a { color: #d97706; text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>Hermes Browser</h1>
-  <p class="tagline">AI 에이전트 + 자격증명 안전 저장 + 외부 MCP 통합이 가능한 Electron 기반 브라우저</p>
+  <div class="wrap">
+    <h1>Hermes Browser <span class="gold">V12</span></h1>
+    <p class="tagline">AI-powered Electron browser with MCP-First architecture for engineers. 10 LLM providers. Local-first + BYOK. Cowork for engineers. 49 MCP tools, 209+ tests, zero lock-in.</p>
 
-  <div>
-    <span class="badge">Electron</span>
-    <span class="badge">MCP</span>
-    <span class="badge gold">safeStorage</span>
-    <span class="badge">143 tests</span>
-    <span class="badge">AGPL-free</span>
-  </div>
+    <div class="badges">
+      <span class="badge green">✓ 209 unit PASS</span>
+      <span class="badge green">✓ 46/46 eval</span>
+      <span class="badge gold">49 MCP tools</span>
+      <span class="badge gold">10 LLM providers</span>
+      <span class="badge">AGPL-3</span>
+      <span class="badge">Electron 33 + WSL</span>
+    </div>
 
-  <div class="card">
-    <h2>Live Metrics</h2>
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-value" id="tests">143</div>
-        <div class="metric-label">tests passing</div>
+    <h2>Three Differentiators</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="num">49</div>
+        <h3>MCP-First Architecture</h3>
+        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge.</p>
       </div>
-      <div class="metric">
-        <div class="metric-value" id="tools">20</div>
-        <div class="metric-label">MCP tools</div>
+      <div class="card">
+        <div class="num">10</div>
+        <h3>Local-First + BYOK</h3>
+        <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS. Zero provider lock-in. 30-second swap.</p>
       </div>
-      <div class="metric">
-        <div class="metric-value" id="scenarios">7</div>
-        <div class="metric-label">eval scenarios</div>
-      </div>
-      <div class="metric">
-        <div class="metric-value" id="modules">9</div>
-        <div class="metric-label">agent modules</div>
+      <div class="card">
+        <div class="num">5</div>
+        <h3>Cowork for Engineers</h3>
+        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform path handling (Windows/WSL).</p>
       </div>
     </div>
-    <p style="font-size:13px;color:#6b7280">Last updated: <span id="updated">2026-07-10</span></p>
-  </div>
 
-  <div class="card">
-    <h2>Quick Start</h2>
-    <pre>git clone https://github.com/leemind-q/hermes-browser.git
-cd hermes-browser
-npm install
-npm test    # 143 tests
-npm start   # launches Hermes Browser</pre>
-  </div>
+    <div class="section">
+      <h2>30-Second Quick Start</h2>
+      <div class="quick">
+        <p>Test &amp; run locally:</p>
+        <pre><code>cd /mnt/c/Users/qqwer/Desktop/Hermes/hermes-browser
+npm test            # 209 unit + 46 eval (~3 sec)
+npm start           # Launch Electron (Miraecle window)</code></pre>
+        <p style="margin-top: 12px;">Connect from external AI agents via HTTP bridge on port 8780:</p>
+        <pre><code>TOKEN=$(curl -s http://127.0.0.1:8780/auth/token | jq -r .token)
+curl -X POST http://127.0.0.1:8780/mcp/tool \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"cowork_list","args":{"dir":"demo-circuits"}}'</code></pre>
+      </div>
+    </div>
 
-  <div class="card">
-    <h2>Use with Claude Code</h2>
-    <p>Add to <code>~/.claude/mcp.json</code>:</p>
-    <pre>{
-  "mcpServers": {
-    "hermes-browser": {
-      "command": "node",
-      "args": ["C:/Users/qqwer/Desktop/Hermes/hermes-browser/mcp-server/server.js"]
-    }
-  }
-}</pre>
-    <p>Then ask Claude Code: <em>"Hermes Browser로 네이버에서 고양이 사진 검색해줘"</em></p>
-  </div>
+    <div class="section">
+      <h2>V12 Day-by-Day</h2>
+      <ul class="diff-list">
+        <li><strong>Day 1:</strong> OS light/dark sync (chrome.html follows OS theme via nativeTheme)</li>
+        <li><strong>Day 2:</strong> BYOK + 10 LLM provider presets + test connection</li>
+        <li><strong>Day 3:</strong> MiniMax endpoint fix (/anthropic + X-Api-Key)</li>
+        <li><strong>Day 4:</strong> Cowork + 49 tools + UI spring motion + Glass</li>
+        <li><strong>Day 5:</strong> Cross-platform path fix + 회로 demo (BD69730FV)</li>
+        <li><strong>Day 6:</strong> Status bar + Bento + Theme toggle polish</li>
+      </ul>
+    </div>
 
-  <div class="card">
-    <h2>Differentiator</h2>
-    <p>Aside/Atlas/Dia 다 공통 약점: <strong>로그인 필요한 사이트 작업 못 함</strong>.</p>
-    <p>Hermes Browser: <code>safeStorage</code>(OS 키체인) + 도메인 스코핑 + mode 검증 + audit log.</p>
-    <ul>
-      <li>Bearer token auth (localhost only)</li>
-      <li>Rate limit 60/min per token</li>
-      <li>30s tool timeout (no hangs)</li>
-      <li>Password never logged or exposed in list</li>
-      <li>Prompt injection detection (6 patterns)</li>
-    </ul>
-  </div>
+    <div class="section">
+      <h2>Architecture</h2>
+      <div class="quick">
+        <pre><code>┌────────────────────────────────────────────────────────┐
+│  Renderer (src/chrome.html)                            │
+│  - Bento empty state + Status bar + Tabs/sidebar      │
+│  - Light/dark theme (Space Grotesk + DM Sans)         │
+│  - Spring motion (--ease-spring)                      │
+└──────┬─────────────────────────────────────┬───────────┘
+       │ IPC                                  │
+┌──────▼─────────────┐            ┌───────────▼──────────┐
+│  Main Process      │            │  MCP Bridge :8780    │
+│  (main.js)         │◄──────────►│  49 tools exposed    │
+│  - nativeTheme     │            └──────────────────────┘
+│  - Cowork attach   │
+└──────┬─────────────┘
+       │
+┌──────▼─────────────────────┐
+│  AgentService              │
+│  - Plan / Mode / Approval  │
+│  - ReadingList / Workspace │
+│  - Cowork / Provider       │
+│  - Scheduler               │
+└────────────────────────────┘</code></pre>
+      </div>
+    </div>
 
-  <div class="footer">
-    <p><a href="https://github.com/leemind-q/hermes-browser">GitHub repo</a> · <a href="https://github.com/leemind-q/hermes-browser/blob/main/README.md">README</a></p>
-    <p>License: AGPL-3 compatible architecture (own implementation, no code copied from BrowserOS)</p>
+    <div class="section">
+      <h2>GitHub &amp; Quick Links</h2>
+      <ul class="diff-list">
+        <li><a href="https://github.com/leemind-q/hermes-browser" target="_blank">github.com/leemind-q/hermes-browser</a> — Source code (AGPL-3)</li>
+        <li><a href="https://github.com/leemind-q/hermes-browser#readme" target="_blank">README</a> — Full documentation</li>
+        <li><a href="https://github.com/leemind-q/hermes-browser/actions" target="_blank">GitHub Actions</a> — Auto tests on push</li>
+        <li>MIT-derived safe fork of <a href="https://github.com/browseros-ai/BrowserOS" target="_blank">browserOS-ai/BrowserOS</a></li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>Hermes Browser V12 · Built by <a href="https://github.com/leemind-q">leemind-q</a> · Last updated 2026-07-11</p>
+    </div>
   </div>
 </body>
 </html>
