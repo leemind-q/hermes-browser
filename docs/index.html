@@ -212,9 +212,9 @@
     <h2>Three Differentiators</h2>
     <div class="grid">
       <div class="card">
-        <div class="num">70</div>
+        <div class="num">75</div>
         <h3>MCP-First Architecture</h3>
-        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks, git integration.</p>
+        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks, full git workflow, browser extensions.</p>
       </div>
       <div class="card">
         <div class="num">12</div>
@@ -222,9 +222,9 @@
         <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS, <strong>Naver HyperCLOVA X</strong>. Zero provider lock-in. 30-second swap.</p>
       </div>
       <div class="card">
-        <div class="num">26</div>
+        <div class="num">31</div>
         <h3>Cowork for Engineers</h3>
-        <p>Files + browser + AI + Git. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch + multi-agent locks + leases + atomic bulk edit + git status/log/diff/blame.</p>
+        <p>Files + browser + AI + Git. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Multi-agent locks + atomic bulk edit + git status/log/diff/blame/commit/push/branch/checkout.</p>
       </div>
     </div>
 
@@ -258,6 +258,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <li><strong>Day 10:</strong> V16 design polish (vertical tabs + split view + settings panel) + Cowork v4 (backup/exclude/diff)</li>
         <li><strong>Day 11:</strong> V17 final polish (AI sidebar auto-expand + workspace tags + shortcut modal + font scale) + Cowork v5 (lock/lease/task queue/shared state) + Tab thumbnail gallery</li>
         <li><strong>Day 12:</strong> V18: Cowork v6.5 (search-replace + autoLock + atomic rollback + changeSummary) + Cowork v6 (git_status/log/diff/blame/show) + Pages V18 (실사용 workflow gallery)</li>
+        <li><strong>Day 13:</strong> V19: Cowork v7 (git_commit/push/pull/branch/checkout + _gitBin helper) + Firefox MV2 extension + Pages V19</li>
       </ul>
     </div>
 
@@ -327,7 +328,17 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <div class="card">
           <h3>🔧 Git Integration</h3>
           <img src="screenshots/v18-git.png" alt="Git" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
-          <p>V18: git_status / git_log / git_diff / git_blame / git_show — 5개 MCP 도구.</p>
+          <p>V18-V19: 10개 MCP 도구 (status/log/diff/blame/show/commit/push/pull/branch/checkout) — 완전 git workflow 자동화.</p>
+        </div>
+        <div class="card">
+          <h3>🦊 Firefox 확장</h3>
+          <img src="screenshots/v19-firefox.png" alt="Firefox" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>V19: Firefox 109+ MV2 확장 — Chrome과 동일한 cowork 도구 사용 가능.</p>
+        </div>
+        <div class="card">
+          <h3>⚛️ Atomic Bulk Edit</h3>
+          <img src="screenshots/v19-atomic.png" alt="Atomic" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>V18.5: autoLock + atomic rollback — 여러 파일 안전 bulk edit. 실패 시 자동 복구.</p>
         </div>
       </div>
     </div>
@@ -371,7 +382,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v18.0 · Last updated 2026-07-11</span>
+      <span>version: v19.0 · Last updated 2026-07-11</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
