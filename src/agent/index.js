@@ -15,6 +15,7 @@ const { createStructuredAction, PlanState } = require('./plan');
 const { ApprovalManager } = require('./approval');
 const { PersistenceStore } = require('./persistence');
 const { CredentialVault } = require('./credentials');
+const { CoworkService } = require('./cowork');
 const { extractPageContext, extractTabContext, getAllTabContexts, getMultiTabContexts, extractSearchResults, readPageContent } = require('./extraction');
 const { clickElement, fillElement, findElementByRef, findElementByText, sleep } = require('./actions');
 
@@ -286,6 +287,37 @@ class AgentService {
   listCredentials() { return this.credentials.list(); }
   removeCredential(domain) { return this.credentials.remove(domain); }
   getCredential(domain) { return this.credentials.get(domain); }
+
+  // ============ V12 Cowork (Files + Browser + AI) ============
+  /** List files in a directory with optional pattern filter */
+  async coworkList(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.listDir(args);
+  }
+
+  /** Read a text file (with size limits). Returns metadata for binary files. */
+  async coworkRead(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.readFile(args);
+  }
+
+  /** Grep regex across files (uses system grep) */
+  async coworkGrep(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.grepFiles(args);
+  }
+
+  /** Search files by name pattern OR content pattern */
+  async coworkSearch(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.searchFiles(args);
+  }
+
+  /** Get file metadata (size, mtime, mime type) */
+  async coworkStat(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.fileStat(args);
+  }
 
 
   // ============ Multi-tab batch actions ============

@@ -242,6 +242,18 @@ function buildAgent() {
   });
   a.scheduler.load().catch(err => console.warn('[scheduler] load failed:', err.message));
   a.scheduler.start();
+
+  // V12 Cowork: files + browser + AI integration
+  const workspaceRoot = path.join(app.getPath('home'), 'Hermes-Workspace');
+  try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch {}
+  const { CoworkService } = require('./src/agent/cowork');
+  a.cowork = new CoworkService({
+    workspaceRoot,
+    maxFileSize: 10 * 1024 * 1024,  // 10MB
+    maxResults: 100,
+  });
+  console.log('[cowork] initialized at', workspaceRoot);
+
   return a;
 }
 agent = buildAgent();

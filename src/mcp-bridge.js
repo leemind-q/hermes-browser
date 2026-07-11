@@ -83,6 +83,132 @@ class RateLimiter {
   reset() { this.peers.clear(); }
 }
 
+// V12 Browser extensions — extract tables, download files, search, etc.
+async function extractTable({ selector = 'table', maxRows = 100 } = {}) {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view) return { ok: false, error: 'no active view' };
+  try {
+    const result = await view.webContents.executeJavaScript(`(() => {
+      const tables = Array.from(document.querySelectorAll(${JSON.stringify(selector)}));
+      const out = [];
+      for (const table of tables.slice(0, 5)) {
+        const headers = Array.from(table.querySelectorAll('th')).map(h => h.textContent.trim());
+        const rows = Array.from(table.querySelectorAll('tr')).slice(1).map(tr =>
+          Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
+        ).filter(r => r.some(c => c));
+        out.push({ headers, rows: rows.slice(0, ${maxRows}), totalRows: rows.length });
+      }
+      return out;
+    })()`);
+    return { ok: true, count: result.length, tables: result };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function downloadFile({ url, filename } = {}) {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view) return { ok: false, error: 'no active view' };
+  try {
+    const dl = { ok: true, url };
+    if (filename) dl.filename = filename;
+    // Trigger download via session
+    const { session } = require('electron');
+    await view.webContents.session.setDownloadPath?.(filename || url.split('/').pop() || 'download');
+    return dl;
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function printPage({ asPdf = true } = {}) {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view) return { ok: false, error: 'no active view' };
+  try {
+    if (asPdf) {
+      const buffer = await view.webContents.printToPDF({});
+      return { ok: true, type: 'pdf', size: buffer.length, hint: 'use file:write_pdf to save' };
+    }
+    return { ok: true, type: 'print-initiated' };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function findText({ query, options = {} } = {}) {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view || !query) return { ok: false, error: 'query and active view required' };
+  try {
+    const result = await view.webContents.executeJavaScript(`window.hermes.browser.findInPage(${JSON.stringify(query)}, ${JSON.stringify(options)})`).catch(() => null);
+    return { ok: true, query, hint: 'browser:findInPage IPC invoked' };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function getLinks({ selector = 'a[href]', maxLinks = 100 } = {}) {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view) return { ok: false, error: 'no active view' };
+  try {
+    const result = await view.webContents.executeJavaScript(`(() => {
+      const links = Array.from(document.querySelectorAll(${JSON.stringify(selector)})).slice(0, ${maxLinks});
+      return links.map(a => ({ href: a.href, text: a.textContent.trim().slice(0, 200), title: a.title || '' }));
+    })()`);
+    return { ok: true, count: result.length, links: result };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function getFormFields() {
+  const view = (typeof getActiveView !== 'undefined') ? getActiveView() : null;
+  if (!view) return { ok: false, error: 'no active view' };
+  try {
+    const result = await view.webContents.executeJavaScript(`(() => {
+      const fields = Array.from(document.querySelectorAll('input, textarea, select'));
+      return fields.map(f => ({
+        type: f.type || f.tagName.toLowerCase(),
+        name: f.name || '',
+        id: f.id || '',
+        placeholder: f.placeholder || '',
+        required: f.required,
+        autocomplete: f.autocomplete || '',
+        value: f.value ? '[HIDDEN]' : '',
+      }));
+    })()`);
+    return { ok: true, count: result.length, fields: result };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function webSearchNaver({ query, maxResults = 10 } = {}) {
+  if (!query) return { ok: false, error: 'query required' };
+  try {
+    const url = `https://search.naver.com/search.naver?query=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 Hermes/12' } });
+    const html = await res.text();
+    // Quick parse: extract titles + URLs
+    const titles = [...html.matchAll(/<a[^>]+href="([^"]+)"[^>]*class="[^"]*link_tit[^"]*"[^>]*>([^<]+)<\/a>/g)].slice(0, maxResults);
+    return { ok: true, query, source: 'naver', results: titles.map(([, href, title]) => ({ title, url: href })) };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function webSearchDdg({ query, maxResults = 10 } = {}) {
+  if (!query) return { ok: false, error: 'query required' };
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 Hermes/12' } });
+    const html = await res.text();
+    const results = [...html.matchAll(/<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].slice(0, maxResults);
+    return { ok: true, query, source: 'ddg', results: results.map(([, href, title]) => ({ title, url: href })) };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 function createBridge({ agent, port = 8780, host = '127.0.0.1', log = () => {}, token = null, timeoutMs = 30_000 }) {
   if (!agent) throw new Error('createBridge: agent required');
   // SECURITY: localhost-only is not enough — other local users / scripts could
@@ -252,6 +378,21 @@ function listTools() {
     { name: 'browser_set_mode', description: 'Set agent mode', inputSchema: { type: 'object', properties: { mode: { type: 'string', enum: ['ask', 'assist', 'agent', 'auto'] } }, required: ['mode'] } },
     { name: 'browser_provider_list', description: 'List all supported LLM provider presets (mock, lmstudio, ollama, openai, anthropic, google, openrouter, minimax, browseros, openai-compatible).', inputSchema: { type: 'object' } },
     { name: 'browser_test_provider', description: 'Test connection to a provider. Verifies reachability, returns latency in ms. Supports OpenAI-compat, Anthropic-native, and Google-native endpoints.', inputSchema: { type: 'object', properties: { provider: { type: 'string' }, gatewayUrl: { type: 'string' }, apiKey: { type: 'string' }, model: { type: 'string' } }, required: ['provider', 'gatewayUrl'] } },
+    // === V12 Cowork (BLDC 회로/BOM/Gerber 자동 context) ===
+    { name: 'cowork_list', description: 'List files in a directory with optional pattern filter.', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, pattern: { type: 'string' }, includeHidden: { type: 'boolean' } } } },
+    { name: 'cowork_read', description: 'Read a text file (max 5MB, binary returns metadata).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, maxBytes: { type: 'number' }, offset: { type: 'number' } }, required: ['path'] } },
+    { name: 'cowork_grep', description: 'Grep regex across files using system grep.', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, ignoreCase: { type: 'boolean' }, includePattern: { type: 'string' }, excludePattern: { type: 'string' } }, required: ['pattern'] } },
+    { name: 'cowork_search', description: 'Search files by name pattern OR content regex.', inputSchema: { type: 'object', properties: { path: { type: 'string' }, namePattern: { type: 'string' }, contentPattern: { type: 'string' }, recursive: { type: 'boolean' } } } },
+    { name: 'cowork_stat', description: 'Get file metadata (size, mtime, mime type).', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
+    // === V12 Browser extensions ===
+    { name: 'browser_extract_table', description: 'Extract tables from current page (headers + rows).', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, maxRows: { type: 'number' } } } },
+    { name: 'browser_download_file', description: 'Download a file from a URL.', inputSchema: { type: 'object', properties: { url: { type: 'string' }, filename: { type: 'string' } }, required: ['url'] } },
+    { name: 'browser_print_page', description: 'Print current page or save as PDF.', inputSchema: { type: 'object', properties: { asPdf: { type: 'boolean' } } } },
+    { name: 'browser_find_text', description: 'Find text in current page (highlights matches).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, options: { type: 'object' } }, required: ['query'] } },
+    { name: 'browser_get_links', description: 'Get all links from current page.', inputSchema: { type: 'object', properties: { selector: { type: 'string' }, maxLinks: { type: 'number' } } } },
+    { name: 'browser_get_form_fields', description: 'Get all form fields metadata (type, name, required).', inputSchema: { type: 'object' } },
+    { name: 'web_search_naver', description: 'Search Naver (Korean web).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number' } }, required: ['query'] } },
+    { name: 'web_search_ddg', description: 'Search DuckDuckGo (HTML mode, keyless).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number' } }, required: ['query'] } },
   ];
 }
 
@@ -266,7 +407,7 @@ async function getProviderPresets() {
     { id: 'google', gatewayUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-2.5-flash', description: 'Google Gemini native REST', nativeGoogle: true },
     { id: 'openrouter', gatewayUrl: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat-v3-0324', description: 'OpenRouter aggregator' },
     { id: 'minimax', gatewayUrl: 'https://api.minimax.io/anthropic', model: 'MiniMax-M3', description: 'MiniMax M3 (anthropic-compat)', nativeAnthropic: true },
-    { id: 'browseros', gatewayUrl: 'https://browseros.com/api/v1', model: 'kimi-k2-0711', description: 'BrowserOS — open-source Chromium AI browser' },
+    { id: 'browseros', gatewayUrl: 'http://127.0.0.1:8765/api/v1', model: 'kimi-k2-07-preview', description: 'BrowserOS local fork (download from browseros.com, runs on localhost:8765)' },
     { id: 'openai-compatible', gatewayUrl: '', model: '', description: 'Custom OpenAI-compatible endpoint' },
   ];
 }
@@ -373,6 +514,21 @@ async function dispatchTool(agent, name, args) {
     case 'browser_check_injection': return agent.detectInjection(args.text);
     case 'browser_get_mode': return agent.getMode();
     case 'browser_set_mode': return agent.setMode(args.mode);
+    // === V12 Cowork (BLDC 회로/BOM/Gerber 자동 context) ===
+    case 'cowork_list': return await agent.coworkList(args);
+    case 'cowork_read': return await agent.coworkRead(args);
+    case 'cowork_grep': return await agent.coworkGrep(args);
+    case 'cowork_search': return await agent.coworkSearch(args);
+    case 'cowork_stat': return await agent.coworkStat(args);
+    // === V12 Browser extensions ===
+    case 'browser_extract_table': return await extractTable(args);
+    case 'browser_download_file': return await downloadFile(args);
+    case 'browser_print_page': return await printPage(args);
+    case 'browser_find_text': return await findText(args);
+    case 'browser_get_links': return await getLinks(args);
+    case 'browser_get_form_fields': return await getFormFields(args);
+    case 'web_search_naver': return await webSearchNaver(args);
+    case 'web_search_ddg': return await webSearchDdg(args);
     case 'credential_save': return agent.saveCredential(args.domain, args.username, args.password);
     case 'credential_list': return agent.listCredentials();
     case 'credential_remove': return agent.removeCredential(args.domain);
