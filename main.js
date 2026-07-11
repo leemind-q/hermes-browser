@@ -1114,12 +1114,14 @@ ipcMain.handle('browser:testProvider', async (_e, args) => {
         max_tokens: 4,
         messages: [{ role: 'user', content: 'hi' }],
       });
-    } else if (provider === 'minimax') {
-      // Per Hermes memory: base ends with /anthropic — that IS the endpoint
-      url = `${base}`;
+        } else if (provider === 'minimax') {
+      // MiniMax: base = https://api.minimax.io/anthropic → endpoint {base}/v1/messages
+      // Per Hermes memory: base_url must end with /anthropic, NOT /v1
+      // MiniMax uses X-Api-Key (capitalized) + anthropic-version
+      url = `${base}/v1/messages`;
       headers = {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey || '',
+        'X-Api-Key': apiKey || '',
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       };

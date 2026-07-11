@@ -281,11 +281,14 @@ async function testProviderConnection(args) {
     const preset = presets.find(p => p.id === provider) || {};
     let url, headers, body;
     if (preset.nativeAnthropic || provider === 'anthropic' || provider === 'minimax') {
-      const stripped = provider === 'minimax' ? base.replace(/\/anthropic$/, '') : base;
-      url = `${stripped}/v1/messages`;
+      // All nativeAnthropic providers: POST {base}/v1/messages
+      // For MiniMax: base = https://api.minimax.io/anthropic → endpoint = {base}/v1/messages
+      // MiniMax uses X-Api-Key (capitalized) per Hermes memory
+      url = `${base}/v1/messages`;
+      const apiKeyHeader = provider === 'minimax' ? 'X-Api-Key' : 'x-api-key';
       headers = {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey || '',
+        [apiKeyHeader]: apiKey || '',
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       };

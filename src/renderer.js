@@ -781,24 +781,18 @@ async function callOpenAICompatible(messages) {
 
   // === Native Anthropic endpoint (used by MiniMax too via /anthropic) ===
   if (preset.nativeAnthropic || provider === 'minimax' || provider === 'anthropic') {
-    // Anthropic native: POST {base}/v1/messages
-    // base = https://api.anthropic.com or https://api.minimax.io/anthropic
-    // Strip trailing /v1 or /anthropic then build {base}/v1/messages
-    let url;
-    if (provider === 'minimax') {
-      // MiniMax: base already ends with /anthropic. Strip it, then add /v1/messages
-      const stripped = base.replace(/\/anthropic$/, '');
-      url = `${stripped}/v1/messages`;
-    } else {
-      // Anthropic: base = https://api.anthropic.com. Add /v1/messages
-      url = `${base}/v1/messages`;
-    }
+    // All nativeAnthropic providers: POST {base}/v1/messages
+    // For MiniMax: base = https://api.minimax.io/anthropic → endpoint = {base}/v1/messages (NO strip)
+    // Per Hermes memory: base_url must end with /anthropic, NOT /v1
+    // MiniMax uses X-Api-Key (capitalized) — different from Anthropic's x-api-key
+    const url = `${base}/v1/messages`;
+    const apiKeyHeader = provider === 'minimax' ? 'X-Api-Key' : 'x-api-key';
     log('llm', `POST ${url} (anthropic-native) model=${model}`);
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        [apiKeyHeader]: apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',  // browser-side call
       },
