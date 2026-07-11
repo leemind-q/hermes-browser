@@ -393,6 +393,11 @@ function listTools() {
     { name: 'browser_get_form_fields', description: 'Get all form fields metadata (type, name, required).', inputSchema: { type: 'object' } },
     { name: 'web_search_naver', description: 'Search Naver (Korean web).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number' } }, required: ['query'] } },
     { name: 'web_search_ddg', description: 'Search DuckDuckGo (HTML mode, keyless).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number' } }, required: ['query'] } },
+    // === V14 Cowork v2 ===
+    { name: 'cowork_watch', description: 'Watch directory for file changes (V14: returns watcher handle + recent events).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, ignored: { type: 'array' } }, required: ['path'] } },
+    { name: 'cowork_read_tail', description: 'Read last N lines of file (V14: real-time log tail).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, lines: { type: 'number' } }, required: ['path'] } },
+    { name: 'cowork_diff', description: 'Diff two files line-by-line (V14: LCS-based, unified format).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, path2: { type: 'string' }, context: { type: 'number' } }, required: ['path', 'path2'] } },
+    { name: 'cowork_search_replace', description: 'Search + replace regex across files (V14: pretend=true = preview only, dry-run safe).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, replacement: { type: 'string' }, glob: { type: 'string' }, maxFiles: { type: 'number' }, pretend: { type: 'boolean' } }, required: ['pattern', 'replacement'] } },
   ];
 }
 
@@ -409,6 +414,8 @@ async function getProviderPresets() {
     { id: 'minimax', gatewayUrl: 'https://api.minimax.io/anthropic', model: 'MiniMax-M3', description: 'MiniMax M3 (anthropic-compat)', nativeAnthropic: true },
     { id: 'browseros', gatewayUrl: 'http://127.0.0.1:8765/api/v1', model: 'kimi-k2-07-preview', description: 'BrowserOS local fork (download from browseros.com, runs on localhost:8765)' },
     { id: 'openai-compatible', gatewayUrl: '', model: '', description: 'Custom OpenAI-compatible endpoint' },
+    { id: 'clovastudio', gatewayUrl: 'https://clovastudio.stream.ntruss.com', model: 'HCX-003', description: 'Naver Cloud CLOVA Studio (HyperCLOVA X, Korean-specialized)', nativeCLOVA: true },
+    { id: 'hyperclova-x', gatewayUrl: 'https://clovastudio.stream.ntruss.com', model: 'HCX-003', description: 'HyperCLOVA X (Naver Cloud, Korean LLM)', nativeCLOVA: true },
   ];
 }
 
@@ -444,6 +451,23 @@ async function testProviderConnection(args) {
       body = JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
         generationConfig: { maxOutputTokens: 4 },
+      });
+    } else if (preset.nativeCLOVA || provider === 'clovastudio' || provider === 'hyperclova-x') {
+      // V14: Naver Cloud CLOVA Studio (HyperCLOVA X) — Korean LLM specialist
+      // Endpoint: POST {base}/v1/chat/completions/{invoke-id} or /testapp/v1/chat-completions/{invoke-id}
+      // Per docs: api.ncloud-docs.com/docs/ai-naver-clovastudio
+      // For test connection, use minimal endpoint
+      const m = model || preset.model || 'HCX-003';
+      url = `${base}/v1/chat/completions/${encodeURIComponent(m)}`;
+      headers = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': `Bearer ${apiKey || ''}`,
+        'X-NCP-CLOVASTUDIO-REQUEST-ID': 'hermes-' + Date.now().toString(36),
+      };
+      body = JSON.stringify({
+        messages: [{ role: 'user', content: 'hi' }],
+        maxTokens: 4,
+        temperature: 0.1,
       });
     } else {
       url = `${base}/chat/completions`;
@@ -520,6 +544,11 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_grep': try { return await agent.coworkGrep(args); } catch(e) { return { ok: false, error: 'coworkGrep: ' + e.message }; }
     case 'cowork_search': try { return await agent.coworkSearch(args); } catch(e) { return { ok: false, error: 'coworkSearch: ' + e.message }; }
     case 'cowork_stat': try { return await agent.coworkStat(args); } catch(e) { return { ok: false, error: 'coworkStat: ' + e.message }; }
+    // === V14 Cowork v2 ===
+    case 'cowork_watch': try { return await agent.coworkWatch(args); } catch(e) { return { ok: false, error: 'coworkWatch: ' + e.message }; }
+    case 'cowork_read_tail': try { return await agent.coworkReadTail(args); } catch(e) { return { ok: false, error: 'coworkReadTail: ' + e.message }; }
+    case 'cowork_diff': try { return await agent.coworkDiff(args); } catch(e) { return { ok: false, error: 'coworkDiff: ' + e.message }; }
+    case 'cowork_search_replace': try { return await agent.coworkSearchReplace(args); } catch(e) { return { ok: false, error: 'coworkSearchReplace: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);

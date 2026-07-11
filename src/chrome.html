@@ -1208,7 +1208,146 @@ button:focus-visible, .tab:focus-visible {
   pointer-events: none;
 }
 .tab[data-active="true"] .tab-name { font-weight: 600; color: var(--ink-strong); }
+
+/* ============================================================
+   V14 PREMIUM UI REFINEMENT (Day 8)
+   - Subtle gradient mesh background (theme-aware)
+   - Tab hover thumbnail preview
+   - Better focus rings (gold glow)
+   - Micro-interactions polish
+   ============================================================ */
+
+/* Gradient mesh background — subtle blobs that shift with theme */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 12% 18%, var(--glass-refraction-gold) 0%, transparent 28%),
+    radial-gradient(circle at 88% 32%, var(--glass-refraction-cyan) 0%, transparent 32%),
+    radial-gradient(circle at 50% 80%, var(--glass-refraction-violet) 0%, transparent 30%);
+  opacity: 0.85;
+  animation: mesh-breathe 12s ease-in-out infinite alternate;
+}
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(251, 191, 36, 0.07) 0%, transparent 32%),
+    radial-gradient(circle at 88% 32%, rgba(91, 200, 255, 0.05) 0%, transparent 36%),
+    radial-gradient(circle at 50% 80%, rgba(151, 128, 255, 0.06) 0%, transparent 34%);
+  opacity: 1;
+}
+@keyframes mesh-breathe {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.08) translate(-2%, -1%); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+/* Tab hover thumbnail preview — V14 signature */
+.tab[data-thumb]:hover::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 150px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(20, 30, 50, 0.18), 0 4px 8px rgba(20, 30, 50, 0.08);
+  background-image: var(--thumb-bg, none);
+  background-size: cover;
+  background-position: top;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  animation: thumb-pop 200ms var(--ease-spring) forwards;
+  animation-delay: 400ms;
+}
+@keyframes thumb-pop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.96); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* Better focus rings — gold glow */
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg-elevated),
+    0 0 0 4px var(--gold),
+    0 0 18px rgba(251, 191, 36, 0.4);
+}
+
+/* Topbar — V14 refined */
+.topbar {
+  background: var(--glass-bg-strong) !important;
+  backdrop-filter: blur(40px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(220%) !important;
+  border-color: var(--glass-edge-light) !important;
+}
+
+/* Glass effect on right/left panels (premium) */
+.floating-panel {
+  background: var(--glass-bg-strong) !important;
+  backdrop-filter: blur(36px) saturate(210%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(210%) !important;
+}
+
+/* Sidebar item active state with gold glow */
+.sidebar-item[data-active="true"] {
+  background: var(--gold-soft) !important;
+  color: var(--ink-strong) !important;
+  box-shadow: inset 3px 0 0 var(--gold), 0 0 12px rgba(251, 191, 36, 0.18) !important;
+}
+
+/* Tabs — V14 subtle border */
+.tab {
+  transition: var(--anim-fast);
+}
+.tab:hover:not([data-active="true"]) {
+  background: var(--accent-hover);
+}
+
+/* WebView rounded corners — premium feel */
+webview {
+  border-radius: var(--radius-webview);
+  overflow: hidden;
+}
+
+/* AI response area — shimmer subtle border when loading */
+.chat-scroll[data-loading="true"] {
+  position: relative;
+}
+.chat-scroll[data-loading="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  animation: shimmer-bar 1.6s linear infinite;
+  z-index: 5;
+}
+@keyframes shimmer-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Tool button hover micro-glow */
+.icon-btn:hover, .basics-btn:hover {
+  background: var(--gold-soft) !important;
+  color: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.18) !important;
+}
+
+/* Address bar focus — gold accent */
+.address:focus-within {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-soft) !important;
+}
 </style>
+
 
 </head>
 <body>
@@ -1357,6 +1496,8 @@ button:focus-visible, .tab:focus-visible {
   <option value="openrouter">OpenRouter (openrouter.ai)</option>
   <option value="minimax">MiniMax M3 (api.minimax.io)</option>
   <option value="browseros">BrowserOS (local fork, :8765)</option>
+<option value="clovastudio">Naver CLOVA Studio (HyperCLOVA X)</option>
+<option value="hyperclova-x">HyperCLOVA X (한국어 특화)</option>
   <option value="openai-compatible">OpenAI-compatible (custom URL)</option>
 </select>
   <div id="providerDesc" class="small-muted" style="margin-top:4px;line-height:1.4">Select a provider — gateway URL and model auto-fill.</div>

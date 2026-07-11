@@ -319,6 +319,27 @@ class AgentService {
     return this.cowork.fileStat(args);
   }
 
+  // V14: Cowork v2 — watch, readTail, diff, searchReplace
+  async coworkWatch(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.watch(args);
+  }
+
+  async coworkReadTail(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.readTail(args);
+  }
+
+  async coworkDiff(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.diff(args);
+  }
+
+  async coworkSearchReplace(args) {
+    if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' };
+    return this.cowork.searchReplace(args);
+  }
+
 
   // ============ Multi-tab batch actions ============
   /**

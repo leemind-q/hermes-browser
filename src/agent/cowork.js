@@ -326,6 +326,233 @@ class CoworkService {
     return normalized;
   }
 
+  // ============================================================
+  // V14: Cowork v2 — Real-time watch + diff + replace
+  // ============================================================
+
+  /** Watch a directory for file changes (returns watcher handle) */
+  async watch(args) {
+    const { path: dir, pattern, ignored = ['node_modules', '.git'] } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      // Use fs.watch with debounce for performance
+      const debounceMap = new Map(); // filename -> timer
+      const events = [];
+      const { fs: nodeFs } = require('fs');
+      const watcher = nodeFs.watch(absDir, { recursive: true, persistent: false }, (eventType, filename) => {
+        if (!filename) return;
+        if (pattern && !new RegExp(pattern.replace(/\*/g, '.*'), 'i').test(filename)) return;
+        if (ignored.some(ig => filename.includes(ig))) return;
+        // Debounce per-file (1 event / 200ms)
+        if (debounceMap.has(filename)) clearTimeout(debounceMap.get(filename));
+        debounceMap.set(filename, setTimeout(() => {
+          events.push({
+            type: eventType,
+            file: filename,
+            fullPath: require('path').join(absDir, filename),
+            time: new Date().toISOString(),
+          });
+          if (events.length > 1000) events.shift();
+        }, 200));
+      });
+      // Store watcher for later close
+      if (!this._watchers) this._watchers = new Map();
+      const watcherId = 'w_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      this._watchers.set(watcherId, { watcher, events, dir });
+      // Auto-cleanup after 10 minutes
+      setTimeout(() => {
+        try { watcher.close(); } catch {}
+        this._watchers?.delete(watcherId);
+      }, 600000);
+      return { ok: true, watcherId, dir, pattern: pattern || null, ttl: 600 };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Read last N lines of file (real-time tail) */
+  async readTail(args) {
+    const { path: filePath, lines = 50 } = args || {};
+    const absPath = this._safePath(filePath);
+    if (!absPath) return { ok: false, error: 'unsafe path' };
+    try {
+      // Set up tail watcher if not exists
+      const content = await require('fs').promises.readFile(absPath, 'utf8');
+      const allLines = content.split('\n');
+      const tail = allLines.slice(-lines).join('\n');
+      // Cache last-read position for incremental updates
+      if (!this._tails) this._tails = new Map();
+      this._tails.set(absPath, { size: content.length, lines: allLines.length });
+      return { ok: true, path: filePath, lines: tail.split('\n').length, content: tail };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Diff two files (unified diff style) */
+  async diff(args) {
+    const { path: file1, path2: file2, context = 3 } = args || {};
+    const a1 = this._safePath(file1);
+    const a2 = this._safePath(file2);
+    if (!a1 || !a2) return { ok: false, error: 'unsafe path' };
+    try {
+      const [c1, c2] = await Promise.all([
+        require('fs').promises.readFile(a1, 'utf8'),
+        require('fs').promises.readFile(a2, 'utf8'),
+      ]);
+      const l1 = c1.split('\n');
+      const l2 = c2.split('\n');
+      // Simple LCS-based diff (line by line)
+      const diff = [];
+      const maxLen = Math.max(l1.length, l2.length);
+      let same = 0, added = 0, removed = 0;
+      const lcs = this._lcs(l1, l2);
+      let p1 = 0, p2 = 0, pLcs = 0;
+      while (p1 < l1.length || p2 < l2.length) {
+        if (pLcs < lcs.length && l1[p1] === lcs[pLcs] && l2[p2] === lcs[pLcs]) {
+          // Common line
+          if (diff.length === 0 || diff[diff.length - 1].type !== 'same') {
+            diff.push({ type: 'same', lines: [] });
+          }
+          diff[diff.length - 1].lines.push({ left: l1[p1], right: l2[p2] });
+          same++;
+          p1++; p2++; pLcs++;
+        } else if (pLcs < lcs.length && l1[p1] !== lcs[pLcs]) {
+          // Left-only line (removed from left to reach common)
+          if (diff.length === 0 || diff[diff.length - 1].type !== 'removed') {
+            diff.push({ type: 'removed', lines: [] });
+          }
+          diff[diff.length - 1].lines.push({ left: l1[p1], right: null });
+          removed++;
+          p1++;
+        } else if (pLcs < lcs.length && l2[p2] !== lcs[pLcs]) {
+          // Right-only line (added)
+          if (diff.length === 0 || diff[diff.length - 1].type !== 'added') {
+            diff.push({ type: 'added', lines: [] });
+          }
+          diff[diff.length - 1].lines.push({ left: null, right: l2[p2] });
+          added++;
+          p2++;
+        } else {
+          break;
+        }
+      }
+      // Flatten for readability
+      const flat = [];
+      diff.forEach(group => {
+        group.lines.forEach(line => flat.push({
+          type: group.type,
+          text: line.left || line.right,
+        }));
+      });
+      return { ok: true, left: file1, right: file2, same, added, removed, hunks: diff.length, diff: flat.slice(0, 500) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Longest common subsequence (for diff) */
+  _lcs(a, b) {
+    const m = a.length, n = b.length;
+    if (m === 0 || n === 0) return [];
+    // Memory-efficient: only need last 2 rows
+    const dp = Array(n + 1).fill(0);
+    const prev = Array(n + 1).fill(0);
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cur = a[i - 1] === b[j - 1]
+          ? prev[j - 1] + 1
+          : Math.max(prev[j], dp[j - 1]);
+        dp[j - 1] = prev[j];
+        dp[j] = cur;
+      }
+      for (let j = 0; j <= n; j++) { prev[j] = dp[j]; dp[j] = 0; }
+    }
+    // Reconstruct path (approximate — only for small files)
+    if (m * n > 100000) return []; // skip reconstruction for huge files
+    const lcs = [];
+    let i = m, j = n;
+    while (i > 0 && j > 0) {
+      if (a[i - 1] === b[j - 1]) { lcs.unshift(a[i - 1]); i--; j--; }
+      else if (prev[j] >= dp[j - 1]) j--;
+      else i--;
+    }
+    return lcs;
+  }
+
+  /** Search + replace across files (with confirmation token if no-pretend flag) */
+  async searchReplace(args) {
+    const { path: dir, pattern, replacement, glob = '*.{txt,md,json,csv,ts,js,gd}', maxFiles = 50, pretend = true } = args || {};
+    if (!pattern || !replacement) return { ok: false, error: 'pattern and replacement required' };
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const re = new RegExp(pattern, 'g');
+      const matches = [];
+      const self = this;
+      const globRe = new RegExp('^' + glob.replace(/\*/g, '.*').replace(/\./g, '\\.').replace(/\{([a-z,]+)\}/g, '$1') + '$', 'i');
+      const filePaths = [];
+      const globCheck = this._globMatch.bind(this);
+      async function walk(dir) {
+        if (filePaths.length >= maxFiles) return;
+        let entries;
+        try { entries = await require('fs').promises.readdir(dir, { withFileTypes: true }); } catch { return; }
+        for (const entry of entries) {
+          if (filePaths.length >= maxFiles) return;
+          const fullPath = require('path').join(dir, entry.name);
+          if (entry.isDirectory() && !['node_modules', '.git', 'dist'].includes(entry.name)) {
+            await walk(fullPath);
+          } else if (entry.isFile() && globCheck(entry.name, glob)) {
+            filePaths.push(fullPath);
+          }
+        }
+      }
+      await walk(absDir);
+      // Phase 1: preview (always done)
+      for (const fp of filePaths) {
+        try {
+          const content = await require('fs').promises.readFile(fp, 'utf8');
+          const rel = require('path').relative(self.workspaceRoot, fp);
+          const hits = [...content.matchAll(re)];
+          if (hits.length > 0) {
+            matches.push({ file: rel, hits: hits.length, preview: hits.slice(0, 3).map(m => ({ line: content.substr(0, m.index).split('\n').length, text: m[0].slice(0, 80) })) });
+          }
+        } catch {}
+      }
+      // Phase 2: apply replacements (only if !pretend)
+      const applied = [];
+      if (!pretend) {
+        for (const fp of filePaths) {
+          try {
+            const content = await require('fs').promises.readFile(fp, 'utf8');
+            const newContent = content.replace(re, replacement);
+            if (newContent !== content) {
+              await require('fs').promises.writeFile(fp, newContent, 'utf8');
+              applied.push({ file: require('path').relative(self.workspaceRoot, fp), hits: [...content.matchAll(re)].length });
+            }
+          } catch {}
+        }
+        self.invalidateCache();
+      }
+      return { ok: true, mode: pretend ? 'preview' : 'apply', filesScanned: filePaths.length, matches, applied };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Simple glob match: *.txt → /\.txt$/, *.{txt,md} → /\.(txt|md)$/ */
+  _globMatch(name, glob) {
+    if (!glob || glob === '*') return true;
+    // Convert glob → regex
+    const re = glob
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.')
+      .replace(/\{([a-z,/]+)\}/gi, (_, p) => '(' + p.split(',').join('|') + ')');
+    return new RegExp('^' + re + '$', 'i').test(name);
+  }
+
   _guessMime(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const map = {

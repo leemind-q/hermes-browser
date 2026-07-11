@@ -285,6 +285,20 @@ const PROVIDER_PRESETS = {
     apiKeyPlaceholder: '(per provider)',
     description: 'Custom OpenAI-compatible endpoint',
   },
+  clovastudio: {
+    gatewayUrl: 'https://clovastudio.stream.ntruss.com',
+    model: 'HCX-003',
+    apiKeyPlaceholder: 'NC-CLOVA-...',
+    description: 'Naver Cloud CLOVA Studio (HyperCLOVA X, 한국어 특화)',
+    nativeCLOVA: true,
+  },
+  'hyperclova-x': {
+    gatewayUrl: 'https://clovastudio.stream.ntruss.com',
+    model: 'HCX-003',
+    apiKeyPlaceholder: 'NC-CLOVA-...',
+    description: 'HyperCLOVA X (Naver Cloud, 한국어 최적화)',
+    nativeCLOVA: true,
+  },
 };
 
 // V12: Test provider connection
@@ -1299,6 +1313,41 @@ const SettingsPopover = (() => {
   function isOpen() { return state.settingsPopoverOpen; }
   return { init, render, open, close, toggle, position, isOpen, menuConfig };
 })();
+
+// ============================================================
+// V14 — Tab thumbnail preview (hover popup) (Day 8)
+// ============================================================
+
+async function refreshTabThumbnails() {
+  try {
+    const tabs = window.hermes?.tabs?.list?.() || [];
+    tabs.forEach(async (tab, idx) => {
+      try {
+        const tabEl = document.querySelector(`[data-tab-id="${tab.id}"]`);
+        if (!tabEl || tabEl.dataset.thumb) return;
+        const url = tab.url || tab.webContents?.getURL?.() || '';
+        if (!url || url.startsWith('data:') || url.startsWith('about:')) return;
+        // Capture thumbnail via IPC
+        const img = await window.hermes?.api?.request?.('captureTabThumbnail', { tabId: tab.id });
+        if (img) tabEl.dataset.thumb = '1';
+      } catch {}
+    });
+  } catch {}
+}
+
+async function captureTabThumbnail(tabId) {
+  try {
+    const view = (typeof getActiveView === 'function') ? null : null; // Optional optimization
+    return await window.hermes?.api?.request?.('captureTabThumbnail', { tabId });
+  } catch {
+    return null;
+  }
+}
+
+// Refresh thumbnails on tab focus + every 5 seconds
+setTimeout(refreshTabThumbnails, 2000);
+setInterval(refreshTabThumbnails, 5000);
+
 
 // ============================================================
 // V13 — Command Palette (Cmd+K) + Workspace Switcher (Day 7)
