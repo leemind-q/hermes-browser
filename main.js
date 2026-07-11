@@ -179,7 +179,7 @@ function createWindow() {
     frame: false,
     autoHideMenuBar: true,
     title: 'Miraecle',
-    backgroundColor: '#f4f7ff',
+    backgroundColor: '#f5f5f7',
     webPreferences: {
       preload: path.join(__dirname, 'src', 'preload.js'),
       contextIsolation: true,
@@ -267,7 +267,15 @@ if (process.env.HERMES_MCP_BRIDGE !== 'off') {
   }
 }
 
-app.whenReady().then(createWindow);
+// Force Chromium to use light color scheme regardless of OS setting
+const { nativeTheme } = require('electron');
+app.commandLine.appendSwitch('disable-features', 'WebContentsForceDark,ForceDark,AutoDarkMode,WebUIDarkMode');
+app.commandLine.appendSwitch('force-prefers-color-scheme', 'light');
+app.whenReady().then(async () => {
+  // Belt-and-suspenders: force light theme at Electron API level
+  nativeTheme.themeSource = 'light';
+  createWindow();
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
@@ -313,6 +321,9 @@ function createTab(url = 'https://www.google.com', options = {}) {
       nodeIntegration: false,
       sandbox: true,
       partition: `persist:hermes-tab-${id}`,
+      // Force light scheme — disable chromium auto-dark for web content
+      backgroundColor: '#ffffff',
+      offscreen: false,
     },
   });
   const tab = { id, url: normalizeUrl(url), title: 'New Tab', loading: false, domain: '', agentOwned: Boolean(opt.agentOwned), view };

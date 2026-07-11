@@ -7,84 +7,126 @@
   <title>Miraecle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
+        :root {
       /* === Layout — high-density compact panels === */
       --left: 144px; --right: 248px; --top: 54px;
       --gutter: 12px; --gap: 10px; --bottom: 12px;
-      /* Compact sidebar tokens — refined spacing */
+      /* Sidebar spacing */
       --sb-pad: 10px; --sb-gap: 10px; --sb-sec-gap: 16px;
       --sb-row-h: 28px; --sb-card-pad: 8px 10px;
       --sb-title: 11px; --sb-body: 11px; --sb-muted: 10px;
       --sb-icon: 14px; --sb-control-h: 24px; --sb-radius: 8px;
-      /* Collapsed rail */
       --rail-w: 36px;
 
-      /* Typography */
-      font-family: "Inter","Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      /* === Typography: Space Grotesk + DM Sans === */
+      --font-display: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+      --font-body: "DM Sans", "Inter", system-ui, -apple-system, sans-serif;
+      font-family: var(--font-body);
       font-size: 13px;
-      font-feature-settings: "cv11","ss03";
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
 
-      /* Colors — neutral base, one accent */
-      --ink: #101625; --muted: rgba(16,22,37,.78); --faint: rgba(16,22,37,.58);
-      --accent: #5b6cff; --accent-soft: rgba(91,108,255,.08); --accent-hover: rgba(91,108,255,.14);
-      --danger: #ef4444; --warn: #f59e0b; --success: #22c55e;
-      --bg: #eef1f6;
+      /* === Color System: Light + Gold === */
+      --bg: #f5f5f7;
+      --bg-elevated: #ffffff;
+      --bg-subtle: #fafafa;
+      --bg-panel: rgba(255, 255, 255, 0.72);
+      --ink: #1a1a2e;
+      --ink-strong: #0f0f1e;
+      --muted: rgba(26, 26, 46, 0.7);
+      --faint: rgba(26, 26, 46, 0.5);
+      --border: rgba(26, 26, 46, 0.08);
+      --border-strong: rgba(26, 26, 46, 0.14);
 
-      /* === Liquid Glass Material System — optical material, not plastic === */
-      --glass-bg: rgba(255,255,255,.20);
-      --glass-bg-strong: rgba(255,255,255,.31);
-      --glass-bg-edge: rgba(255,255,255,.55);
-      --glass-blur: blur(20px) saturate(152%) brightness(1.06);
-      --glass-saturation: saturate(152%);
-      --glass-edge-light: rgba(255,255,255,.72);
-      --glass-edge-dark: rgba(0,0,0,.075);
-      --glass-inner-highlight: inset 0 1px 0 rgba(255,255,255,.62), inset 1px 0 0 rgba(255,255,255,.28);
-      --glass-inner-shadow: inset 0 -2px 8px rgba(0,0,0,.088), inset -1px 0 5px rgba(0,0,0,.05);
-      --glass-shadow: 0 5px 28px rgba(20,30,50,.11), var(--glass-inner-highlight), var(--glass-inner-shadow);
-      --glass-refraction-cyan: rgba(91,200,255,.082);
-      --glass-refraction-violet: rgba(151,128,255,.072);
-      /* Layer 1: base translucent | Layer 2: ::before specular | Layer 3: ::after refraction | Layer 4: box-shadow edge */
+      /* Gold accent (AsIDE quality tone) */
+      --gold: #fbbf24;
+      --gold-soft: rgba(251, 191, 36, 0.12);
+      --gold-hover: rgba(251, 191, 36, 0.22);
+      --gold-glow: 0 0 24px rgba(251, 191, 36, 0.35);
+
+      /* Old accent (kept for compat) */
+      --accent: #5b6cff;
+      --accent-soft: rgba(91, 108, 255, 0.08);
+      --accent-hover: rgba(91, 108, 255, 0.14);
+
+      /* Semantic */
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --success: #22c55e;
+
+      /* === Glass Material System — premium light glass === */
+      --glass-bg: rgba(255, 255, 255, 0.72);
+      --glass-bg-strong: rgba(255, 255, 255, 0.88);
+      --glass-bg-edge: rgba(255, 255, 255, 0.95);
+      --glass-blur: blur(24px) saturate(180%) brightness(1.04);
+      --glass-edge-light: rgba(255, 255, 255, 0.95);
+      --glass-edge-dark: rgba(26, 26, 46, 0.08);
+      --glass-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 1), inset 1px 0 0 rgba(255, 255, 255, 0.6);
+      --glass-inner-shadow: inset 0 -1px 0 rgba(26, 26, 46, 0.04);
+      --glass-shadow: 0 8px 32px rgba(20, 30, 50, 0.08), 0 2px 6px rgba(20, 30, 50, 0.04), var(--glass-inner-highlight), var(--glass-inner-shadow);
+      --glass-refraction-cyan: rgba(91, 200, 255, 0.06);
+      --glass-refraction-violet: rgba(151, 128, 255, 0.05);
+      --glass-refraction-gold: rgba(251, 191, 36, 0.05);
 
       /* Popover glass — strongest */
-      --glass-pop-bg: rgba(255,255,255,.55);
-      --glass-pop-blur: blur(24px) saturate(150%) brightness(1.05);
-      --glass-pop-shadow: 0 12px 40px rgba(20,30,50,.1), inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 6px rgba(0,0,0,.04);
+      --glass-pop-bg: rgba(255, 255, 255, 0.92);
+      --glass-pop-blur: blur(28px) saturate(180%) brightness(1.05);
+      --glass-pop-shadow: 0 24px 64px rgba(20, 30, 50, 0.18), 0 8px 24px rgba(20, 30, 50, 0.08);
 
-      /* === Radius hierarchy — concentric, outer to inner === */
-      --radius-app-shell: 28px;
-      --radius-browser-bezel: 24px;
-      --radius-webview: 16px;  /* = bezel - frameInset(8px) */
+      /* Radius scale */
+      --radius-webview: 16px;
       --radius-sidebar: 18px;
-      --radius-card: 12px;
+      --radius-card: 14px;
       --radius-control: 8px;
       --radius-pill: 999px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
 
       /* Size scale */
       --fs-xs: 11px; --fs-sm: 12px; --fs-base: 13px; --fs-md: 14px; --fs-lg: 15px; --fs-xl: 17px;
       --sp-xs: 4px; --sp-sm: 6px; --sp-md: 8px; --sp-lg: 12px; --sp-xl: 16px;
-      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 18px;
       --btn-size: 32px; --icon-size: 16px;
       --btn-gap: 6px; --group-gap: 10px;
-      --ease: cubic-bezier(.2,.9,.2,1);
-      --ease-spring: cubic-bezier(.34,1.56,.64,1);
+      --ease: cubic-bezier(.2, .9, .2, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
       --anim: .18s ease-out;
+      --anim-slow: .32s cubic-bezier(.2, .9, .2, 1);
+
+      /* Force light scheme */
+      color-scheme: light;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; color: var(--ink); background: var(--bg); }
+    html, body { 
+      margin: 0; width: 100%; height: 100%; overflow: hidden; 
+      color: var(--ink); 
+      background: var(--bg); 
+      color-scheme: light;
+    }
+    html { background: #f5f5f7; }
     body::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
-        radial-gradient(1000px 650px at 8% 5%, rgba(91,200,255,.1), transparent 50%),
-        radial-gradient(800px 550px at 92% 95%, rgba(151,128,255,.09), transparent 50%),
-        radial-gradient(600px 450px at 50% 50%, rgba(91,108,255,.04), transparent 60%),
-        linear-gradient(155deg, #e6eaf2 0%, #dce1ee 50%, #e4e9f3 100%);
+        radial-gradient(1100px 700px at 8% 5%, rgba(251, 191, 36, 0.06), transparent 55%),
+        radial-gradient(900px 600px at 92% 95%, rgba(91, 200, 255, 0.05), transparent 50%),
+        radial-gradient(700px 500px at 50% 50%, rgba(251, 191, 36, 0.025), transparent 60%),
+        linear-gradient(155deg, #f5f5f7 0%, #ffffff 50%, #fafafa 100%);
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.04), transparent 40%);
     }
     button, input, textarea, select { font: inherit; }
     button { border: 0; color: inherit; cursor: pointer; }
+    /* Strong !important force light for any chromium auto-dark override */
+    html, body, *:not(input):not(textarea):not(select) {
+      -webkit-color-scheme: light;
+      color-scheme: light;
+    }
     .app { position: relative; width: 100vw; height: 100vh; }
 
     /* === Animations === */
@@ -535,6 +577,17 @@
 .save-toast.success { color: #27c27c; }
 .save-toast.error { color: #ff4d6d; }
 .save-toast.info { color: #5b8bf7; }
+
+    /* === NUCLEAR LIGHT OVERRIDE — force light on all chromium dark-mode artifacts === */
+    html, body, .app, body::before, body::after {
+      background-color: #f5f5f7 !important;
+      background-image: none !important;
+      filter: none !important;
+    }
+    /* If chromium paints webview bg dark, this stops it */
+    webview, .webview-container, [class*="webview"] {
+      background-color: #f5f5f7 !important;
+    }
 </style>
 </head>
 <body>
