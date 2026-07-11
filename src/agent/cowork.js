@@ -806,7 +806,7 @@ class CoworkService {
   // V18: Cowork v6 — Git integration (child_process exec git)
   // ============================================================
 
-  /** Git status in a directory (or whole workspace) */
+  /** Git status in a directory (or whole workspace) — V18.1: WSL path auto-detect */
   async gitStatus(args) {
     const { path: dir = '.', short = true } = args || {};
     const absDir = this._safePath(dir);
@@ -815,7 +815,10 @@ class CoworkService {
       const { execFile } = require('child_process');
       const util = require('util');
       const exec = util.promisify(execFile);
-      const { stdout } = await exec('git', ['status', short ? '--short' : '--porcelain'], { cwd: absDir, timeout: 10000 });
+      // V18.1: Convert Windows-style path to WSL for git execution
+      const gitCwd = this._toWSLPath(absDir);
+      const gitBin = process.platform === 'win32' ? 'git' : '/usr/bin/git';
+      const { stdout } = await exec(gitBin, ['status', short ? '--short' : '--porcelain'], { cwd: gitCwd, timeout: 10000 });
       const lines = stdout.split('\n').filter(l => l.trim());
       const items = lines.map(line => {
         const status = line.substring(0, 2);
@@ -841,7 +844,7 @@ class CoworkService {
       const { execFile } = require('child_process');
       const util = require('util');
       const exec = util.promisify(execFile);
-      const { stdout } = await exec('git', ['log', `-n`, String(limit), branch, `--pretty=format:${format}`], { cwd: absDir, timeout: 10000 });
+      const { stdout } = await exec('git', ['log', `-n`, String(limit), branch, `--pretty=format:${format}`], { cwd: this._toWSLPath(absDir), timeout: 10000 });
       const lines = stdout.split('\n').filter(l => l.trim());
       const commits = lines.map(line => {
         const [hash, shortHash, author, email, date, ...subjectParts] = line.split('|');
@@ -931,6 +934,17 @@ class CoworkService {
     } catch (e) {
       return { ok: false, error: e.message };
     }
+  }
+
+  /** V18.1: Convert Windows path (C:\...) to WSL path (/mnt/c/...) */
+  _toWSLPath(p) {
+    if (!p) return p;
+    // Already WSL
+    if (p.startsWith('/')) return p;
+    // Windows drive letter
+    const m = p.match(/^([A-Za-z]):[\\/](.+)/);
+    if (m) return '/mnt/' + m[1].toLowerCase() + '/' + m[2].replace(/\\/g, '/');
+    return p;
   }
 
   /** Simple glob match: *.txt → /\.txt$/, *.{txt,md} → /\.(txt|md)$/ */
