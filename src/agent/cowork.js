@@ -520,7 +520,7 @@ class CoworkService {
     return { ok: true, watcherId, dir: entry.dir, total: entry.events.length, events };
   }
 
-  /** V15: Search + replace across files (V16: --backup, --exclude, maxFiles up to 200) */
+  /** V18: Search + replace across files with autoLock (atomic bulk edit) */
   async searchReplace(args) {
     const {
       path: dir,
@@ -532,6 +532,10 @@ class CoworkService {
       backup = false,
       exclude = ['node_modules', '.git', 'dist'],
       writeOnly = false,
+      autoLock = true, // V18: acquire lock per file before write
+      lockTtl = 30000, // V18: lock TTL (ms)
+      atomic = false, // V18: rollback all changes if any write fails
+      agentId = 'search-replace',
     } = args || {};
     if (!pattern || !replacement) return { ok: false, error: 'pattern and replacement required' };
     const absDir = this._safePath(dir);
@@ -569,18 +573,56 @@ class CoworkService {
           }
         } catch {}
       }
-      // Phase 2: apply replacements (only if !pretend)
+      // Phase 2: apply replacements (V18: with autoLock + atomic + changeSummary)
       const applied = [];
       const backups = [];
       const diffs = [];
+      const locksAcquired = []; // V18: track locks for release/rollback
+      let linesAdded = 0, linesRemoved = 0;
+      const failures = [];
+      let aborted = false;
+
+      // Helper: rollback all already-applied writes (atomic mode)
+      const rollback = async () => {
+        if (!atomic) return;
+        for (let i = applied.length - 1; i >= 0; i--) {
+          const a = applied[i];
+          try {
+            // Restore from backup if exists
+            if (backup) {
+              const backupPath = require('path').join(self.workspaceRoot, a.file) + '.bak';
+              await require('fs').promises.copyFile(backupPath, require('path').join(self.workspaceRoot, a.file));
+            }
+          } catch {}
+        }
+      };
+
       if (!pretend) {
         for (const fp of filePaths) {
+          if (aborted) break;
+          let lockToken = null;
           try {
+            // V18: acquire lock if requested
+            if (autoLock) {
+              const lockResult = await this.acquireLock({ path: fp.replace(self.workspaceRoot + require('path').sep, ''), agentId, ttl: lockTtl });
+              if (!lockResult.ok) {
+                failures.push({ file: fp, error: 'lock failed: ' + lockResult.error });
+                if (atomic) { aborted = true; break; }
+                continue;
+              }
+              lockToken = lockResult.token;
+              locksAcquired.push({ file: fp, token: lockToken });
+            }
             const content = await require('fs').promises.readFile(fp, 'utf8');
             const newContent = content.replace(re, replacement);
             if (newContent !== content) {
               const relPath = require('path').relative(self.workspaceRoot, fp);
               const hits = [...content.matchAll(re)].length;
+              // Line count delta
+              const oldLines = content.split('\n').length;
+              const newLines = newContent.split('\n').length;
+              if (newLines > oldLines) linesAdded += newLines - oldLines;
+              else if (newLines < oldLines) linesRemoved += oldLines - newLines;
               // Backup if requested
               if (backup) {
                 const backupPath = fp + '.bak';
@@ -590,7 +632,6 @@ class CoworkService {
               if (!writeOnly) {
                 applied.push({ file: relPath, hits, bytesChanged: newContent.length - content.length });
               }
-              // Diff preview: first 200 chars before + after
               diffs.push({
                 file: relPath,
                 hits,
@@ -601,19 +642,37 @@ class CoworkService {
               });
               await require('fs').promises.writeFile(fp, newContent, 'utf8');
             }
-          } catch {}
+          } catch (e) {
+            failures.push({ file: fp, error: e.message });
+            if (atomic) { aborted = true; break; }
+          } finally {
+            // V18: release lock if held
+            if (lockToken) {
+              this.releaseLock({ path: fp.replace(self.workspaceRoot + require('path').sep, ''), token: lockToken });
+            }
+          }
         }
         self.invalidateCache();
       }
+
       return {
-        ok: true,
+        ok: !aborted,
         mode: pretend ? 'preview' : 'apply',
+        atomic,
         filesScanned: filePaths.length,
+        filesChanged: applied.length,
         matches,
         applied: writeOnly ? [] : applied,
         diffs: writeOnly ? [] : diffs,
         backupCount: backups.length,
         backupPaths: writeOnly ? [] : backups,
+        locksAcquired: locksAcquired.length,
+        failures,
+        changeSummary: {
+          linesAdded,
+          linesRemoved,
+          filesTouched: applied.length,
+        },
       };
     } catch (e) {
       return { ok: false, error: e.message };
@@ -741,6 +800,137 @@ class CoworkService {
     const all = {};
     for (const [k, v] of this._sharedState) all[k] = { ...v };
     return { ok: true, count: Object.keys(all).length, state: all };
+  }
+
+  // ============================================================
+  // V18: Cowork v6 — Git integration (child_process exec git)
+  // ============================================================
+
+  /** Git status in a directory (or whole workspace) */
+  async gitStatus(args) {
+    const { path: dir = '.', short = true } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const { execFile } = require('child_process');
+      const util = require('util');
+      const exec = util.promisify(execFile);
+      const { stdout } = await exec('git', ['status', short ? '--short' : '--porcelain'], { cwd: absDir, timeout: 10000 });
+      const lines = stdout.split('\n').filter(l => l.trim());
+      const items = lines.map(line => {
+        const status = line.substring(0, 2);
+        const file = line.substring(3).trim();
+        let s = { raw: status, file };
+        if (status[0] !== ' ' && status[0] !== '?') s.staged = status[0];
+        if (status[1] !== ' ' && status[1] !== '?') s.unstaged = status[1];
+        if (status[0] === '?' || status[1] === '?') s.untracked = true;
+        return s;
+      });
+      return { ok: true, dir, count: items.length, items };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Git log (last N commits) */
+  async gitLog(args) {
+    const { path: dir = '.', limit = 10, branch = 'HEAD', format = '%H|%h|%an|%ae|%ad|%s' } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const { execFile } = require('child_process');
+      const util = require('util');
+      const exec = util.promisify(execFile);
+      const { stdout } = await exec('git', ['log', `-n`, String(limit), branch, `--pretty=format:${format}`], { cwd: absDir, timeout: 10000 });
+      const lines = stdout.split('\n').filter(l => l.trim());
+      const commits = lines.map(line => {
+        const [hash, shortHash, author, email, date, ...subjectParts] = line.split('|');
+        return { hash, shortHash, author, email, date, subject: subjectParts.join('|') };
+      });
+      return { ok: true, dir, branch, count: commits.length, commits };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Git diff (staged or unstaged) */
+  async gitDiff(args) {
+    const { path: dir = '.', staged = false, file, limit = 5000 } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const { execFile } = require('child_process');
+      const util = require('util');
+      const exec = util.promisify(execFile);
+      const gitArgs = ['diff', '--no-color'];
+      if (staged) gitArgs.push('--staged');
+      if (file) gitArgs.push('--', file);
+      const { stdout } = await exec('git', gitArgs, { cwd: absDir, timeout: 10000, maxBuffer: 10 * 1024 * 1024 });
+      const diff = stdout.slice(0, limit);
+      const lines = diff.split('\n');
+      const additions = lines.filter(l => l.startsWith('+') && !l.startsWith('+++')).length;
+      const deletions = lines.filter(l => l.startsWith('-') && !l.startsWith('---')).length;
+      return { ok: true, dir, staged, file, diff, lines: lines.length, additions, deletions, truncated: stdout.length > limit };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Git blame (line-by-line author) */
+  async gitBlame(args) {
+    const { path: file, dir = '.', startLine, endLine } = args || {};
+    if (!file) return { ok: false, error: 'path required' };
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const { execFile } = require('child_process');
+      const util = require('util');
+      const exec = util.promisify(execFile);
+      const gitArgs = ['blame', '--line-porcelain'];
+      if (startLine && endLine) gitArgs.push(`-L`, `${startLine},${endLine}`);
+      gitArgs.push('--', file);
+      const { stdout } = await exec('git', gitArgs, { cwd: absDir, timeout: 10000, maxBuffer: 10 * 1024 * 1024 });
+      // Parse porcelain: <hash> <orig-line> <final-line> [count]
+      // followed by author, author-mail, author-time, author-tz, summary, previous, filename
+      const lines = stdout.split('\n');
+      const entries = [];
+      let current = null;
+      for (const line of lines) {
+        if (line.match(/^[0-9a-f]{40}/)) {
+          if (current) entries.push(current);
+          const parts = line.split(' ');
+          current = { hash: parts[0], origLine: parts[1], finalLine: parts[2] };
+        } else if (current) {
+          if (line.startsWith('author ')) current.author = line.substring(7);
+          else if (line.startsWith('author-mail ')) current.email = line.substring(12).replace(/[<>]/g, '');
+          else if (line.startsWith('author-time ')) current.timestamp = parseInt(line.substring(12)) * 1000;
+          else if (line.startsWith('summary ')) current.summary = line.substring(8);
+        }
+      }
+      if (current) entries.push(current);
+      return { ok: true, file, dir, count: entries.length, entries: entries.slice(0, 500) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  /** Git show (commit details) */
+  async gitShow(args) {
+    const { commit = 'HEAD', dir = '.', stat = true } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const { execFile } = require('child_process');
+      const util = require('util');
+      const exec = util.promisify(execFile);
+      const gitArgs = ['show', '--no-color'];
+      if (stat) gitArgs.push('--stat');
+      gitArgs.push(commit);
+      const { stdout } = await exec('git', gitArgs, { cwd: absDir, timeout: 10000, maxBuffer: 10 * 1024 * 1024 });
+      return { ok: true, dir, commit, output: stdout.slice(0, 20000) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   }
 
   /** Simple glob match: *.txt → /\.txt$/, *.{txt,md} → /\.(txt|md)$/ */

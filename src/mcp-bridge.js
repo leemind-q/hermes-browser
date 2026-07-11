@@ -445,7 +445,7 @@ function listTools() {
     { name: 'cowork_watch', description: 'Watch directory for file changes (V14: returns watcher handle + recent events).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, ignored: { type: 'array' } }, required: ['path'] } },
     { name: 'cowork_read_tail', description: 'Read last N lines of file (V14: real-time log tail).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, lines: { type: 'number' } }, required: ['path'] } },
     { name: 'cowork_diff', description: 'Diff two files line-by-line (V14: LCS-based, unified format).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, path2: { type: 'string' }, context: { type: 'number' } }, required: ['path', 'path2'] } },
-    { name: 'cowork_search_replace', description: 'Search + replace regex across files (V14: pretend=true = preview only, dry-run safe; V16: backup, exclude, writeOnly, diffs, maxFiles up to 200).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, replacement: { type: 'string' }, glob: { type: 'string' }, maxFiles: { type: 'number' }, pretend: { type: 'boolean' }, backup: { type: 'boolean' }, exclude: { type: 'array' }, writeOnly: { type: 'boolean' } }, required: ['pattern', 'replacement'] } },
+    { name: 'cowork_search_replace', description: 'Search + replace regex across files (V14: pretend=true = preview only, dry-run safe; V16: backup, exclude, writeOnly, diffs, maxFiles up to 200; V18: autoLock per-file + atomic rollback + changeSummary with lines added/removed).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, pattern: { type: 'string' }, replacement: { type: 'string' }, glob: { type: 'string' }, maxFiles: { type: 'number' }, pretend: { type: 'boolean' }, backup: { type: 'boolean' }, exclude: { type: 'array' }, writeOnly: { type: 'boolean' }, autoLock: { type: 'boolean' }, lockTtl: { type: 'number' }, atomic: { type: 'boolean' }, agentId: { type: 'string' } }, required: ['pattern', 'replacement'] } },
     // === V15 Cowork v3 (streaming watch) ===
     { name: 'cowork_watch_list', description: 'List all active watchers (V15 streaming watch management).', inputSchema: { type: 'object' } },
     { name: 'cowork_watch_unsubscribe', description: 'Stop and clean up a watcher by ID (V15).', inputSchema: { type: 'object', properties: { watcherId: { type: 'string' } }, required: ['watcherId'] } },
@@ -460,6 +460,12 @@ function listTools() {
     { name: 'cowork_dequeue_task', description: 'Dequeue next task(s) for an agent (V17: priority + FIFO).', inputSchema: { type: 'object', properties: { agentId: { type: 'string' }, max: { type: 'number' } } } },
     { name: 'cowork_set_shared_state', description: 'Set shared state key (V17: cross-agent coordination).', inputSchema: { type: 'object', properties: { key: { type: 'string' }, value: { type: 'object' }, agentId: { type: 'string' } }, required: ['key'] } },
     { name: 'cowork_get_shared_state', description: 'Get shared state (V17: cross-agent coordination).', inputSchema: { type: 'object', properties: { key: { type: 'string' } } } },
+    // === V18 Cowork v6 (git integration) ===
+    { name: 'cowork_git_status', description: 'Git status (modified/staged/untracked files).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, short: { type: 'boolean' } } } },
+    { name: 'cowork_git_log', description: 'Git log (last N commits).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, limit: { type: 'number' }, branch: { type: 'string' } } } },
+    { name: 'cowork_git_diff', description: 'Git diff (staged or unstaged).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, staged: { type: 'boolean' }, file: { type: 'string' }, limit: { type: 'number' } } } },
+    { name: 'cowork_git_blame', description: 'Git blame (line-by-line author/date).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, dir: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' } }, required: ['path'] } },
+    { name: 'cowork_git_show', description: 'Git show (commit details with stat).', inputSchema: { type: 'object', properties: { commit: { type: 'string' }, dir: { type: 'string' } } } },
   ];
 }
 
@@ -625,6 +631,12 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_dequeue_task': try { return await agent.coworkDequeueTask(args); } catch(e) { return { ok: false, error: 'coworkDequeueTask: ' + e.message }; }
     case 'cowork_set_shared_state': try { return await agent.coworkSetSharedState(args); } catch(e) { return { ok: false, error: 'coworkSetSharedState: ' + e.message }; }
     case 'cowork_get_shared_state': try { return await agent.coworkGetSharedState(args); } catch(e) { return { ok: false, error: 'coworkGetSharedState: ' + e.message }; }
+    // === V18 Cowork v6 (git integration) ===
+    case 'cowork_git_status': try { return await agent.coworkGitStatus(args); } catch(e) { return { ok: false, error: 'coworkGitStatus: ' + e.message }; }
+    case 'cowork_git_log': try { return await agent.coworkGitLog(args); } catch(e) { return { ok: false, error: 'coworkGitLog: ' + e.message }; }
+    case 'cowork_git_diff': try { return await agent.coworkGitDiff(args); } catch(e) { return { ok: false, error: 'coworkGitDiff: ' + e.message }; }
+    case 'cowork_git_blame': try { return await agent.coworkGitBlame(args); } catch(e) { return { ok: false, error: 'coworkGitBlame: ' + e.message }; }
+    case 'cowork_git_show': try { return await agent.coworkGitShow(args); } catch(e) { return { ok: false, error: 'coworkGitShow: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);

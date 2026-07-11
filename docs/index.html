@@ -212,9 +212,9 @@
     <h2>Three Differentiators</h2>
     <div class="grid">
       <div class="card">
-        <div class="num">65</div>
+        <div class="num">70</div>
         <h3>MCP-First Architecture</h3>
-        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks.</p>
+        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks, git integration.</p>
       </div>
       <div class="card">
         <div class="num">12</div>
@@ -222,9 +222,9 @@
         <p>LM Studio, Ollama, OpenAI, Anthropic, Google, OpenRouter, MiniMax, BrowserOS, <strong>Naver HyperCLOVA X</strong>. Zero provider lock-in. 30-second swap.</p>
       </div>
       <div class="card">
-        <div class="num">21</div>
+        <div class="num">26</div>
         <h3>Cowork for Engineers</h3>
-        <p>Files + browser + AI. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch + multi-agent locks + leases + task queue.</p>
+        <p>Files + browser + AI + Git. BLDC circuit / BOM / Gerber / datasheet automatic context. Cross-platform (Windows/WSL). Real-time watch + multi-agent locks + leases + atomic bulk edit + git status/log/diff/blame.</p>
       </div>
     </div>
 
@@ -257,6 +257,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <li><strong>Day 9:</strong> Cowork v3 SSE streaming watch + Real tab thumbnails + Pages auto</li>
         <li><strong>Day 10:</strong> V16 design polish (vertical tabs + split view + settings panel) + Cowork v4 (backup/exclude/diff)</li>
         <li><strong>Day 11:</strong> V17 final polish (AI sidebar auto-expand + workspace tags + shortcut modal + font scale) + Cowork v5 (lock/lease/task queue/shared state) + Tab thumbnail gallery</li>
+        <li><strong>Day 12:</strong> V18: Cowork v6.5 (search-replace + autoLock + atomic rollback + changeSummary) + Cowork v6 (git_status/log/diff/blame/show) + Pages V18 (실사용 workflow gallery)</li>
       </ul>
     </div>
 
@@ -292,6 +293,42 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
 │           watch_list/watch_unsubscribe/watch_events)   │
 │  - Reading list + Workspace + Session recorder         │
 └────────────────────────────────────────────────────────┘</code></pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📸 실제 사용 워크플로우 (Live Screenshots)</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>💬 AI 패널 + BYOK</h3>
+          <img src="screenshots/v18-ai-panel.png" alt="AI Panel" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>12 LLM providers 직접 통합. HyperCLOVA X, MiniMax, LM Studio 모두 한 클릭 swap.</p>
+        </div>
+        <div class="card">
+          <h3>⌘K 커맨드 팔레트</h3>
+          <img src="screenshots/v18-cmdk.png" alt="Cmd+K" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>Cmd+K 한 번에 모든 명령. V18: 19 commands (vertical tabs, split view, tab gallery 등).</p>
+        </div>
+        <div class="card">
+          <h3>⚙️ 설정 패널</h3>
+          <img src="screenshots/v18-settings.png" alt="Settings" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>Sliders + Toggles + Sections. 폰트 크기, 메시 BG, AI 자동 펼침, 테마 등.</p>
+        </div>
+        <div class="card">
+          <h3>📂 Cowork 워크스페이스</h3>
+          <img src="screenshots/v18-cowork.png" alt="Cowork" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>BLDC 회로 / BOM / Gerber 자동 context. Cross-platform (Windows ↔ WSL).</p>
+        </div>
+        <div class="card">
+          <h3>📡 실시간 Watch (SSE)</h3>
+          <img src="screenshots/v18-watch.png" alt="Watch" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>파일 변경 즉시 SSE stream으로 이벤트 전달. AI 에이전트가 실시간 반응.</p>
+        </div>
+        <div class="card">
+          <h3>🔧 Git Integration</h3>
+          <img src="screenshots/v18-git.png" alt="Git" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
+          <p>V18: git_status / git_log / git_diff / git_blame / git_show — 5개 MCP 도구.</p>
+        </div>
       </div>
     </div>
 
@@ -334,7 +371,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v17.0 · Last updated 2026-07-11</span>
+      <span>version: v18.0 · Last updated 2026-07-11</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>

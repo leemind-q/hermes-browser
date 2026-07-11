@@ -348,6 +348,12 @@ class AgentService {
 
   // V17: Cowork v5 — multi-agent concurrency
   async coworkAcquireLock(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.acquireLock(args); }
+  // V18: Cowork v6 — git integration
+  async coworkGitStatus(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.gitStatus(args); }
+  async coworkGitLog(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.gitLog(args); }
+  async coworkGitDiff(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.gitDiff(args); }
+  async coworkGitBlame(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.gitBlame(args); }
+  async coworkGitShow(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.gitShow(args); }
   async coworkReleaseLock(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.releaseLock(args); }
   async coworkListLocks() { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.listLocks(); }
   async coworkAcquireLease(args) { if (!this.cowork) return { ok: false, error: 'CoworkService not initialized' }; return this.cowork.acquireLease(args); }
