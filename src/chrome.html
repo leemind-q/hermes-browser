@@ -940,7 +940,276 @@ button:focus-visible, .tab:focus-visible {
   100% { transform: scaleX(0); transform-origin: right; }
 }
 
+
+/* ============================================================
+   V13 UI REFINEMENT (Day 7)
+   - Stronger glass blur
+   - Tab group coloring
+   - Workspace switcher pill
+   - Shimmer/loading micro-animations
+   - Better drop indicator
+   ============================================================ */
+
+/* Stronger glass for premium feel */
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(32px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(1.05);
+}
+
+/* Tab group coloring */
+.tab[data-group="engineering"] { border-left: 3px solid var(--gold); }
+.tab[data-group="research"] { border-left: 3px solid #06b6d4; }
+.tab[data-group="personal"] { border-left: 3px solid #a78bfa; }
+.tab[data-group="admin"] { border-left: 3px solid #64748b; }
+
+/* Workspace switcher pill (bottom of left sidebar) */
+.workspace-switcher {
+  position: absolute;
+  bottom: 36px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge-dark);
+  cursor: pointer;
+  transition: var(--anim);
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(20, 30, 50, 0.04);
+}
+.workspace-switcher:hover {
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 30, 50, 0.08);
+}
+.workspace-switcher .ws-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.workspace-switcher .ws-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.workspace-switcher .ws-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workspace-switcher .ws-meta {
+  font-size: 10px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* Better drop indicator (insertion line) */
+.tabs-row[data-drop-before="true"]::before,
+.tabs-row[data-drop-after="true"]::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+  z-index: 50;
+  animation: drop-pulse 1s ease infinite;
+}
+@keyframes drop-pulse {
+  0%, 100% { opacity: 0.6; transform: scaleY(0.95); }
+  50% { opacity: 1; transform: scaleY(1.05); }
+}
+.tabs-row[data-drop-before="true"]::before { left: -1px; }
+.tabs-row[data-drop-after="true"]::after { right: -1px; }
+
+/* Shimmer loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(26, 26, 46, 0.04) 0%,
+    rgba(26, 26, 46, 0.10) 50%,
+    rgba(26, 26, 46, 0.04) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-control);
+}
+
+/* Pulse dot for live status */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.3;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+@keyframes live-pulse {
+  0% { transform: scale(0.5); opacity: 0.4; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Better command palette (Cmd+K) */
+.cmdk {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18vh;
+  background: rgba(15, 15, 30, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+.cmdk[data-open="true"] {
+  display: flex;
+  animation: cmdk-bg 200ms ease both;
+}
+@keyframes cmdk-bg {
+  0% { background: rgba(15, 15, 30, 0); }
+  100% { background: rgba(15, 15, 30, 0.5); }
+}
+.cmdk-card {
+  width: 580px;
+  max-width: 90vw;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(20, 30, 50, 0.24), 0 8px 16px rgba(20, 30, 50, 0.10);
+  overflow: hidden;
+  animation: cmdk-in 280ms var(--ease-spring) both;
+}
+@keyframes cmdk-in {
+  0% { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cmdk-input {
+  width: 100%;
+  padding: 18px 22px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink-strong);
+  outline: none;
+  border-bottom: 1px solid var(--border);
+}
+.cmdk-input::placeholder { color: var(--faint); }
+.cmdk-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: var(--anim-fast);
+}
+.cmdk-item:hover, .cmdk-item[data-active="true"] {
+  background: var(--accent-soft);
+}
+.cmdk-item .ci-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-radius: var(--radius-control);
+  flex-shrink: 0;
+}
+.cmdk-item .ci-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink-strong);
+  font-weight: 500;
+}
+.cmdk-item .ci-hint {
+  font-size: 10px;
+  color: var(--faint);
+  font-family: var(--font-display);
+  background: var(--bg-subtle);
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.cmdk-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--faint);
+}
+
+/* Tooltip shortcut hint on icon buttons */
+.icon-btn[data-shortcut]::after {
+  content: attr(data-shortcut);
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--ink-strong);
+  color: var(--bg-elevated);
+  font-size: 10px;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+  z-index: 200;
+}
+.icon-btn[data-shortcut]:hover::after { opacity: 1; }
+
+/* Better tab active indicator */
+.tab { position: relative; }
+.tab[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--gold-soft) 0%, transparent 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.tab[data-active="true"] .tab-name { font-weight: 600; color: var(--ink-strong); }
 </style>
+
 </head>
 <body>
   <div class="app" id="app">
@@ -1016,6 +1285,16 @@ button:focus-visible, .tab:focus-visible {
         <div class="memory-row" data-type="preferences"><span>Preferences</span><span class="mem-state-dot"></span></div>
         <div class="memory-row" data-type="tasks"><span>Tasks</span><span class="mem-state-dot"></span></div>
         <div class="memory-row" data-type="session"><span>Session</span><span class="mem-state-dot"></span></div>
+      </div>
+    
+      <!-- V13 Workspace switcher pill (bottom of sidebar) -->
+      <div class="workspace-switcher" id="workspaceSwitcher" title="Workspace 전환">
+        <div class="ws-avatar">T</div>
+        <div class="ws-info">
+          <div class="ws-name" id="wsCurrentName">Default</div>
+          <div class="ws-meta" id="wsCurrentMeta">오프라인 워크스페이스</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M16 15l-4 4-4-4"/></svg>
       </div>
     </aside>
 
@@ -1169,5 +1448,17 @@ button:focus-visible, .tab:focus-visible {
   <div class="progress-bar" id="progressBar"></div>
 
 <script src="renderer.js"></script>
+
+  <!-- V13 Command palette (Cmd+K) -->
+  <div class="cmdk" id="cmdk">
+    <div class="cmdk-card">
+      <input type="text" class="cmdk-input" id="cmdkInput" placeholder="명령 입력 — 페이지 검색, LLM 변경, 도구 실행..." />
+      <div class="cmdk-list" id="cmdkList"></div>
+      <div class="cmdk-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> navigate · <kbd>Enter</kbd> select</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

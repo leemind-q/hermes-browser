@@ -1300,6 +1300,154 @@ const SettingsPopover = (() => {
   return { init, render, open, close, toggle, position, isOpen, menuConfig };
 })();
 
+// ============================================================
+// V13 — Command Palette (Cmd+K) + Workspace Switcher (Day 7)
+// ============================================================
+
+const V13_CMDS = [
+  { id: 'newtab', label: '새 탭 열기', icon: 'plus', shortcut: 'Ctrl+T', action: () => $('newTabBtn')?.click() },
+  { id: 'toggleai', label: 'AI 패널 토글', icon: 'sparkle', shortcut: 'Ctrl+`', action: () => $('rightToggle')?.click() },
+  { id: 'togglesb', label: '사이드바 토글', icon: 'sidebar', shortcut: '', action: () => $('leftToggle')?.click() },
+  { id: 'find', label: '페이지 내 검색', icon: 'search', shortcut: 'Ctrl+F', action: () => $('findBtn')?.click() },
+  { id: 'workspace', label: '워크스페이스 저장', icon: 'bookmark', shortcut: '', action: () => $('saveWorkspaceBtn')?.click() },
+  { id: 'readinglist', label: '읽기 목록', icon: 'star', shortcut: '', action: () => $('readingListBtn')?.click() },
+  { id: 'history', label: '방문 기록', icon: 'clock', shortcut: 'Ctrl+H', action: () => $('historyBtn')?.click() },
+  { id: 'downloads', label: '다운로드', icon: 'download', shortcut: 'Ctrl+J', action: () => $('downloadsBtn')?.click() },
+  { id: 'settings', label: '설정', icon: 'gear', shortcut: 'Ctrl+,', action: () => $('settingsBtn')?.click() },
+  { id: 'theme', label: '테마 전환 (라이트 ↔ 다크)', icon: 'sun', shortcut: '', action: () => $('themeToggle')?.click() },
+  { id: 'reload', label: '페이지 새로고침', icon: 'reload', shortcut: 'F5', action: () => $('reloadBtn')?.click() },
+  { id: 'cowork', label: 'Cowork 워크스페이스 열기', icon: 'folder', shortcut: '', action: () => window.hermes?.ui?.openCowork?.() },
+  { id: 'reloadapp', label: '앱 다시 로드', icon: 'reset', shortcut: '', action: () => window.hermes?.window?.reload?.() },
+];
+
+function openCmdK() {
+  const cmdk = $('cmdk');
+  if (!cmdk) return;
+  cmdk.dataset.open = 'true';
+  const input = $('cmdkInput');
+  if (input) { input.value = ''; input.focus(); }
+  renderCmdK('');
+}
+
+function closeCmdK() {
+  const cmdk = $('cmdk');
+  if (cmdk) cmdk.dataset.open = 'false';
+  let activeEl = $('cmdkList [data-active="true"]');
+  if (activeEl) activeEl.removeAttribute('data-active');
+}
+
+function renderCmdK(query) {
+  const list = $('cmdkList');
+  if (!list) return;
+  const q = String(query || '').toLowerCase().trim();
+  const filtered = q
+    ? V13_CMDS.filter(c => c.label.toLowerCase().includes(q) || c.id.includes(q))
+    : V13_CMDS;
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--faint); font-size: 12px;">일치하는 명령 없음</div>';
+    return;
+  }
+  list.innerHTML = filtered.map((c, i) => `
+    <div class="cmdk-item" data-action="${c.id}" data-index="${i}">
+      <div class="ci-icon">⚡</div>
+      <div class="ci-label">${c.label}</div>
+      ${c.shortcut ? `<div class="ci-hint">${c.shortcut}</div>` : ''}
+    </div>
+  `).join('');
+  // Highlight first
+  const first = list.querySelector('.cmdk-item');
+  if (first) first.dataset.active = 'true';
+  // Click handler
+  list.querySelectorAll('.cmdk-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.index);
+      filtered[idx]?.action?.();
+      closeCmdK();
+    });
+  });
+}
+
+let cmdkActiveIdx = 0;
+function cmdkMove(delta) {
+  const list = $('cmdkList');
+  if (!list) return;
+  const items = Array.from(list.querySelectorAll('.cmdk-item'));
+  if (items.length === 0) return;
+  items.forEach(el => el.removeAttribute('data-active'));
+  cmdkActiveIdx = (cmdkActiveIdx + delta + items.length) % items.length;
+  items[cmdkActiveIdx].dataset.active = 'true';
+  items[cmdkActiveIdx].scrollIntoView({ block: 'nearest' });
+}
+
+function cmdkActivate() {
+  const list = $('cmdkList');
+  if (!list) return;
+  const idx = cmdkActiveIdx;
+  const items = V13_CMDS.filter(c => {
+    const q = $('cmdkInput').value.toLowerCase().trim();
+    return q ? c.label.toLowerCase().includes(q) || c.id.includes(q) : true;
+  });
+  items[idx]?.action?.();
+  closeCmdK();
+}
+
+// Wire up command palette
+document.addEventListener('keydown', (e) => {
+  // Cmd+K or Ctrl+K
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    if ($('cmdk')?.dataset.open === 'true') closeCmdK();
+    else openCmdK();
+    return;
+  }
+  // Inside cmdk
+  if ($('cmdk')?.dataset.open === 'true') {
+    if (e.key === 'Escape') { closeCmdK(); e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { cmdkMove(1); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { cmdkMove(-1); e.preventDefault(); }
+    else if (e.key === 'Enter') { cmdkActivate(); e.preventDefault(); }
+  }
+});
+
+$('cmdkInput')?.addEventListener('input', (e) => renderCmdK(e.target.value));
+
+// Workspace switcher
+$('workspaceSwitcher')?.addEventListener('click', () => {
+  // Open workspaces list (or command palette filtered for workspace)
+  openCmdK();
+  $('cmdkInput').value = '워크스페이스';
+  renderCmdK('워크스페이스');
+});
+
+// Update workspace name when active changes
+async function refreshWorkspaceSwitcher() {
+  try {
+    const res = await window.hermes?.api?.request?.('listWorkspaces');
+    const list = $('wsCurrentName');
+    if (list && res?.workspaces) {
+      const active = res.workspaces[0] || null;
+      list.textContent = active ? active.name : 'Default';
+    }
+    const meta = $('wsCurrentMeta');
+    if (meta) {
+      const tabs = window.hermes?.tabs?.list?.() || [];
+      meta.textContent = tabs.length === 0 ? '오프라인 워크스페이스' : tabs.length + ' 탭 · 활성';
+    }
+  } catch {}
+}
+setTimeout(refreshWorkspaceSwitcher, 500);
+
+// ============================================================
+// V13 Live status indicators
+// ============================================================
+
+// Pulse dot animation for live states (e.g., bridge health, recording)
+setInterval(() => {
+  const liveDots = document.querySelectorAll('.live-dot');
+  liveDots.forEach(d => d.style.animationDelay = (Math.random() * 0.5) + 's');
+}, 2000);
+
+
 // === UI Helpers ===
 function showSheet(id) { const el = $(id); if (el) { el.classList.remove('closing'); el.classList.add('visible'); } }
 function hideSheet(id) {

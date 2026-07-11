@@ -23,14 +23,37 @@ class CoworkService {
     // File extension → MIME hints for AI consumption
     this.textExtensions = new Set(['.txt', '.md', '.csv', '.tsv', '.json', '.xml', '.yaml', '.yml', '.log', '.ini', '.cfg', '.conf', '.sh', '.bash', '.js', '.ts', '.py', '.gd', '.cpp', '.c', '.h', '.hpp', '.rs', '.go', '.java', '.html', '.css', '.sql']);
     this.binaryExtensions = new Set(['.pdf', '.zip', '.tar', '.gz', '.7z', '.exe', '.dll', '.so', '.dylib', '.bin', '.gerber', '.gbr', '.drl', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico']);
+
+    // V13: Performance cache — listDir/stalk bypass for repeated calls
+    this._dirCache = new Map(); // dir → { mtime, entries, ts }
+    this._statCache = new Map(); // path → { stat, ts }
+    this._cacheTTL = 3000; // 3 seconds
+  }
+
+  _isCacheValid(entry) {
+    return entry && (Date.now() - entry.ts) < this._cacheTTL;
+  }
+
+  _statCached(p) {
+    const cached = this._statCache.get(p);
+    if (this._isCacheValid(cached)) return cached.stat;
+    return null;
   }
 
   async listDir(args) {
-    const { dir = '.', pattern, includeHidden = false } = args || {};
+    const { dir = '.', pattern, includeHidden = false, noCache = false } = args || {};
     const absDir = this._safePath(dir);
     if (!absDir) return { ok: false, error: 'unsafe path' };
     try {
-      const entries = await fs.readdir(absDir, { withFileTypes: true });
+      // V13: cache check
+      const cached = this._dirCache.get(absDir);
+      let entries;
+      if (this._isCacheValid(cached) && !noCache) {
+        entries = cached.entries;
+      } else {
+        entries = await fs.readdir(absDir, { withFileTypes: true });
+        this._dirCache.set(absDir, { entries, ts: Date.now() });
+      }
       let results = entries
         .filter(e => includeHidden || !e.name.startsWith('.'))
         .map(e => ({
@@ -44,9 +67,20 @@ class CoworkService {
         const re = new RegExp(pattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i');
         results = results.filter(r => re.test(r.name));
       }
-      return { ok: true, dir, count: results.length, items: results.slice(0, this.maxResults) };
+      return { ok: true, dir, count: results.length, items: results.slice(0, this.maxResults), cached: !noCache && !!cached };
     } catch (e) {
       return { ok: false, error: e.message };
+    }
+  }
+
+  /** Invalidate cache (call when files change) */
+  invalidateCache(path) {
+    if (path) {
+      this._dirCache.delete(path);
+      this._statCache.delete(path);
+    } else {
+      this._dirCache.clear();
+      this._statCache.clear();
     }
   }
 
@@ -100,36 +134,63 @@ class CoworkService {
       const excludeRe = excludePattern ? new RegExp(excludePattern.replace(/\*/g, '.*').replace(/\?/g, '.'), 'i') : null;
 
       const self = this;
+      // V13: collect file paths first (concurrent), then read in batches
+      const filePaths = [];
       async function walk(dir) {
-        if (matches.length >= maxResults) return;
+        if (filePaths.length >= maxResults * 10) return;
         let entries;
         try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
         for (const entry of entries) {
-          if (matches.length >= maxResults) return;
+          if (filePaths.length >= maxResults * 10) return;
           const fullPath = path.join(dir, entry.name);
           if (entry.isDirectory()) {
             if (!excludeDirs.has(entry.name)) await walk(fullPath);
           } else if (entry.isFile()) {
             if (includeRe && !includeRe.test(entry.name)) continue;
             if (excludeRe && excludeRe.test(entry.name)) continue;
-            let stat;
-            try { stat = await fs.stat(fullPath); } catch { continue; }
-            if (stat.size > 5 * 1024 * 1024) continue;
+            // Quick size filter via stat cache
             try {
-              const content = await fs.readFile(fullPath, 'utf8');
-              const lines = content.split('\n');
-              for (let i = 0; i < lines.length; i++) {
-                if (re.test(lines[i])) {
-                  matches.push({
-                    file: path.relative(self.workspaceRoot, fullPath),
-                    line: i + 1,
-                    content: lines[i].slice(0, 200),
-                  });
-                  if (matches.length >= maxResults) return;
-                }
+              let stat = self._statCached(fullPath);
+              if (!stat) {
+                stat = await fs.stat(fullPath);
+                self._statCache.set(fullPath, { stat, ts: Date.now() });
               }
-            } catch { /* skip binary */ }
+              if (stat.size > 5 * 1024 * 1024) continue;
+            } catch { continue; }
+            filePaths.push(fullPath);
           }
+        }
+      }
+      await walk(absDir);
+
+      // Concurrent reads in batches of 8 (limit fs handles)
+      const BATCH = 8;
+      for (let i = 0; i < filePaths.length && matches.length < maxResults; i += BATCH) {
+        const batch = filePaths.slice(i, i + BATCH);
+        const results = await Promise.all(batch.map(async (fullPath) => {
+          try {
+            const content = await fs.readFile(fullPath, 'utf8');
+            const lines = content.split('\n');
+            const hits = [];
+            for (let j = 0; j < lines.length; j++) {
+              if (re.test(lines[j])) {
+                hits.push({
+                  file: path.relative(self.workspaceRoot, fullPath),
+                  line: j + 1,
+                  content: lines[j].slice(0, 200),
+                });
+                if (hits.length >= maxResults) break;
+              }
+            }
+            return hits;
+          } catch { return []; }
+        }));
+        for (const r of results) {
+          for (const m of r) {
+            matches.push(m);
+            if (matches.length >= maxResults) break;
+          }
+          if (matches.length >= maxResults) break;
         }
       }
       try {
