@@ -818,7 +818,6 @@ class AgentService {
   listWorkspaces() { return this.store.listWorkspaces(); }
   restoreWorkspace(id) { return this.store.restoreWorkspace(id); }
   deleteWorkspace(id) { return this.store.deleteWorkspace(id); }
-}
   async coworkGitCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitCommit(args); }
   async coworkGitPush(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPush(args); }
   async coworkGitPull(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPull(args); }
@@ -830,9 +829,6 @@ class AgentService {
   async coworkGitDiffStat(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitDiffStat(args); }
   async coworkGitChangelog(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitChangelog(args); }
   async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); }
-}  // ← closing class brace
+}
 
 module.exports = { AgentService };
-
-
-
