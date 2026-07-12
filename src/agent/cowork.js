@@ -959,6 +959,205 @@ class CoworkService {
     return new RegExp('^' + re + '$', 'i').test(name);
   }
 
+  // V19: Git workflow
+  async gitCommit(args) {
+    const { message, dir = '.', files = [], all = false, amend = false } = args || {};
+    if (!message) return { ok: false, error: 'message required' };
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      if (files && files.length > 0) await this._gitExec(['add', ...files], cwd);
+      else if (all) await this._gitExec(['add', '-A'], cwd);
+      const gargs = ['commit', '-m', message];
+      if (amend) gargs.push('--amend');
+      await this._gitExec(gargs, cwd);
+      const { stdout: hashOut } = await this._gitExec(['rev-parse', 'HEAD'], cwd);
+      const { stdout: logOut } = await this._gitExec(['log', '-1', '--pretty=format:%h|%s'], cwd);
+      const [sh, sj] = logOut.trim().split('|');
+      return { ok: true, dir, hash: hashOut.trim(), shortHash: sh, subject: sj, message, amend };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitPush(args) {
+    const { dir = '.', remote = 'origin', branch, force = false } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const gargs = ['push'];
+      if (force) gargs.push('--force');
+      gargs.push(remote);
+      if (branch) gargs.push(branch);
+      const { stdout, stderr } = await this._gitExec(gargs, cwd);
+      return { ok: true, dir, remote, branch, force, output: stdout || stderr };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitPull(args) {
+    const { dir = '.', remote = 'origin', branch, rebase = false } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const gargs = ['pull'];
+      if (rebase) gargs.push('--rebase');
+      gargs.push(remote);
+      if (branch) gargs.push(branch);
+      const { stdout, stderr } = await this._gitExec(gargs, cwd);
+      return { ok: true, dir, remote, branch, rebase, output: stdout || stderr };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitBranch(args) {
+    const { dir = '.', action = 'list', name, remote = false, force = false } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      if (action === 'list') {
+        const gargs = ['branch'];
+        if (remote) gargs.push('-a');
+        const { stdout } = await this._gitExec(gargs, cwd);
+        const branches = stdout.split('\n').filter(b => b.trim()).map(b => ({
+          name: b.replace(/^[*\s]+/, '').trim(), current: b.startsWith('*'), remote: b.trim().startswith('remotes/'),
+        }));
+        return { ok: true, dir, branches, count: branches.length };
+      } else if (action === 'create') {
+        if (!name) return { ok: false, error: 'name required' };
+        const { stdout } = await this._gitExec(['checkout', '-b', name], cwd);
+        return { ok: true, dir, action: 'create', name, output: stdout };
+      } else if (action === 'delete') {
+        if (!name) return { ok: false, error: 'name required' };
+        const gargs = ['branch', force ? '-D' : '-d', name];
+        const { stdout } = await this._gitExec(gargs, cwd);
+        return { ok: true, dir, action: 'delete', name, force, output: stdout };
+      }
+      return { ok: false, error: 'unknown action: ' + action };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitCheckout(args) {
+    const { dir = '.', branch, create = false, file } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    if (!branch && !file) return { ok: false, error: 'branch or file required' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const gargs = ['checkout'];
+      if (branch && create) gargs.push('-b', branch);
+      else if (branch) gargs.push(branch);
+      else if (file) gargs.push('--', file);
+      const { stdout, stderr } = await this._gitExec(gargs, cwd);
+      const { stdout: brOut } = await this._gitExec(['branch', '--show-current'], cwd);
+      return { ok: true, dir, branch: brOut.trim() || null, create, file, output: stdout || stderr };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  // V20: Git workflow patterns
+  async gitAutoCommit(args) {
+    const { message, dir = '.', files = [] } = args || {};
+    if (!message) return { ok: false, error: 'message required' };
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      if (files && files.length > 0) await this._gitExec(['add', ...files], cwd);
+      const { stdout: stOut } = await this._gitExec(['status', '--short'], cwd);
+      if (!stOut.trim()) return { ok: true, committed: false, reason: 'nothing to commit', dir };
+      await this._gitExec(['commit', '-m', message], cwd);
+      const { stdout: hashOut } = await this._gitExec(['rev-parse', 'HEAD'], cwd);
+      const { stdout: logOut } = await this._gitExec(['log', '-1', '--pretty=format:%h|%s'], cwd);
+      const [sh, sj] = logOut.trim().split('|');
+      return { ok: true, committed: true, dir, hash: hashOut.trim(), shortHash: sh, subject: sj, message, filesChanged: stOut.trim().split('\n').length };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitSync(args) {
+    const { dir = '.', remote = 'origin', branch, rebase = true } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const { stdout: cb } = await this._gitExec(['branch', '--show-current'], cwd);
+      const target = (branch || cb.trim());
+      if (!target) return { ok: false, error: 'no branch' };
+      const pull = await this._gitExec(['pull', rebase ? '--rebase' : '', remote, target].filter(Boolean), cwd);
+      const push = await this._gitExec(['push', remote, target], cwd);
+      return { ok: true, dir, remote, branch: target, pull: pull.stdout || pull.stderr, push: push.stdout || push.stderr };
+    } catch (e) { return { ok: false, error: e.message, stderr: e.stderr }; }
+  }
+
+  async gitReleaseNotes(args) {
+    const { dir = '.', limit = 10, fromRef, toRef = 'HEAD', format = 'md' } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const range = fromRef ? (fromRef + '..' + toRef) : ('-' + limit);
+      const { stdout } = await this._gitExec(['log', range, '--pretty=format:%H|%h|%an|%ae|%ad|%s', '--date=short'], cwd);
+      const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
+        const [hash, shortHash, author, email, date, ...sp] = line.split('|');
+        return { hash, shortHash, author, email, date, subject: sp.join('|') };
+      });
+      const r = fromRef ? (fromRef + '..' + toRef) : ('last ' + limit);
+      if (format === 'json') return { ok: true, dir, range: r, commits };
+      const lines = ['# Release Notes', '', 'Range: `' + r + '`', ''];
+      for (const c of commits) lines.push('- `' + c.shortHash + '` ' + c.subject + ' (' + c.author + ', ' + c.date + ')');
+      lines.push('', 'Total: ' + commits.length + ' commits');
+      return { ok: true, dir, range: r, count: commits.length, notes: lines.join('\n') };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async gitDiffStat(args) {
+    const { dir = '.', staged = false, file, fromRef, toRef } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      const gargs = ['diff', '--numstat', '--no-color'];
+      if (staged) gargs.push('--staged');
+      if (fromRef && toRef) gargs.push(fromRef, toRef);
+      if (file) gargs.push('--', file);
+      const { stdout } = await this._gitExec(gargs, cwd);
+      const files = stdout.split('\n').filter(l => l.trim()).map(line => {
+        const parts = line.split('\t');
+        return { file: parts[2] || '', additions: parts[0] === '-' ? 0 : parseInt(parts[0]), deletions: parts[1] === '-' ? 0 : parseInt(parts[1]), binary: parts[0] === '-' || parts[1] === '-' };
+      });
+      return { ok: true, dir, files, count: files.length, totalAdditions: files.reduce((s, f) => s + f.additions, 0), totalDeletions: files.reduce((s, f) => s + f.deletions, 0) };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async gitChangelog(args) {
+    const { dir = '.', fromTag, toRef = 'HEAD' } = args || {};
+    const absDir = this._safePath(dir);
+    if (!absDir) return { ok: false, error: 'unsafe path' };
+    try {
+      const cwd = this._toWSLPath(absDir);
+      let from = fromTag;
+      if (!from) {
+        try { const { stdout } = await this._gitExec(['describe', '--tags', '--abbrev=0', toRef], cwd); from = stdout.trim(); }
+        catch (e) { const { stdout } = await this._gitExec(['rev-list', '--max-parents=0', 'HEAD'], cwd); from = stdout.trim().split('\n')[0]; }
+      }
+      const nr = await this.gitReleaseNotes({ dir: absDir, fromRef: from, toRef, format: 'md' });
+      const ds = await this.gitDiffStat({ dir: absDir, fromRef: from, toRef });
+      return { ok: true, dir, from, to: toRef, range: from + '..' + toRef, notes: nr.notes, stats: { files: ds.count, additions: ds.totalAdditions, deletions: ds.totalDeletions } };
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  async _gitExec(args, cwd) {
+    const { execFile } = require('child_process');
+    const exec = require('util').promisify(execFile);
+    try {
+      return await exec('git', args, { cwd, timeout: 30000, shell: true, env: Object.assign({}, process.env, { PATH: process.env.PATH + ':/usr/local/bin:/usr/bin:/mnt/c/Program Files/Git/cmd' }) });
+    } catch (e1) {
+      try { return await exec('/usr/bin/git', args, { cwd, timeout: 30000 }); } catch (e2) {
+        return await exec('git.exe', args, { cwd, timeout: 30000, shell: true });
+      }
+    }
+  }
+
+
   _guessMime(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const map = {
