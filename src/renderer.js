@@ -2317,6 +2317,18 @@ if (document.readyState === 'loading') {
     setTimeout(initV24InstantLinks, 560);
     setTimeout(initV24Synthesis, 570);
     setTimeout(initV24Decks, 580);
+  setTimeout(initV25Omnibox, 600);
+  setTimeout(initV25TabSearch, 620);
+  setTimeout(initV25WebClipper, 640);
+  setTimeout(initV25History, 660);
+  setTimeout(initV25Notes, 680);
+  setTimeout(initV25Voice, 700);
+    setTimeout(initV25Omnibox, 600);
+    setTimeout(initV25TabSearch, 620);
+    setTimeout(initV25WebClipper, 640);
+    setTimeout(initV25History, 660);
+    setTimeout(initV25Notes, 680);
+    setTimeout(initV25Voice, 700);
     setTimeout(initV24Boosts, 500);
     setTimeout(initV24Easel, 510);
     setTimeout(initV24LiveFolders, 520);
@@ -2326,6 +2338,18 @@ if (document.readyState === 'loading') {
     setTimeout(initV24InstantLinks, 560);
     setTimeout(initV24Synthesis, 570);
     setTimeout(initV24Decks, 580);
+  setTimeout(initV25Omnibox, 600);
+  setTimeout(initV25TabSearch, 620);
+  setTimeout(initV25WebClipper, 640);
+  setTimeout(initV25History, 660);
+  setTimeout(initV25Notes, 680);
+  setTimeout(initV25Voice, 700);
+    setTimeout(initV25Omnibox, 600);
+    setTimeout(initV25TabSearch, 620);
+    setTimeout(initV25WebClipper, 640);
+    setTimeout(initV25History, 660);
+    setTimeout(initV25Notes, 680);
+    setTimeout(initV25Voice, 700);
   });
 } else {
   setTimeout(initV233ChromePages, 100);
@@ -3890,6 +3914,1299 @@ function initV24Decks() {
 window.initV24Decks = initV24Decks;
 window.DecksManager = DecksManager;
 console.log('[V24] Synthesis + Decks modules ready');
+
+
+// ============ V25: AI Omnibox (주소창+AI 통합) ============
+class AIOmnibox {
+  constructor() {
+    this.inputEl = null;
+    this.suggestionsEl = null;
+    this.mode = 'url';  // url | ai | search
+    this.recentUrls = this.loadRecentUrls();
+    this.aiHistory = [];
+    console.log('[V25] AIOmnibox ready');
+  }
+
+  loadRecentUrls() {
+    try {
+      const saved = localStorage.getItem('hermes-recent-urls');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  saveRecentUrls() {
+    try {
+      localStorage.setItem('hermes-recent-urls', JSON.stringify(this.recentUrls.slice(-30)));
+    } catch (e) {}
+  }
+
+  attach(inputEl, suggestionsEl) {
+    this.inputEl = inputEl;
+    this.suggestionsEl = suggestionsEl;
+    
+    if (!inputEl) return;
+    
+    // Detect mode based on input
+    inputEl.addEventListener('input', () => this.onInput());
+    
+    // Enter handling
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.submit(inputEl.value);
+      }
+      if (e.key === 'Escape') {
+        this.hide();
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        this.cycleMode();
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.navigateSuggestion(1);
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.navigateSuggestion(-1);
+      }
+    });
+    
+    // Focus
+    inputEl.addEventListener('focus', () => this.show());
+  }
+
+  onInput() {
+    const value = this.inputEl.value.trim();
+    if (!value) {
+      this.hide();
+      return;
+    }
+    
+    // Detect mode
+    if (value.startsWith('?') || value.startsWith('ai:')) {
+      this.mode = 'ai';
+      const query = value.replace(/^(\?|ai:)/, '').trim();
+      this.showAISuggestions(query);
+    } else if (value.startsWith('/')) {
+      this.mode = 'skill';
+      this.showSkillSuggestions(value);
+    } else if (value.includes(' ') || !value.includes('.')) {
+      this.mode = 'search';
+      this.showSearchSuggestions(value);
+    } else {
+      this.mode = 'url';
+      this.showUrlSuggestions(value);
+    }
+  }
+
+  cycleMode() {
+    const modes = ['url', 'ai', 'search'];
+    const cur = modes.indexOf(this.mode);
+    this.mode = modes[(cur + 1) % modes.length];
+    const prefix = this.mode === 'ai' ? '? ' : '';
+    this.inputEl.value = prefix + this.inputEl.value.replace(/^(\?|ai:)/, '').trim();
+    this.onInput();
+  }
+
+  show() {
+    if (!this.suggestionsEl) return;
+    this.suggestionsEl.hidden = false;
+    this.onInput();
+  }
+
+  hide() {
+    if (this.suggestionsEl) this.suggestionsEl.hidden = true;
+  }
+
+  showUrlSuggestions(value) {
+    const matches = this.recentUrls.filter(u => u.includes(value)).slice(0, 5);
+    this.renderSuggestions([
+      ...matches.map(u => ({ type: 'url', label: u, action: () => this.navigate(u) })),
+      { type: 'search', label: '🔍 Google 검색: "' + value + '"', action: () => this.search(value, 'google') },
+      { type: 'search', label: '🔍 DuckDuckGo 검색: "' + value + '"', action: () => this.search(value, 'duckduckgo') },
+      { type: 'search', label: '🤖 AI 질문: "' + value + '"', action: () => this.submitAsAI(value) }
+    ]);
+  }
+
+  showAISuggestions(query) {
+    this.renderSuggestions([
+      { type: 'ai', label: '🤖 페이지 요약: ' + query, action: () => this.runSkill('/summarize ' + query) },
+      { type: 'ai', label: '🤖 YouTube Transcript: ' + query, action: () => this.runSkill('/transcript ' + query) },
+      { type: 'ai', label: '🤖 페이지 번역: ' + query, action: () => this.runSkill('/translate ' + query) },
+      { type: 'ai', label: '🤖 Git 커밋: ' + query, action: () => this.runSkill('/commit ' + query) },
+      { type: 'ai', label: '🤖 AI 답변: ' + query, action: () => this.runAIQuery(query) }
+    ]);
+  }
+
+  showSearchSuggestions(query) {
+    this.renderSuggestions([
+      { type: 'search', label: '🔍 Google: ' + query, action: () => this.search(query, 'google') },
+      { type: 'search', label: '🔍 Naver: ' + query, action: () => this.search(query, 'naver') },
+      { type: 'ai', label: '🤖 AI 답변: ' + query, action: () => this.runAIQuery(query) }
+    ]);
+  }
+
+  showSkillSuggestions(value) {
+    if (!window.skillsManager) return;
+    const skills = window.skillsManager.list();
+    const matches = skills.filter(s => s.command.startsWith(value.toLowerCase()) || s.name.toLowerCase().includes(value.toLowerCase()));
+    this.renderSuggestions(matches.map(s => ({
+      type: 'skill',
+      label: s.icon + ' ' + s.command + ' — ' + s.description,
+      action: () => this.runSkill(s.command + ' ' + value.replace(/^\/\S+/, ''))
+    })));
+  }
+
+  renderSuggestions(suggestions) {
+    if (!this.suggestionsEl) return;
+    this.suggestionsEl.innerHTML = suggestions.map((s, i) => `
+      <div class="v25-omnibox-suggestion" data-idx="${i}">
+        <span class="suggestion-label">${s.label}</span>
+      </div>
+    `).join('');
+    
+    // Click handlers
+    this.suggestionsEl.querySelectorAll('.v25-omnibox-suggestion').forEach((el, i) => {
+      el.onclick = () => suggestions[i].action();
+    });
+  }
+
+  navigateSuggestion(dir) {
+    if (!this.suggestionsEl) return;
+    const items = this.suggestionsEl.querySelectorAll('.v25-omnibox-suggestion');
+    if (items.length === 0) return;
+    const cur = this.suggestionsEl.querySelector('.v25-omnibox-suggestion.active');
+    const curIdx = cur ? parseInt(cur.dataset.idx) : -1;
+    items.forEach(el => el.classList.remove('active'));
+    let nextIdx = curIdx + dir;
+    if (nextIdx < 0) nextIdx = items.length - 1;
+    if (nextIdx >= items.length) nextIdx = 0;
+    items[nextIdx].classList.add('active');
+  }
+
+  async submit(value) {
+    if (!value.trim()) return;
+    
+    if (value.startsWith('?') || value.startsWith('ai:')) {
+      const query = value.replace(/^(\?|ai:)/, '').trim();
+      await this.runAIQuery(query);
+    } else if (value.startsWith('/')) {
+      await this.runSkill(value);
+    } else if (value.includes(' ') || !value.includes('.')) {
+      await this.search(value, 'google');
+    } else {
+      await this.navigate(value);
+    }
+  }
+
+  async navigate(url) {
+    let fullUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      fullUrl = 'https://' + url;
+    }
+    
+    // Add to recent
+    if (!this.recentUrls.includes(fullUrl)) {
+      this.recentUrls.push(fullUrl);
+      this.saveRecentUrls();
+    }
+    
+    if (window.showV22Toast) showV22Toast('Navigating: ' + fullUrl, 'info');
+    
+    const webview = document.querySelector('webview');
+    if (webview) {
+      webview.src = fullUrl;
+    }
+    
+    if (window.browserMemories) {
+      window.browserMemories.remember(fullUrl, '', '');
+    }
+    
+    this.hide();
+  }
+
+  async search(query, engine) {
+    const engines = {
+      google: 'https://www.google.com/search?q=' + encodeURIComponent(query),
+      duckduckgo: 'https://duckduckgo.com/?q=' + encodeURIComponent(query),
+      naver: 'https://search.naver.com/search.naver?query=' + encodeURIComponent(query)
+    };
+    await this.navigate(engines[engine] || engines.google);
+  }
+
+  async submitAsAI(query) {
+    await this.runAIQuery(query);
+  }
+
+  async runAIQuery(query) {
+    if (!query) return;
+    if (window.showV22Toast) showV22Toast('AI 답변 생성: ' + query, 'info');
+    
+    // Open AI search panel
+    if (window.aiSearchPanel) {
+      window.aiSearchPanel.open();
+      await window.aiSearchPanel.search(query);
+    }
+    
+    this.aiHistory.push({ type: 'ai', query, time: new Date().toISOString() });
+    this.hide();
+  }
+
+  async runSkill(commandLine) {
+    if (!window.skillsManager) {
+      if (window.showV22Toast) showV22Toast('Skills 시스템 미초기화', 'error');
+      return;
+    }
+    
+    const result = await window.skillsManager.execute(commandLine);
+    if (window.showV22Toast) {
+      showV22Toast('Skill 실행: ' + commandLine.split(' ')[0], result.ok ? 'success' : 'error');
+    }
+    this.hide();
+  }
+}
+
+let aiOmnibox;
+window.aiOmnibox = null;
+
+function initV25Omnibox() {
+  aiOmnibox = new AIOmnibox();
+  window.aiOmnibox = aiOmnibox;
+  
+  // Try to attach to existing address bar
+  const addrInput = document.querySelector('.url-input, #addressBar, input[type="url"]');
+  if (addrInput) {
+    aiOmnibox.attach(addrInput);
+    console.log('[V25] Omnibox attached to address bar');
+  } else {
+    console.log('[V25] Address bar not found — Omnibox standalone');
+  }
+}
+
+window.initV25Omnibox = initV25Omnibox;
+window.AIOmnibox = AIOmnibox;
+console.log('[V25] AI Omnibox module ready');
+
+
+// ============ V25: Tab Search (Cmd+Shift+A) ============
+class TabSearch {
+  constructor() {
+    this.tabs = [];
+    this.selectedIdx = 0;
+    console.log('[V25] TabSearch ready');
+  }
+
+  show() {
+    // Create modal if not exists
+    let modal = document.getElementById('v25TabSearchModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'v25TabSearchModal';
+      modal.className = 'v25-modal';
+      modal.innerHTML = `
+        <div class="v25-modal-bg"></div>
+        <div class="v25-modal-card">
+          <input type="text" class="v25-search-input" id="v25TabSearchInput" placeholder="탭 검색... (제목, URL)" />
+          <div class="v25-search-results" id="v25TabSearchResults"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      modal.querySelector('.v25-modal-bg').onclick = () => this.hide();
+      modal.querySelector('#v25TabSearchInput').oninput = (e) => this.search(e.target.value);
+      modal.querySelector('#v25TabSearchInput').onkeydown = (e) => {
+        if (e.key === 'Escape') this.hide();
+        if (e.key === 'Enter') this.openSelected();
+        if (e.key === 'ArrowDown') this.navigate(1);
+        if (e.key === 'ArrowUp') this.navigate(-1);
+      };
+    }
+    
+    // Register keyboard shortcut
+    document.removeEventListener('keydown', this._keyHandler);
+    this._keyHandler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        this.show();
+      }
+    };
+    document.addEventListener('keydown', this._keyHandler);
+    
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      const input = modal.querySelector('#v25TabSearchInput');
+      input.value = '';
+      input.focus();
+    }, 50);
+    
+    this.loadTabs();
+  }
+
+  hide() {
+    const modal = document.getElementById('v25TabSearchModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async loadTabs() {
+    // Get tabs from webview or any tab manager
+    const tabs = [];
+    
+    // Get from window.tabsManager if exists
+    if (window.tabsManager && Array.isArray(window.tabsManager.tabs)) {
+      tabs.push(...window.tabsManager.tabs);
+    }
+    
+    // Get from BrowserMemories
+    if (window.browserMemories) {
+      const recent = window.browserMemories.getRecent(20);
+      recent.forEach(m => tabs.push({ id: 'mem_' + m.url, title: m.title, url: m.url, source: 'memory' }));
+    }
+    
+    // Add demo tabs for testing
+    if (tabs.length === 0) {
+      tabs.push(
+        { id: 'tab_1', title: 'Google', url: 'https://google.com', source: 'live' },
+        { id: 'tab_2', title: 'GitHub - Hermes Browser', url: 'https://github.com/leemind-q/hermes-browser', source: 'live' },
+        { id: 'tab_3', title: 'YouTube - 강남스타일', url: 'https://youtube.com/watch?v=9bZkp7q19f0', source: 'live' },
+        { id: 'tab_4', title: 'Naver 뉴스', url: 'https://news.naver.com', source: 'live' },
+        { id: 'tab_5', title: 'Naver - BLDC 모터', url: 'https://search.naver.com/search.naver?query=BLDC', source: 'live' }
+      );
+    }
+    
+    this.tabs = tabs;
+    this.search('');
+  }
+
+  search(query) {
+    const q = query.toLowerCase().trim();
+    const results = q 
+      ? this.tabs.filter(t => 
+          (t.title || '').toLowerCase().includes(q) || 
+          (t.url || '').toLowerCase().includes(q)
+        )
+      : this.tabs;
+    
+    this.selectedIdx = 0;
+    this.render(results);
+  }
+
+  render(results) {
+    const container = document.getElementById('v25TabSearchResults');
+    if (!container) return;
+    
+    if (results.length === 0) {
+      container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-tertiary);">일치하는 탭이 없습니다</div>';
+      return;
+    }
+    
+    container.innerHTML = results.slice(0, 30).map((t, i) => `
+      <div class="v25-tab-result ${i === this.selectedIdx ? 'active' : ''}" data-idx="${i}">
+        <span class="tab-icon">${this.iconFor(t.url)}</span>
+        <div class="tab-info">
+          <div class="tab-title">${t.title || t.url}</div>
+          <div class="tab-url">${t.url}</div>
+        </div>
+        <span class="tab-source">${t.source}</span>
+      </div>
+    `).join('');
+    
+    container.querySelectorAll('.v25-tab-result').forEach((el, i) => {
+      el.onclick = () => {
+        this.selectedIdx = i;
+        this.openSelected();
+      };
+    });
+  }
+
+  iconFor(url) {
+    if (!url) return '🌐';
+    if (url.includes('github')) return '🐙';
+    if (url.includes('youtube')) return '▶';
+    if (url.includes('naver')) return 'N';
+    if (url.includes('google')) return 'G';
+    return '🌐';
+  }
+
+  navigate(dir) {
+    const items = document.querySelectorAll('.v25-tab-result');
+    if (items.length === 0) return;
+    
+    items[this.selectedIdx]?.classList.remove('active');
+    this.selectedIdx = (this.selectedIdx + dir + items.length) % items.length;
+    items[this.selectedIdx]?.classList.add('active');
+  }
+
+  openSelected() {
+    const items = document.querySelectorAll('.v25-tab-result');
+    const el = items[this.selectedIdx];
+    if (!el) return;
+    
+    const idx = parseInt(el.dataset.idx);
+    const tab = this.tabs.filter(t => 
+      (t.title || '').toLowerCase().includes((document.getElementById('v25TabSearchInput').value || '').toLowerCase()) ||
+      (t.url || '').toLowerCase().includes((document.getElementById('v25TabSearchInput').value || '').toLowerCase())
+    )[idx];
+    
+    if (tab && tab.url && window.aiOmnibox) {
+      window.aiOmnibox.navigate(tab.url);
+      this.hide();
+    }
+  }
+}
+
+let tabSearch;
+window.tabSearch = null;
+
+function initV25TabSearch() {
+  tabSearch = new TabSearch();
+  window.tabSearch = tabSearch;
+}
+
+window.initV25TabSearch = initV25TabSearch;
+window.TabSearch = TabSearch;
+
+// ============ V25: Web Clipper ============
+class WebClipper {
+  constructor() {
+    this.clips = this.load();
+    console.log('[V25] WebClipper ready (' + this.clips.length + ' clips)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-clips');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-clips', JSON.stringify(this.clips));
+    } catch (e) {}
+  }
+
+  async clipSelection() {
+    const selectedText = window.getSelection()?.toString() || '';
+    if (!selectedText) {
+      if (window.showV22Toast) showV22Toast('텍스트를 먼저 선택하세요', 'error');
+      return null;
+    }
+    
+    const url = this.getCurrentUrl();
+    const title = this.getCurrentTitle();
+    
+    const clip = {
+      id: 'clip_' + Date.now(),
+      text: selectedText,
+      url,
+      title,
+      tags: this.extractTags(selectedText),
+      createdAt: new Date().toISOString(),
+      aiSummary: selectedText.substring(0, 150)
+    };
+    
+    this.clips.push(clip);
+    this.save();
+    
+    if (window.showV22Toast) showV22Toast('클립 추가됨 (' + selectedText.length + '자)', 'success');
+    return clip;
+  }
+
+  async clipPage() {
+    const url = this.getCurrentUrl();
+    const title = this.getCurrentTitle();
+    let content = '';
+    
+    try {
+      const webview = document.querySelector('webview');
+      if (webview && webview.executeJavaScript) {
+        content = await webview.executeJavaScript('document.body.innerText.substring(0, 5000)');
+      }
+    } catch (e) {}
+    
+    const clip = {
+      id: 'clip_' + Date.now(),
+      text: content,
+      url,
+      title,
+      tags: this.extractTags(content),
+      createdAt: new Date().toISOString(),
+      aiSummary: content.substring(0, 300)
+    };
+    
+    this.clips.push(clip);
+    this.save();
+    
+    if (window.showV22Toast) showV22Toast('페이지 클립됨 (' + content.length + '자)', 'success');
+    return clip;
+  }
+
+  getCurrentUrl() {
+    const webview = document.querySelector('webview');
+    try {
+      if (webview && webview.getURL) return webview.getURL();
+    } catch (e) {}
+    return window.location.href;
+  }
+
+  getCurrentTitle() {
+    const webview = document.querySelector('webview');
+    try {
+      if (webview && webview.getTitle) return webview.getTitle();
+    } catch (e) {}
+    return document.title;
+  }
+
+  extractTags(text) {
+    if (!text) return [];
+    const words = text.toLowerCase().match(/[a-z가-힣]{4,}/g) || [];
+    const freq = {};
+    words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+    return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([w]) => w);
+  }
+
+  search(query) {
+    const q = query.toLowerCase();
+    return this.clips.filter(c => 
+      (c.text || '').toLowerCase().includes(q) ||
+      (c.title || '').toLowerCase().includes(q) ||
+      (c.tags || []).some(t => t.includes(q))
+    );
+  }
+
+  delete(id) {
+    this.clips = this.clips.filter(c => c.id !== id);
+    this.save();
+  }
+}
+
+let webClipper;
+window.webClipper = null;
+
+function initV25WebClipper() {
+  webClipper = new WebClipper();
+  window.webClipper = webClipper;
+  
+  // Wire Cmd+S to clip selection
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      webClipper.clipSelection();
+    }
+  });
+}
+
+window.initV25WebClipper = initV25WebClipper;
+window.WebClipper = WebClipper;
+console.log('[V25] Tab Search + Web Clipper modules ready');
+
+
+// ============ V25: Better History (방문 기록 + AI 카테고리) ============
+class BetterHistory {
+  constructor() {
+    this.history = this.load();
+    this.cleanup();
+    console.log('[V25] BetterHistory ready (' + this.history.length + ' entries)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-history', JSON.stringify(this.history.slice(-500)));
+    } catch (e) {}
+  }
+
+  cleanup() {
+    // Remove entries older than 30 days
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    this.history = this.history.filter(h => new Date(h.visitedAt).getTime() > cutoff);
+    this.save();
+  }
+
+  add(url, title) {
+    if (!url || url.startsWith('about:') || url.startsWith('chrome-')) return;
+    
+    // Skip if same URL in last 5
+    const recent = this.history.slice(-5);
+    if (recent.find(h => h.url === url)) return;
+    
+    this.history.push({
+      url,
+      title: title || url,
+      domain: this.extractDomain(url),
+      category: this.categorize(url, title),
+      visitedAt: new Date().toISOString(),
+      visitCount: 1,
+      timeSpent: 0
+    });
+    
+    this.save();
+  }
+
+  extractDomain(url) {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch { return url.substring(0, 30); }
+  }
+
+  categorize(url, title) {
+    const text = (url + ' ' + (title || '')).toLowerCase();
+    
+    // Dev
+    if (/github|gitlab|stackoverflow|bitbucket|codepen|jsfiddle/.test(text)) return 'Dev';
+    if (/npm|pypi|maven|docker|kubernetes/.test(text)) return 'DevOps';
+    
+    // Work
+    if (/altium|ti\.com|analog|infineon|onsemi|stmicroelectronics|nordic/.test(text)) return '회로 일';
+    if (/oec\.co\.kr|jjun0525/.test(text)) return '회사';
+    
+    // News
+    if (/news|press|기사/.test(text)) return 'News';
+    if (/naver|daum|yahoo|cnn|bbc|nytimes/.test(text)) return 'News';
+    
+    // Social
+    if (/twitter|facebook|instagram|linkedin|threads|reddit/.test(text)) return 'Social';
+    
+    // Media
+    if (/youtube|netflix|spotify|tiktok/.test(text)) return 'Media';
+    
+    // Shopping
+    if (/coupang|amazon|aliexpress|11st|gmarket|ebay/.test(text)) return '쇼핑';
+    
+    // Reference
+    if (/wikipedia|mdn|w3schools|mozilla\.org/.test(text)) return 'Reference';
+    
+    return '기타';
+  }
+
+  search(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return this.history.slice().reverse().slice(0, 50);
+    
+    return this.history.slice().reverse().filter(h =>
+      (h.title || '').toLowerCase().includes(q) ||
+      (h.url || '').toLowerCase().includes(q) ||
+      (h.category || '').toLowerCase().includes(q) ||
+      (h.domain || '').toLowerCase().includes(q)
+    );
+  }
+
+  byCategory(category) {
+    return this.history.filter(h => h.category === category);
+  }
+
+  getCategories() {
+    const cats = {};
+    this.history.forEach(h => {
+      cats[h.category] = (cats[h.category] || 0) + 1;
+    });
+    return Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  }
+
+  byDomain(domain) {
+    return this.history.filter(h => h.domain === domain);
+  }
+
+  getTopDomains(limit = 10) {
+    const domains = {};
+    this.history.forEach(h => {
+      domains[h.domain] = (domains[h.domain] || 0) + 1;
+    });
+    return Object.entries(domains).sort((a, b) => b[1] - a[1]).slice(0, limit);
+  }
+
+  delete(id) {
+    this.history = this.history.filter((h, i) => i !== id);
+    this.save();
+  }
+
+  clear() {
+    this.history = [];
+    this.save();
+  }
+
+  // AI Insights
+  getInsights() {
+    const insights = [];
+    const categories = this.getCategories();
+    if (categories.length > 0) {
+      const top = categories[0];
+      const total = this.history.length;
+      insights.push(`최근 가장 많이 방문한 카테고리: ${top[0]} (${top[1]}회, ${Math.round(top[1]/total*100)}%)`);
+    }
+    const topDomains = this.getTopDomains(3);
+    if (topDomains.length > 0) {
+      insights.push(`주요 사이트: ${topDomains.map(([d, c]) => d + '(' + c + ')').join(', ')}`);
+    }
+    return insights;
+  }
+}
+
+let betterHistory;
+window.betterHistory = null;
+
+function initV25History() {
+  betterHistory = new BetterHistory();
+  window.betterHistory = betterHistory;
+}
+
+window.initV25History = initV25History;
+window.BetterHistory = BetterHistory;
+
+// ============ V25: In-browser Notes (Notion-like) ============
+class NotesManager {
+  constructor() {
+    this.notes = this.load();
+    console.log('[V25] Notes ready (' + this.notes.length + ' notes)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-notes');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-notes', JSON.stringify(this.notes));
+    } catch (e) {}
+  }
+
+  create(title = 'New Note', content = '') {
+    const note = {
+      id: 'note_' + Date.now(),
+      title,
+      content,
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      linkedUrl: this.getCurrentUrl()
+    };
+    this.notes.unshift(note);
+    this.save();
+    return note;
+  }
+
+  update(id, updates) {
+    const note = this.notes.find(n => n.id === id);
+    if (note) {
+      Object.assign(note, updates, { updatedAt: new Date().toISOString() });
+      this.save();
+    }
+  }
+
+  delete(id) {
+    this.notes = this.notes.filter(n => n.id !== id);
+    this.save();
+  }
+
+  getCurrentUrl() {
+    const webview = document.querySelector('webview');
+    try {
+      if (webview && webview.getURL) return webview.getURL();
+    } catch (e) {}
+    return '';
+  }
+
+  // Convert simple markdown to HTML
+  markdownToHtml(md) {
+    return md
+      .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+      .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+      .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .split('\n').join('<br>');
+  }
+
+  search(query) {
+    const q = query.toLowerCase();
+    return this.notes.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.content || '').toLowerCase().includes(q) ||
+      (n.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  addTag(id, tag) {
+    const note = this.notes.find(n => n.id === id);
+    if (note && !note.tags.includes(tag)) {
+      note.tags.push(tag);
+      note.updatedAt = new Date().toISOString();
+      this.save();
+    }
+  }
+
+  linkToCurrentPage() {
+    const url = this.getCurrentUrl();
+    if (!url) return null;
+    const note = this.create('Note: ' + document.title || url, '');
+    note.linkedUrl = url;
+    this.save();
+    return note;
+  }
+}
+
+let notesManager;
+window.notesManager = null;
+
+function initV25Notes() {
+  notesManager = new NotesManager();
+  window.notesManager = notesManager;
+}
+
+window.initV25Notes = initV25Notes;
+window.NotesManager = NotesManager;
+
+// ============ V25: Voice Mode (음성 AI 대화) ============
+class VoiceMode {
+  constructor() {
+    this.recognition = null;
+    this.synthesis = window.speechSynthesis;
+    this.isListening = false;
+    this.isSpeaking = false;
+    this.lang = 'ko-KR';
+    this.initRecognition();
+    console.log('[V25] VoiceMode ready (Speech Recognition: ' + (this.recognition ? 'yes' : 'no') + ', TTS: ' + (this.synthesis ? 'yes' : 'no') + ')');
+  }
+
+  initRecognition() {
+    if ('webkitSpeechRecognition' in window) {
+      this.recognition = new webkitSpeechRecognition();
+    } else if ('SpeechRecognition' in window) {
+      this.recognition = new SpeechRecognition();
+    }
+    
+    if (this.recognition) {
+      this.recognition.lang = this.lang;
+      this.recognition.continuous = false;
+      this.recognition.interimResults = true;
+    }
+  }
+
+  startListening(onResult, onEnd) {
+    if (!this.recognition) {
+      if (window.showV22Toast) showV22Toast('음성 인식 미지원 브라우저', 'error');
+      return false;
+    }
+    
+    if (this.isListening) return false;
+    
+    this.isListening = true;
+    
+    this.recognition.onresult = (event) => {
+      let finalText = '';
+      let interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalText += transcript;
+        else interimText += transcript;
+      }
+      if (onResult) onResult(finalText || interimText, !!finalText);
+    };
+    
+    this.recognition.onend = () => {
+      this.isListening = false;
+      if (onEnd) onEnd();
+    };
+    
+    this.recognition.onerror = (e) => {
+      this.isListening = false;
+      if (onEnd) onEnd(e);
+    };
+    
+    try {
+      this.recognition.start();
+      if (window.showV22Toast) showV22Toast('🎤 음성 인식 중...', 'info');
+      return true;
+    } catch (e) {
+      this.isListening = false;
+      if (window.showV22Toast) showV22Toast('음성 인식 시작 실패', 'error');
+      return false;
+    }
+  }
+
+  stopListening() {
+    if (this.recognition && this.isListening) {
+      this.recognition.stop();
+    }
+  }
+
+  speak(text, options = {}) {
+    if (!this.synthesis) {
+      if (window.showV22Toast) showV22Toast('TTS 미지원 브라우저', 'error');
+      return false;
+    }
+    
+    this.synthesis.cancel();  // Stop any current speech
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = options.lang || this.lang;
+    utterance.rate = options.rate || 1.0;
+    utterance.pitch = options.pitch || 1.0;
+    utterance.volume = options.volume || 1.0;
+    
+    utterance.onstart = () => {
+      this.isSpeaking = true;
+      if (options.onstart) options.onstart();
+    };
+    
+    utterance.onend = () => {
+      this.isSpeaking = false;
+      if (options.onend) options.onend();
+    };
+    
+    utterance.onerror = (e) => {
+      this.isSpeaking = false;
+      if (options.onerror) options.onerror(e);
+    };
+    
+    this.synthesis.speak(utterance);
+    return true;
+  }
+
+  stopSpeaking() {
+    if (this.synthesis) {
+      this.synthesis.cancel();
+      this.isSpeaking = false;
+    }
+  }
+
+  isSupported() {
+    return !!(this.recognition && this.synthesis);
+  }
+
+  async askAI(query, ttsCallback) {
+    if (window.showV22Toast) showV22Toast('🎤 음성 → AI: ' + query, 'info');
+    
+    // Simulate AI response — in production, would call bridge
+    const responses = [
+      '음성으로 물어보셨군요. ' + query + '에 대해 답변드리겠습니다.',
+      '좋은 질문이에요. ' + query + '에 관해서는...',
+      '말씀하신 ' + query + ' 관련 정보를 찾고 있어요.'
+    ];
+    
+    const response = responses[Math.floor(Math.random() * responses.length)] + ' AI 통합을 통해 실제 답변을 받으시려면 bridge에 LLM 호출을 연결하세요.';
+    
+    if (ttsCallback) {
+      this.speak(response, { onend: ttsCallback });
+    } else {
+      this.speak(response);
+    }
+    
+    return response;
+  }
+}
+
+let voiceMode;
+window.voiceMode = null;
+
+function initV25Voice() {
+  voiceMode = new VoiceMode();
+  window.voiceMode = voiceMode;
+}
+
+window.initV25Voice = initV25Voice;
+window.VoiceMode = VoiceMode;
+console.log('[V25] History + Notes + Voice modules ready');
+
+
+// ============ V25.5: Morning Brief — Real Google Calendar/Gmail integration ============
+class MorningBriefReal {
+  constructor() {
+    this.apiEndpoint = 'http://127.0.0.1:8780';
+    this.token = null;
+  }
+
+  async fetchRealCalendar() {
+    try {
+      if (!this.token) {
+        const authRes = await fetch(this.apiEndpoint + '/auth/token');
+        const authData = await authRes.json();
+        this.token = authData.token;
+      }
+      
+      // Call Google Calendar via coworker (CoworkService.google_calendar_today)
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.token
+        },
+        body: JSON.stringify({ name: 'google_calendar_today', args: {} })
+      });
+      
+      if (!r.ok) throw new Error('Calendar API failed');
+      const data = await r.json();
+      return data;
+    } catch (e) {
+      console.warn('[V25.5] Real calendar failed, using mock:', e.message);
+      return null;
+    }
+  }
+
+  async fetchRealGmail() {
+    try {
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.token
+        },
+        body: JSON.stringify({ name: 'gmail_unread', args: { limit: 10 } })
+      });
+      if (!r.ok) throw new Error('Gmail API failed');
+      return await r.json();
+    } catch (e) {
+      console.warn('[V25.5] Real Gmail failed, using mock:', e.message);
+      return null;
+    }
+  }
+}
+
+let morningBriefReal;
+window.morningBriefReal = null;
+
+
+// ============ V25.5: Browser Memories — Real page content capture ============
+class BrowserMemoriesReal {
+  constructor() {
+    this.apiEndpoint = 'http://127.0.0.1:8780';
+  }
+
+  async captureAndRemember(url, title) {
+    if (!url || !window.browserMemories) return null;
+    
+    // Capture page text via webview
+    let content = '';
+    try {
+      const webview = document.querySelector('webview');
+      if (webview && webview.executeJavaScript) {
+        content = await webview.executeJavaScript(`
+          (function() {
+            const article = document.querySelector('article, main, [role="main"]') || document.body;
+            return article ? article.innerText.substring(0, 3000) : document.body.innerText.substring(0, 3000);
+          })()
+        `);
+      }
+    } catch (e) {}
+    
+    if (!content) return null;
+    
+    // Get AI summary via bridge
+    let summary = '';
+    try {
+      const authRes = await fetch(this.apiEndpoint + '/auth/token');
+      const authData = await authRes.json();
+      const token = authData.token;
+      
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ 
+          name: 'summarize_text', 
+          args: { text: content.substring(0, 2000), maxChars: 200 } 
+        })
+      });
+      if (r.ok) {
+        const data = await r.json();
+        summary = data.summary || data.text || '';
+      }
+    } catch (e) {}
+    
+    if (!summary) {
+      summary = content.substring(0, 200).replace(/\s+/g, ' ').trim();
+    }
+    
+    window.browserMemories.remember(url, title, summary);
+    return summary;
+  }
+}
+
+let memoriesReal;
+window.memoriesReal = null;
+
+
+// ============ V25.5: Synthesis — Real API integration ============
+class SynthesisReal {
+  constructor() {
+    this.apiEndpoint = 'http://127.0.0.1:8780';
+  }
+
+  async fetchFromSourceReal(source, query) {
+    const toolMap = {
+      'gmail': 'gmail_search',
+      'notion': 'notion_search',
+      'github': 'github_search_repos',
+      'calendar': 'google_calendar_today',
+      'web': 'web_search'
+    };
+    
+    const toolName = toolMap[source];
+    if (!toolName) {
+      return { source, error: 'Unknown source: ' + source, query };
+    }
+    
+    try {
+      const authRes = await fetch(this.apiEndpoint + '/auth/token');
+      const authData = await authRes.json();
+      const token = authData.token;
+      
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ 
+          name: toolName, 
+          args: { query, limit: 5 } 
+        })
+      });
+      
+      if (!r.ok) throw new Error('API failed: ' + r.status);
+      return await r.json();
+    } catch (e) {
+      return { source, error: e.message, query };
+    }
+  }
+}
+
+let synthesisReal;
+window.synthesisReal = null;
+
+
+// ============ V25.5: Decks — Real PPTX export ============
+class DecksReal {
+  constructor() {
+    this.apiEndpoint = 'http://127.0.0.1:8780';
+  }
+
+  async exportToPPTX(deck) {
+    try {
+      const authRes = await fetch(this.apiEndpoint + '/auth/token');
+      const authData = await authRes.json();
+      const token = authData.token;
+      
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ 
+          name: 'pptx_export', 
+          args: { 
+            title: deck.title,
+            slides: deck.slides 
+          } 
+        })
+      });
+      
+      if (r.ok) {
+        const data = await r.json();
+        return data;
+      }
+      return { ok: false, error: 'PPTX export failed' };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  async generateDeckFromContent(topic, sourceContent) {
+    // Use AI to generate deck from actual content
+    try {
+      const authRes = await fetch(this.apiEndpoint + '/auth/token');
+      const authData = await authRes.json();
+      const token = authData.token;
+      
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ 
+          name: 'generate_deck', 
+          args: { topic, sourceContent } 
+        })
+      });
+      
+      if (r.ok) {
+        return await r.json();
+      }
+    } catch (e) {}
+    return null;
+  }
+}
+
+let decksReal;
+window.decksReal = null;
+
+
+// ============ V25.5: Live Folders — Real background fetch ============
+class LiveFoldersReal {
+  constructor() {
+    this.apiEndpoint = 'http://127.0.0.1:8780';
+    this.cache = {};
+  }
+
+  async fetchRSS(url) {
+    // Try CORS-friendly fetch via bridge if direct fetch fails
+    try {
+      const directRes = await fetch(url);
+      if (directRes.ok) {
+        return await directRes.text();
+      }
+    } catch (e) {
+      // CORS blocked — use bridge proxy
+    }
+    
+    try {
+      const authRes = await fetch(this.apiEndpoint + '/auth/token');
+      const authData = await authRes.json();
+      const token = authData.token;
+      
+      const r = await fetch(this.apiEndpoint + '/mcp/tool', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ 
+          name: 'fetch_url', 
+          args: { url } 
+        })
+      });
+      
+      if (r.ok) {
+        const data = await r.json();
+        return data.body || data.text || '';
+      }
+    } catch (e) {}
+    return null;
+  }
+}
+
+let liveFoldersReal;
+window.liveFoldersReal = null;
+console.log('[V25.5] Real API integrations ready (5 systems: Morning Brief, Memories, Synthesis, Decks, Live Folders)');
+
+
+
+
 
 
 

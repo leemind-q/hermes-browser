@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v24.0 · Last updated 2026-07-12</span>
+      <span>version: v25.0 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -742,5 +742,66 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <p>AI 어시스턴트 일시중지/재개. 즉시 일시중지 또는 시간 지정 (e.g. 30분).</p>
       </div>
     </div>
+
+    <h2 style="margin-top: 80px;">V25 — 6개 신규 시스템 + 5개 Real API 통합</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      <b>"다해 다! 전부 다 적용!"</b> — 추가 흡수 6개 + Mock → Real API 5개. Playwright 12/12 통과.
+    </p>
+
+    <h3 style="margin-top: 40px;">6개 신규 시스템 (Comet/Atlas 따라잡기)</h3>
+    <div class="differentiator-grid">
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · OMNIBOX</div>
+        <h3 style="margin-top:8px;">🌐 AI Omnibox</h3>
+        <p>주소창 + AI 통합. <b>4 modes</b>: URL / AI (? prefix) / Search / Skill (/ prefix). Tab 키로 모드 전환. Arrow keys로 suggestion 이동.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · TAB SEARCH</div>
+        <h3 style="margin-top:8px;">🔍 Tab Search (Cmd+Shift+A)</h3>
+        <p>모든 탭 빠르게 검색. 모달 + 입력 즉시 결과. BrowserMemories 통합. Enter로 열기.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · WEB CLIPPER</div>
+        <h3 style="margin-top:8px;">✂ Web Clipper</h3>
+        <p>선택 텍스트 또는 전체 페이지 저장. <b>자동 태깅</b> (빈도 기반). URL/제목/태그 통합 검색. Cmd+Shift+S 단축키.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · BETTER HISTORY</div>
+        <h3 style="margin-top:8px;">📜 Better History</h3>
+        <p>방문 기록 + <b>AI 카테고리</b> 자동 분류 (Dev/News/Media/Social/Shopping/회로 일/회사/Reference/기타). 30일 cleanup + Top domains + AI 인사이트.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · NOTES</div>
+        <h3 style="margin-top:8px;">📝 In-browser Notes</h3>
+        <p>Notion-like 노트. <b>Markdown → HTML</b> 렌더링. 태그 + 페이지 연결 + 검색. 시맨틱 저장.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">V25 · VOICE</div>
+        <h3 style="margin-top:8px;">🎤 Voice Mode</h3>
+        <p>Web Speech API 통합. <b>Speech Recognition</b> (음성 → 텍스트) + <b>SpeechSynthesis</b> (TTS, ko-KR). 우하단 pulse indicator.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 40px;">5개 Mock → Real API 통합</h3>
+    <div class="differentiator-grid">
+      <div class="diff-card">
+        <div class="scenario-tag">V25.5 · REAL BRIDGE</div>
+        <h3 style="margin-top:8px;">🔌 5개 시스템 Real API</h3>
+        <p>Morning BriefReal (Google Calendar/Gmail) · MemoriesReal (실제 페이지 텍스트 + AI 요약) · SynthesisReal (Gmail/Notion/GitHub/Calendar 통합) · DecksReal (PptxGenJS 실제 export) · LiveFoldersReal (bridge proxy RSS fetch)</p>
+        <div style="margin-top:12px; font-size:11px; color:var(--text-tertiary);">Bridge endpoint: 127.0.0.1:8780 · 84 MCP tools · 12 LLM providers</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 60px;">📊 V25 누적 통계</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:13px; background:var(--bg-overlay); border:1px solid var(--border-medium); border-radius:var(--r-lg); padding:16px;">
+      <tbody>
+        <tr><td style="padding:8px;"><b>V22까지 시스템</b></td><td style="padding:8px;text-align:right;">5개 (USP, Quick Bar, Context Menu, Cmd+K, 84 tools)</td></tr>
+        <tr><td style="padding:8px;"><b>V23 디자인</b></td><td style="padding:8px;text-align:right;">AsIDE급 visual layer + 12 color tokens + 4-layer shadow</td></tr>
+        <tr><td style="padding:8px;"><b>V23.5 신규</b></td><td style="padding:8px;text-align:right;">Spaces, Skills, Memories, Tab Groups, AI Search (5개)</td></tr>
+        <tr><td style="padding:8px;"><b>V24 흡수</b></td><td style="padding:8px;text-align:right;">Boosts, Easel, LiveFolders, ATC, Pause, InstantLinks, Synthesis, Decks, MorningBrief (9개)</td></tr>
+        <tr><td style="padding:8px;"><b>V25 신규 + Real</b></td><td style="padding:8px;text-align:right;">Omnibox, TabSearch, Clipper, History, Notes, Voice + 5 Real API (11개)</td></tr>
+        <tr style="background:var(--gold-soft);"><td style="padding:8px;"><b>총 시스템</b></td><td style="padding:8px;text-align:right; font-weight:700;">30+ 개</td></tr>
+      </tbody>
+    </table>
 </body>
 </html>

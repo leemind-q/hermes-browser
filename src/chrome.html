@@ -3971,6 +3971,151 @@ mark {
   color: var(--gold);
   margin-top: 4px;
 }
+
+/* ============ V25: Modal + Omnibox + Tabs ============ */
+.v25-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 100px;
+}
+.v25-modal-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 30, 0.5);
+  backdrop-filter: blur(12px);
+}
+.v25-modal-card {
+  position: relative;
+  width: 640px;
+  max-width: 95vw;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(36px) saturate(180%);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-deep), 0 0 0 1px var(--gold-glow);
+  overflow: hidden;
+  animation: v25-card-rise var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes v25-card-rise {
+  from { opacity: 0; transform: translateY(-20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.v25-search-input {
+  width: 100%;
+  padding: 18px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.v25-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+.v25-search-results {
+  max-height: 480px;
+  overflow-y: auto;
+}
+.v25-tab-result, .v25-omnibox-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+  border-left: 3px solid transparent;
+}
+.v25-tab-result:hover, .v25-omnibox-suggestion:hover,
+.v25-tab-result.active, .v25-omnibox-suggestion.active {
+  background: var(--gold-soft);
+  border-left-color: var(--gold);
+}
+.tab-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.tab-info {
+  flex: 1;
+  min-width: 0;
+}
+.tab-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab-url {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.tab-source {
+  padding: 2px 8px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.suggestion-label {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Voice mode indicator */
+.v25-voice-indicator {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 1000;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rose), var(--gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+  animation: v25-voice-pulse 2s ease-in-out infinite;
+}
+@keyframes v25-voice-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 4px 24px rgba(244, 63, 94, 0.6); }
+}
+.v25-voice-indicator.active {
+  animation: v25-voice-listening 0.8s ease-in-out infinite;
+}
+@keyframes v25-voice-listening {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); background: linear-gradient(135deg, var(--rose), var(--gold-bright)); }
+}
+.v25-voice-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
 </style>
 
 
@@ -4644,6 +4789,20 @@ mark {
     <button class="v24-easel-add">+ 새 Easel</button>
   </div>
   <div id="v24EaselsList" class="v24-easel-grid"></div>
+</div>
+
+<!-- V25: Voice Mode Indicator -->
+<button class="v25-voice-indicator" id="v25VoiceIndicator" aria-label="Voice Mode">
+  <span class="v25-voice-icon">🎤</span>
+</button>
+
+<!-- V25: Tab Search Modal -->
+<div class="v25-modal" id="v25TabSearchModal" style="display:none;">
+  <div class="v25-modal-bg"></div>
+  <div class="v25-modal-card">
+    <input type="text" class="v25-search-input" id="v25TabSearchInput" placeholder="탭 검색... (제목, URL)" />
+    <div class="v25-search-results" id="v25TabSearchResults"></div>
+  </div>
 </div>
 </body>
 </html>
