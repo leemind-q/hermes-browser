@@ -43,12 +43,14 @@ class SidebarController {
 
   open() {
     if (this.sidebar) this.sidebar.classList.add('open');
+    document.body.classList.add('v18-sidebar-open');
     this.isOpen = true;
     this.renderTab(this.currentTab);
   }
 
   close() {
     if (this.sidebar) this.sidebar.classList.remove('open');
+    document.body.classList.remove('v18-sidebar-open');
     this.isOpen = false;
   }
 

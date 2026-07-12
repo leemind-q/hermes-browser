@@ -4117,7 +4117,19 @@ mark {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-/* ============ DAY18: Right Sidebar with 11 Tabs ============ */
+/* ============ DAY18: Right Sidebar - NO OVERLAY (slides main content) ============ */
+/* When sidebar opens, main content shifts left by 360px (no overlay) */
+body.v18-sidebar-open .app,
+body.v18-sidebar-open #app,
+body.v18-sidebar-open main,
+body.v18-sidebar-open .browser-frame {
+  margin-right: 360px;
+  transition: margin-right var(--dur-slow) var(--ease-spring);
+}
+.app, #app, main, .browser-frame {
+  transition: margin-right var(--dur-slow) var(--ease-spring);
+}
+
 #v18Sidebar {
   position: fixed;
   top: 49px;
@@ -4128,11 +4140,12 @@ mark {
   backdrop-filter: blur(28px) saturate(180%);
   border-left: 1px solid var(--gold-line);
   box-shadow: -8px 0 32px rgba(15, 15, 30, 0.08);
-  z-index: 200;
   display: flex;
   flex-direction: column;
-  transition: transform var(--dur-slow) var(--ease-spring);
+  overflow: hidden;
   transform: translateX(100%);
+  transition: transform var(--dur-slow) var(--ease-spring);
+  z-index: 150;  /* below rightPanel (200) so Miraecle AI still works */
 }
 #v18Sidebar.open {
   transform: translateX(0);
@@ -4257,8 +4270,8 @@ mark {
 /* Toggle sidebar button */
 #v18ToggleSidebar {
   position: fixed;
-  bottom: 80px;
-  right: 90px;
+  bottom: 100px;
+  right: 20px;
   z-index: 250;
   width: 40px;
   height: 40px;
