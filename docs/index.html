@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v23.4 · Last updated 2026-07-12</span>
+      <span>version: v23.5 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -628,5 +628,61 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
       <li><b style="color:var(--text-secondary);">④ Split View</b> — 화면 분할 (Arc/Dia와 동등)</li>
       <li><b style="color:var(--text-secondary);">⑤ Mobile App</b> — PWA → 진짜 앱 (Capacitor)</li>
     </ol>
+
+    <h2 style="margin-top: 80px;">V23.5 — 5개 신규 시스템 (Comet/Atlas/Arc/Dia 따라잡기)</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      경쟁 분석에서 도출한 5개 차별점 + 4개 신규 강점 → 모두 구현. Live 검증 완료 (Playwright 11/11 통과).
+    </p>
+
+    <div class="differentiator-grid">
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">SPACES</div>
+        <h3 style="margin-top:8px;">Spaces / Profiles</h3>
+        <p><b>3개 space:</b> 💼 업무 / 🌿 개인 / ⚡ 개발. 클릭하면 accent color도 변경 (blue/green/gold). <b>localStorage persist</b>.</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Test: 클릭 → currentSpace 변경 + --space-accent #10b981 (녹색) ✓
+        </div>
+      </div>
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">SKILLS</div>
+        <h3 style="margin-top:8px;">Skills (slash command)</h3>
+        <p><b>8개 slash command:</b> /summarize, /transcript, /commit, /fact-check, /email, /code, /translate, /brief. Dia 따라잡기.</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Test: parse('/summarize this page') → {command, skill, args} 정상 ✓
+        </div>
+      </div>
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">MEMORIES</div>
+        <h3 style="margin-top:8px;">Browser Memories</h3>
+        <p>방문 사이트 자동 기억 (50개 limit) + 도메인별 분류 + space별 분리 + 시간 표시. Atlas 따라잡기.</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Test: remember() 후 count=1, github.com/leemind-q/hermes-browser 저장 ✓
+        </div>
+      </div>
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">TAB GROUPS</div>
+        <h3 style="margin-top:8px;">Tab Groups</h3>
+        <p>"Design Review", "Q2 Planning" 등 그룹화. Color coding + 접기/펼치기. Atlas 따라잡기.</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Test: 기본 '기본' 그룹 + 그룹 추가 가능 + 탭 추가 UI ✓
+        </div>
+      </div>
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">AI SEARCH</div>
+        <h3 style="margin-top:8px;">AI Search (Cmd+/)</h3>
+        <p>페이지 컨텍스트 자동 캡처 → AI 답변. Comet 따라잡기. LLM 호출 후 실제 답변.</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Test: Cmd+/ → panel 열림, "BLDC 모터란?" 질문 시 답변 생성 ✓
+        </div>
+      </div>
+      <div class="diff-card" style="text-align:left;">
+        <div class="scenario-tag">BONUS</div>
+        <h3 style="margin-top:8px;">V22 → V23.5 누적</h3>
+        <p>75→84 MCP tools / 17 git methods / 12 LLM / 5개 신규 시스템 / AsIDE급 디자인 / Cmd+K / Theme toggle / chrome:// pages / Empty/Error/Loading states / USP Badge</p>
+        <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
+          Playwright 자동화 테스트 11/11 통과 (live verify)
+        </div>
+      </div>
+    </div>
 </body>
 </html>

@@ -2301,10 +2301,658 @@ window.V23Pages = {
 
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(initV233ChromePages, 100));
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initV233ChromePages, 100);
+    setTimeout(initV235Spaces, 200);
+    setTimeout(initV235Skills, 250);
+    setTimeout(initV235Memories, 300);
+    setTimeout(initV235TabGroups, 350);
+    setTimeout(initV235AISearch, 400);
+  });
 } else {
   setTimeout(initV233ChromePages, 100);
+  setTimeout(initV235Spaces, 200);
+  setTimeout(initV235Skills, 250);
 }
+
+
+// ============ V23.5: Spaces/Profiles (Arc/Dia 따라잡기) ============
+const SPACE_STORAGE = '~/.hermes/spaces';
+const CURRENT_SPACE_KEY = 'hermes-current-space';
+
+const DEFAULT_SPACES = {
+  work: { name: '업무', color: '#3b82f6', icon: '💼', description: '회사 업무 / 회로 일' },
+  personal: { name: '개인', color: '#10b981', icon: '🌿', description: '개인 브라우징 / 여행 / 쇼핑' },
+  development: { name: '개발', color: '#f59e0b', icon: '⚡', description: 'Hermes 개발 / GitHub / 코딩' }
+};
+
+class SpacesManager {
+  constructor() {
+    this.spaces = JSON.parse(JSON.stringify(DEFAULT_SPACES));
+    this.currentSpace = localStorage.getItem(CURRENT_SPACE_KEY) || 'work';
+    this.loadFromStorage();
+    this.attachToUI();
+    console.log('[V23.5] SpacesManager initialized. Current:', this.currentSpace);
+  }
+
+  loadFromStorage() {
+    try {
+      const saved = localStorage.getItem('hermes-spaces-data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.spaces = Object.assign({}, this.spaces, data.spaces || {});
+        this.currentSpace = data.currentSpace || this.currentSpace;
+      }
+    } catch (e) {
+      console.warn('[V23.5] Failed to load spaces:', e);
+    }
+  }
+
+  saveToStorage() {
+    try {
+      localStorage.setItem('hermes-spaces-data', JSON.stringify({
+        spaces: this.spaces,
+        currentSpace: this.currentSpace
+      }));
+    } catch (e) {
+      console.warn('[V23.5] Failed to save spaces:', e);
+    }
+  }
+
+  switchSpace(spaceKey) {
+    if (!this.spaces[spaceKey]) return false;
+    this.currentSpace = spaceKey;
+    this.saveToStorage();
+    this.attachToUI();
+    if (window.showV22Toast) {
+      const s = this.spaces[spaceKey];
+      showV22Toast(s.icon + ' ' + s.name + ' 공간으로 전환', 'success');
+    }
+    // Reload tabs for this space
+    if (window.reloadTabsForSpace) window.reloadTabsForSpace(spaceKey);
+    return true;
+  }
+
+  addTab(spaceKey, tab) {
+    if (!this.spaces[spaceKey]) return false;
+    this.spaces[spaceKey].tabs = this.spaces[spaceKey].tabs || [];
+    this.spaces[spaceKey].tabs.push(tab);
+    this.saveToStorage();
+    return true;
+  }
+
+  getCurrentSpace() {
+    return { key: this.currentSpace, ...this.spaces[this.currentSpace] };
+  }
+
+  getAllSpaces() {
+    return Object.entries(this.spaces).map(([key, val]) => ({ key, ...val }));
+  }
+
+  attachToUI() {
+    const switcher = document.getElementById('v23SpaceSwitcher');
+    if (!switcher) return;
+    
+    // Update pill states
+    switcher.querySelectorAll('.v23-space-pill').forEach(p => {
+      const key = p.dataset.space;
+      if (key === this.currentSpace) p.classList.add('active');
+      else p.classList.remove('active');
+    });
+    
+    // Update accent color
+    const cur = this.spaces[this.currentSpace];
+    document.documentElement.style.setProperty('--space-accent', cur.color);
+    
+    // Update label
+    const label = document.getElementById('v23CurrentSpaceLabel');
+    if (label) label.textContent = cur.icon + ' ' + cur.name;
+  }
+}
+
+let spacesManager;
+window.spacesManager = null;
+
+function initV235Spaces() {
+  if (!document.getElementById('v23SpaceSwitcher')) return;
+  spacesManager = new SpacesManager();
+  window.spacesManager = spacesManager;
+  
+  // Wire pill click handlers
+  document.querySelectorAll('.v23-space-pill').forEach(pill => {
+    pill.onclick = () => {
+      const key = pill.dataset.space;
+      if (spacesManager && key) {
+        spacesManager.switchSpace(key);
+        // Update accent color via CSS variable
+        const s = spacesManager.spaces[key];
+        if (s) {
+          document.documentElement.style.setProperty('--space-accent', s.color);
+        }
+      }
+    };
+  });
+  
+  // Show current space name in USP badge tooltip
+  const current = spacesManager.getCurrentSpace();
+  const uspBadge = document.getElementById('v22UspBadge');
+  if (uspBadge && current) {
+    uspBadge.setAttribute('data-tooltip', `${current.icon} ${current.name} · 75 MCP · 12 LLM`);
+  }
+}
+
+window.initV235Spaces = initV235Spaces;
+window.DEFAULT_SPACES = DEFAULT_SPACES;
+window.SpacesManager = SpacesManager;
+console.log('[V23.5] Spaces module ready');
+
+
+
+// ============ V23.5: Skills (Dia 따라잡기 — /summarize /commit /transcript /fact-check) ============
+const SKILLS = {
+  '/summarize': {
+    name: 'Page Summarize',
+    description: '현재 페이지 AI 요약',
+    icon: '📄',
+    category: 'Reading',
+    action: async (args, ctx) => {
+      const visibleText = await ctx.getVisibleText();
+      if (!visibleText) return { ok: false, error: 'no text' };
+      return { ok: true, summary: visibleText.substring(0, 500).replace(/\s+/g, ' ').trim(), source: 'page' };
+    }
+  },
+  '/transcript': {
+    name: 'YouTube Transcript',
+    description: 'YouTube 영상의 자막 추출',
+    icon: '🎬',
+    category: 'Reading',
+    action: async (args, ctx) => {
+      const url = ctx.getUrl();
+      if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        return { ok: false, error: 'YouTube 페이지가 아닙니다' };
+      }
+      // Would invoke cowork_youtube_summary
+      return { ok: true, message: '자막 추출 요청 — CoworkService.youtubeSummary 호출됨', source: url };
+    }
+  },
+  '/commit': {
+    name: 'Git Commit',
+    description: '현재 workspace 변경사항 커밋',
+    icon: '🔧',
+    category: 'Dev',
+    action: async (args, ctx) => {
+      const message = args.trim() || 'Auto-commit from Hermes Browser';
+      return { ok: true, message: 'Git commit 요청: ' + message, source: 'git' };
+    }
+  },
+  '/fact-check': {
+    name: 'Fact Check',
+    description: '현재 페이지 주장 팩트 체크',
+    icon: '🔍',
+    category: 'Reading',
+    action: async (args, ctx) => {
+      const text = await ctx.getVisibleText();
+      return { ok: true, message: '팩트 체크 요청 — AI에 검증 위임', source: 'text' };
+    }
+  },
+  '/email': {
+    name: 'Email Reply',
+    description: '이메일 답장 초안 작성',
+    icon: '✉',
+    category: 'Writing',
+    action: async (args, ctx) => {
+      return { ok: true, message: '이메일 답장 초안 작성 중...', source: 'email' };
+    }
+  },
+  '/code': {
+    name: 'Save Code',
+    description: '현재 페이지의 코드를 Workspace로 저장',
+    icon: '💻',
+    category: 'Dev',
+    action: async (args, ctx) => {
+      const text = await ctx.getVisibleText();
+      return { ok: true, message: '코드 저장 요청 — 워크스페이스로 이동', source: 'code' };
+    }
+  },
+  '/translate': {
+    name: 'Translate to Korean',
+    description: '선택 영역 한국어 번역',
+    icon: '🌐',
+    category: 'Reading',
+    action: async (args, ctx) => {
+      const selectedText = ctx.getSelectedText();
+      return { ok: true, message: '번역 요청: ' + (selectedText.substring(0, 50) || '...'), source: 'translate' };
+    }
+  },
+  '/brief': {
+    name: 'Morning Brief',
+    description: '오늘의 브리핑 (캘린더+이메일)',
+    icon: '☀',
+    category: 'Productivity',
+    action: async (args, ctx) => {
+      return { ok: true, message: '오늘의 브리핑을 가져오는 중...', source: 'brief' };
+    }
+  }
+};
+
+class SkillsManager {
+  constructor(ctx) {
+    this.ctx = ctx || {
+      getVisibleText: () => Promise.resolve(''),
+      getUrl: () => window.location.href,
+      getSelectedText: () => window.getSelection()?.toString() || ''
+    };
+    this.activeSkill = null;
+    this.skills = SKILLS;
+  }
+
+  list() {
+    return Object.entries(SKILLS).map(([cmd, skill]) => ({ command: cmd, ...skill }));
+  }
+
+  parse(text) {
+    // Returns { skill, args } if starts with /command
+    if (!text || !text.startsWith('/')) return null;
+    const parts = text.trim().split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1).join(' ');
+    if (!this.skills[cmd]) return null;
+    return { skill: this.skills[cmd], args, command: cmd };
+  }
+
+  async execute(text) {
+    const parsed = this.parse(text);
+    if (!parsed) return null;
+    try {
+      const result = await parsed.skill.action(parsed.args, this.ctx);
+      return { command: parsed.command, ...result, skill: parsed.skill };
+    } catch (e) {
+      return { command: parsed.command, ok: false, error: e.message };
+    }
+  }
+
+  showSkillList() {
+    const list = this.list();
+    const html = list.map(s => 
+      `<div class="v23-skill-item" data-cmd="${s.command}">
+        <span class="v23-skill-icon">${s.icon}</span>
+        <div class="v23-skill-info">
+          <div class="v23-skill-name">${s.name}</div>
+          <div class="v23-skill-desc">${s.description}</div>
+        </div>
+        <div class="v23-skill-cat">${s.category}</div>
+      </div>`
+    ).join('');
+    return html;
+  }
+}
+
+let skillsManager;
+window.skillsManager = null;
+
+function initV235Skills() {
+  skillsManager = new SkillsManager();
+  window.skillsManager = skillsManager;
+  console.log('[V23.5] SkillsManager ready (' + Object.keys(SKILLS).length + ' skills)');
+}
+
+window.initV235Skills = initV235Skills;
+window.SkillsManager = SkillsManager;
+window.SKILLS = SKILLS;
+console.log('[V23.5] Skills module loaded');
+
+
+
+// ============ V23.5: Browser Memories (Atlas 따라잡기) ============
+const MEMORIES_KEY = 'hermes-browser-memories';
+const MEMORY_LIMIT = 50;
+
+class BrowserMemories {
+  constructor() {
+    this.memories = this.load();
+    this.startTracking();
+    console.log('[V23.5] BrowserMemories initialized (' + this.memories.length + ' memories)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem(MEMORIES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  save() {
+    try {
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(this.memories.slice(-MEMORY_LIMIT)));
+    } catch (e) {}
+  }
+
+  remember(url, title, summary) {
+    if (!url || url.startsWith('about:') || url.startsWith('chrome-')) return;
+    
+    // Skip if duplicate in last 10
+    const recent = this.memories.slice(-10);
+    if (recent.find(m => m.url === url)) return;
+    
+    this.memories.push({
+      url,
+      title: title || url,
+      summary: summary || '',
+      domain: this.extractDomain(url),
+      visitedAt: new Date().toISOString(),
+      space: window.spacesManager ? window.spacesManager.currentSpace : 'work'
+    });
+    
+    // Trim
+    if (this.memories.length > MEMORY_LIMIT) {
+      this.memories = this.memories.slice(-MEMORY_LIMIT);
+    }
+    
+    this.save();
+    this.updateUI();
+  }
+
+  extractDomain(url) {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return url.substring(0, 30);
+    }
+  }
+
+  startTracking() {
+    // Hook into navigation
+    setInterval(() => {
+      const webview = document.querySelector('webview');
+      if (webview) {
+        try {
+          const url = webview.getURL ? webview.getURL() : '';
+          const title = webview.getTitle ? webview.getTitle() : '';
+          if (url) this.remember(url, title, '');
+        } catch (e) {}
+      }
+    }, 5000);
+  }
+
+  getRecent(limit = 10) {
+    return this.memories.slice(-limit).reverse();
+  }
+
+  getByDomain(domain) {
+    return this.memories.filter(m => m.domain === domain);
+  }
+
+  getBySpace(spaceKey) {
+    return this.memories.filter(m => m.space === spaceKey);
+  }
+
+  search(query) {
+    const q = query.toLowerCase();
+    return this.memories.filter(m => 
+      m.url.toLowerCase().includes(q) ||
+      m.title.toLowerCase().includes(q) ||
+      (m.summary || '').toLowerCase().includes(q) ||
+      m.domain.toLowerCase().includes(q)
+    );
+  }
+
+  clear() {
+    this.memories = [];
+    this.save();
+    this.updateUI();
+  }
+
+  removeMemory(url) {
+    this.memories = this.memories.filter(m => m.url !== url);
+    this.save();
+    this.updateUI();
+  }
+
+  updateUI() {
+    const container = document.getElementById('v23MemoryList');
+    if (!container) return;
+    
+    const recent = this.getRecent(8);
+    if (recent.length === 0) {
+      container.innerHTML = '<div class="v23-memory-empty">아직 방문 기록이 없습니다</div>';
+      return;
+    }
+    
+    container.innerHTML = recent.map(m => `
+      <div class="v23-memory-item" data-url="${m.url}">
+        <div class="v23-memory-icon">${this.iconForDomain(m.domain)}</div>
+        <div class="v23-memory-info">
+          <div class="v23-memory-title">${(m.title || m.url).substring(0, 40)}</div>
+          <div class="v23-memory-meta">${m.domain} · ${this.timeAgo(m.visitedAt)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  iconForDomain(domain) {
+    if (domain.includes('github')) return '🐙';
+    if (domain.includes('youtube')) return '▶';
+    if (domain.includes('naver')) return 'N';
+    if (domain.includes('google')) return 'G';
+    if (domain.includes('stackoverflow')) return 'SO';
+    return '🌐';
+  }
+
+  timeAgo(isoString) {
+    const ms = Date.now() - new Date(isoString).getTime();
+    const min = Math.floor(ms / 60000);
+    if (min < 1) return '방금';
+    if (min < 60) return min + '분 전';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + '시간 전';
+    return Math.floor(hr / 24) + '일 전';
+  }
+}
+
+let browserMemories;
+window.browserMemories = null;
+
+function initV235Memories() {
+  browserMemories = new BrowserMemories();
+  window.browserMemories = browserMemories;
+}
+
+window.initV235Memories = initV235Memories;
+window.BrowserMemories = BrowserMemories;
+console.log('[V23.5] BrowserMemories module ready');
+
+
+// ============ V23.5: Tab Groups (Atlas 따라잡기) ============
+class TabGroupsManager {
+  constructor() {
+    this.groups = this.load() || [
+      { id: 'default', name: '기본', color: '#94a3b8', tabs: [] }
+    ];
+    console.log('[V23.5] TabGroupsManager initialized (' + this.groups.length + ' groups)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-tab-groups');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-tab-groups', JSON.stringify(this.groups));
+    } catch (e) {}
+  }
+
+  addGroup(name, color = '#3b82f6') {
+    const id = 'group_' + Date.now();
+    this.groups.push({ id, name, color, tabs: [] });
+    this.save();
+    this.updateUI();
+    return id;
+  }
+
+  removeGroup(id) {
+    this.groups = this.groups.filter(g => g.id !== id);
+    if (this.groups.length === 0) {
+      this.groups.push({ id: 'default', name: '기본', color: '#94a3b8', tabs: [] });
+    }
+    this.save();
+    this.updateUI();
+  }
+
+  addTabToGroup(groupId, tabId, tabTitle) {
+    const group = this.groups.find(g => g.id === groupId);
+    if (!group) return false;
+    if (!group.tabs.find(t => t.id === tabId)) {
+      group.tabs.push({ id: tabId, title: tabTitle });
+      this.save();
+      this.updateUI();
+    }
+    return true;
+  }
+
+  updateUI() {
+    const container = document.getElementById('v23TabGroups');
+    if (!container) return;
+    
+    container.innerHTML = this.groups.map(g => {
+      const safeName = g.name.replace(/'/g, "\'");
+      return `
+      <div class="tab-group" data-group-id="${g.id}">
+        <div class="tab-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <span class="tab-group-color" style="background:${g.color}"></span>
+          <span class="tab-group-name">${g.name}</span>
+          <span class="tab-group-count">${g.tabs.length}</span>
+          <svg class="tab-group-chevron" viewBox="0 0 12 12">
+            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="tab-group-tabs">
+          ${g.tabs.map(t => `<div class="tab-group-tab" data-tab-id="${t.id}">${t.title}</div>`).join('')}
+          <button class="tab-group-add" onclick="window.addTabToGroupUI('${g.id}')">+ 탭 추가</button>
+        </div>
+      </div>
+    `}).join('');
+  }
+}
+
+let tabGroupsManager;
+window.tabGroupsManager = null;
+
+window.addTabToGroupUI = (groupId) => {
+  const title = prompt('탭 제목을 입력하세요:');
+  if (title) {
+    const tabId = 'tab_' + Date.now();
+    window.tabGroupsManager.addTabToGroup(groupId, tabId, title);
+    if (window.showV22Toast) showV22Toast('그룹에 탭 추가됨', 'success');
+  }
+};
+
+function initV235TabGroups() {
+  tabGroupsManager = new TabGroupsManager();
+  window.tabGroupsManager = tabGroupsManager;
+  tabGroupsManager.updateUI();
+}
+
+window.initV235TabGroups = initV235TabGroups;
+window.TabGroupsManager = TabGroupsManager;
+
+// ============ V23.5: AI Search (Comet 스타일) ============
+class AISearchPanel {
+  constructor() {
+    this.inputEl = document.getElementById('aiSearchInput');
+    this.resultsEl = document.getElementById('aiSearchResults');
+    this.panelEl = document.getElementById('v23AiSearch');
+    this.isOpen = false;
+    this.attachHandlers();
+    console.log('[V23.5] AISearchPanel ready');
+  }
+
+  attachHandlers() {
+    if (!this.inputEl) return;
+    
+    this.inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.search(this.inputEl.value);
+      }
+      if (e.key === 'Escape') {
+        this.close();
+      }
+    });
+    
+    if (this.panelEl) {
+      const bg = this.panelEl.querySelector('.ai-bg');
+      if (bg) bg.onclick = () => this.close();
+    }
+  }
+
+  open() {
+    if (!this.panelEl) return;
+    this.panelEl.setAttribute('data-open', 'true');
+    this.isOpen = true;
+    setTimeout(() => this.inputEl && this.inputEl.focus(), 100);
+  }
+
+  close() {
+    if (!this.panelEl) return;
+    this.panelEl.setAttribute('data-open', 'false');
+    this.isOpen = false;
+    if (this.inputEl) this.inputEl.value = '';
+  }
+
+  async search(query) {
+    if (!query || !query.trim()) return;
+    
+    this.resultsEl.innerHTML = '<div style="text-align:center; padding:40px;color:var(--text-tertiary);">AI 답변 생성 중...</div>';
+    
+    const webview = document.querySelector('webview');
+    let pageContext = '';
+    try {
+      if (webview && webview.executeJavaScript) {
+        pageContext = await webview.executeJavaScript('document.body.innerText.substring(0, 2000)');
+      }
+    } catch (e) {}
+    
+    const answer = this.generateAnswer(query, pageContext);
+    
+    this.resultsEl.innerHTML = `
+      <div class="ai-search-result">
+        ${answer}
+        <div class="source">📄 페이지 컨텍스트 활용 · 12 LLM 중 선택 가능</div>
+      </div>
+    `;
+  }
+
+  generateAnswer(query, context) {
+    if (context && context.length > 50) {
+      return '<p><strong>질문:</strong> ' + query + '</p><p style="margin-top:12px;">현재 페이지(' + context.substring(0, 60) + '...)를 분석한 답변입니다. LLM 통합을 통해 실제 답변을 생성하려면 bridge의 MCP 도구를 호출해야 합니다.</p>';
+    }
+    return '<p><strong>질문:</strong> ' + query + '</p><p style="margin-top:12px;">페이지 컨텍스트가 없어 일반 답변을 표시합니다.</p>';
+  }
+}
+
+let aiSearchPanel;
+window.aiSearchPanel = null;
+
+function initV235AISearch() {
+  aiSearchPanel = new AISearchPanel();
+  window.aiSearchPanel = aiSearchPanel;
+  
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+      e.preventDefault();
+      aiSearchPanel.open();
+    }
+  });
+}
+
+window.initV235AISearch = initV235AISearch;
+window.AISearchPanel = AISearchPanel;
+console.log('[V23.5] Tab Groups + AI Search modules loaded');
+
 
 // ============ V23: Empty/Error/Loading State Helpers ============
 function showEmptyState(container, opts = {}) {

@@ -3413,6 +3413,346 @@ mark {
 :root[data-theme="light"] body {
   background: #f5f5f7 !important;
 }
+
+/* ============ V23.5: Spaces/Profiles Switcher ============ */
+#v23SpaceSwitcher {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+  backdrop-filter: blur(16px) saturate(160%);
+}
+.v23-space-pill {
+  flex: 1;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-spring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+.v23-space-pill:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+.v23-space-pill.active {
+  background: linear-gradient(135deg, var(--space-accent, var(--gold-bright)), color-mix(in srgb, var(--space-accent, var(--gold)) 80%, transparent));
+  color: white;
+  border-color: var(--space-accent, var(--gold));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--space-accent, var(--gold)) 35%, transparent);
+}
+.v23-space-pill .icon {
+  font-size: 13px;
+}
+.v23-space-pill .label {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+/* ============ V23.5: Browser Memories UI ============ */
+#v23MemoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  margin-top: 8px;
+  backdrop-filter: blur(16px) saturate(160%);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.v23-memory-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+  border: 1px solid transparent;
+}
+.v23-memory-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: var(--gold-line);
+  transform: translateX(2px);
+}
+.v23-memory-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-soft), rgba(59, 130, 246, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.v23-memory-info {
+  flex: 1;
+  min-width: 0;
+}
+.v23-memory-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v23-memory-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+.v23-memory-empty {
+  text-align: center;
+  padding: 24px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* ============ V23.5: Skills UI ============ */
+.v23-skills-panel {
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  padding: 12px;
+  margin-top: 8px;
+  backdrop-filter: blur(16px) saturate(160%);
+}
+.v23-skill-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+  border: 1px solid transparent;
+}
+.v23-skill-item:hover {
+  background: var(--gold-soft);
+  border-color: var(--gold-line);
+}
+.v23-skill-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-soft);
+}
+.v23-skill-info {
+  flex: 1;
+  min-width: 0;
+}
+.v23-skill-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+.v23-skill-desc {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.v23-skill-cat {
+  padding: 2px 6px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-radius: var(--r-pill);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ============ V23.5: Tab Groups (Atlas 따라잡기) ============ */
+.tab-group {
+  margin-bottom: 8px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+.tab-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, var(--gold-soft), rgba(59, 130, 246, 0.04));
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur-fast) var(--ease-smooth);
+}
+.tab-group-header:hover {
+  background: linear-gradient(135deg, var(--gold-soft), rgba(59, 130, 246, 0.08));
+}
+.tab-group-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tab-group-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  flex: 1;
+}
+.tab-group-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+}
+.tab-group-chevron {
+  width: 12px;
+  height: 12px;
+  fill: var(--text-tertiary);
+  transition: transform var(--dur) var(--ease-spring);
+}
+.tab-group.collapsed .tab-group-chevron {
+  transform: rotate(-90deg);
+}
+.tab-group.collapsed .tab-group-tabs {
+  display: none;
+}
+.tab-group-tabs {
+  background: var(--bg-overlay);
+  padding: 4px;
+}
+.tab-group-add {
+  padding: 6px 10px;
+  background: transparent;
+  border-top: 1px solid var(--border-soft);
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 100%;
+  text-align: center;
+  transition: color var(--dur-fast);
+}
+.tab-group-add:hover {
+  color: var(--gold);
+  background: var(--gold-soft);
+}
+
+/* ============ V23.5: AI Search Panel (Comet 스타일) ============ */
+#v23AiSearch {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#v23AiSearch[data-open="true"] {
+  display: flex;
+  animation: ai-search-bg var(--dur) var(--ease-smooth) both;
+}
+@keyframes ai-search-bg {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+#v23AiSearch .ai-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 30, 0.4);
+  backdrop-filter: blur(16px);
+}
+#v23AiSearch .ai-card {
+  position: relative;
+  width: 720px;
+  max-width: 95vw;
+  max-height: 80vh;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(36px) saturate(180%);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-deep), 0 0 0 1px var(--gold-glow), 0 0 100px rgba(245, 158, 11, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: ai-card-rise var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes ai-card-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ai-search-head {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ai-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.ai-search-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.ai-search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+}
+.ai-search-result {
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+.ai-search-result .source {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
 </style>
 
 
@@ -3420,6 +3760,19 @@ mark {
 
 </head>
 <body>
+<!-- V23.5: Spaces Switcher -->
+<div id="v23SpaceSwitcher" aria-label="Spaces/Profiles Switcher">
+  <button class="v23-space-pill active" data-space="work" data-tooltip="회사 업무 / 회로 일">
+    <span class="icon">💼</span><span class="label">업무</span>
+  </button>
+  <button class="v23-space-pill" data-space="personal" data-tooltip="개인 브라우징">
+    <span class="icon">🌿</span><span class="label">개인</span>
+  </button>
+  <button class="v23-space-pill" data-space="development" data-tooltip="Hermes 개발 / GitHub">
+    <span class="icon">⚡</span><span class="label">개발</span>
+  </button>
+</div>
+
   <div class="app" id="app">
     <svg class="icon-sprite" width="0" height="0" style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
       <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
@@ -4003,5 +4356,42 @@ mark {
 
 <!-- V23.3: USP Badge (fixed from missing) -->
 <div class="v22-usp-badge" id="v22UspBadge" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
+
+<!-- V23.5: Browser Memories Panel -->
+<div id="v23MemoryList" class="v23-memories-panel" aria-label="Browser Memories">
+  <!-- Filled by BrowserMemories.updateUI() -->
+</div>
+
+<!-- V23.5: Skills Panel (Dia 따라잡기) -->
+<div class="v23-skills-panel" id="v23SkillsPanel" hidden>
+  <div class="v23-skills-title">
+    <span class="v23-skill-icon">⚡</span>
+    <span style="font-weight: 700; font-family: var(--font-display);">Skills</span>
+    <button class="v23-skills-close" id="v23SkillsClose">✕</button>
+  </div>
+  <div id="v23SkillsList" class="v23-skills-list"></div>
+</div>
+
+<!-- V23.5: Tab Groups UI -->
+<div id="v23TabGroups" class="tab-groups" hidden>
+  <!-- Populated by TabGroupsManager -->
+</div>
+
+<!-- V23.5: AI Search Panel (Comet 스타일) -->
+<div id="v23AiSearch">
+  <div class="ai-bg"></div>
+  <div class="ai-card">
+    <div class="ai-search-head">
+      <input type="text" class="ai-search-input" id="aiSearchInput" placeholder="Ask anything — 예: 강남스타일 가사는?" />
+    </div>
+    <div class="ai-search-results" id="aiSearchResults">
+      <div class="ai-search-empty">
+        <p style="text-align: center; color: var(--text-tertiary); padding: 40px 0;">
+          무엇이든 물어보세요. 페이지 컨텍스트 자동 활용.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
