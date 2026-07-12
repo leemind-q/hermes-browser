@@ -2323,6 +2323,10 @@ if (document.readyState === 'loading') {
   setTimeout(initV25History, 660);
   setTimeout(initV25Notes, 680);
   setTimeout(initV25Voice, 700);
+  setTimeout(initV18Sidebar, 750);
+  setTimeout(initV18Sidebar, 750);
+  setTimeout(initV18Sidebar, 750);
+  setTimeout(initV18Sidebar, 750);
     setTimeout(initV25Omnibox, 600);
     setTimeout(initV25TabSearch, 620);
     setTimeout(initV25WebClipper, 640);
@@ -4175,10 +4179,22 @@ function initV25Omnibox() {
   window.aiOmnibox = aiOmnibox;
   
   // Try to attach to existing address bar
-  const addrInput = document.querySelector('.url-input, #addressBar, input[type="url"]');
+  const addrInput = document.getElementById('addressInput') || 
+                    document.querySelector('.url-input, #addressBar, input[type="url"]');
   if (addrInput) {
     aiOmnibox.attach(addrInput);
-    console.log('[V25] Omnibox attached to address bar');
+    // Wire Cmd+L to focus address bar
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+        e.preventDefault();
+        addrInput.focus();
+        addrInput.select();
+      }
+      if (e.key === 'Escape' && document.activeElement === addrInput) {
+        addrInput.blur();
+      }
+    });
+    console.log('[V25] Omnibox attached to address bar (Cmd+L wired)');
   } else {
     console.log('[V25] Address bar not found — Omnibox standalone');
   }

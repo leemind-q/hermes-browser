@@ -4116,6 +4116,167 @@ mark {
   font-size: 28px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
+
+/* ============ DAY18: Right Sidebar with 11 Tabs ============ */
+#v18Sidebar {
+  position: fixed;
+  top: 49px;
+  right: 0;
+  width: 360px;
+  height: calc(100vh - 49px - 32px);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(28px) saturate(180%);
+  border-left: 1px solid var(--gold-line);
+  box-shadow: -8px 0 32px rgba(15, 15, 30, 0.08);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--dur-slow) var(--ease-spring);
+  transform: translateX(100%);
+}
+#v18Sidebar.open {
+  transform: translateX(0);
+}
+#v18SidebarTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-elevated);
+}
+.v18-sidebar-tab {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--text-secondary);
+  transition: all var(--dur-fast) var(--ease-spring);
+  position: relative;
+}
+.v18-sidebar-tab:hover {
+  background: var(--gold-soft);
+  border-color: var(--gold-line);
+  transform: translateY(-1px);
+  color: var(--text-primary);
+}
+.v18-sidebar-tab.active {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: white;
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+.v18-sidebar-tab[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-radius: var(--r-sm);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 1000;
+}
+.v18-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+.v18-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v18-panel-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.v18-panel-action {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+}
+.v18-panel-action:hover {
+  background: var(--gold-soft);
+}
+.v18-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-style: italic;
+}
+.v18-item {
+  padding: 10px;
+  margin-bottom: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+.v18-item:hover {
+  border-color: var(--gold-line);
+  transform: translateX(-2px);
+}
+.v18-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.v18-item-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  display: flex;
+  gap: 8px;
+}
+
+/* Toggle sidebar button */
+#v18ToggleSidebar {
+  position: fixed;
+  bottom: 80px;
+  right: 90px;
+  z-index: 250;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 4px 16px var(--gold-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+#v18ToggleSidebar:hover {
+  transform: scale(1.1);
+}
 </style>
 
 
@@ -4804,5 +4965,28 @@ mark {
     <div class="v25-search-results" id="v25TabSearchResults"></div>
   </div>
 </div>
+
+<!-- DAY18: Right Sidebar with 11 Tabs -->
+<button id="v18ToggleSidebar" aria-label="Toggle Sidebar (Cmd+9)">▦</button>
+
+<aside id="v18Sidebar" role="complementary" aria-label="Hermes Inspector">
+  <div id="v18SidebarTabs">
+    <button class="v18-sidebar-tab active" data-tab="spaces" data-tooltip="Spaces (Cmd+1)">💼</button>
+    <button class="v18-sidebar-tab" data-tab="skills" data-tooltip="Skills (Cmd+2)">⚡</button>
+    <button class="v18-sidebar-tab" data-tab="memories" data-tooltip="Memories (Cmd+3)">🧠</button>
+    <button class="v18-sidebar-tab" data-tab="history" data-tooltip="History (Cmd+4)">📜</button>
+    <button class="v18-sidebar-tab" data-tab="notes" data-tooltip="Notes (Cmd+5)">📝</button>
+    <button class="v18-sidebar-tab" data-tab="clips" data-tooltip="Clips (Cmd+6)">✂</button>
+    <button class="v18-sidebar-tab" data-tab="boosts" data-tooltip="Boosts (Cmd+7)">🎨</button>
+    <button class="v18-sidebar-tab" data-tab="easels" data-tooltip="Easels">🖼</button>
+    <button class="v18-sidebar-tab" data-tab="livefolders" data-tooltip="Live Folders">📡</button>
+    <button class="v18-sidebar-tab" data-tab="brief" data-tooltip="Morning Brief">☀</button>
+    <button class="v18-sidebar-tab" data-tab="atc" data-tooltip="ATC Routes">✈</button>
+  </div>
+  <div class="v18-sidebar-content" id="v18SidebarContent">
+    <!-- Dynamically rendered -->
+  </div>
+</aside>
+<script src="sidebar.js"></script>
 </body>
 </html>
