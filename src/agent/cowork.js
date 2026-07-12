@@ -1019,8 +1019,8 @@ class CoworkService {
         const gargs = ['branch'];
         if (remote) gargs.push('-a');
         const { stdout } = await this._gitExec(gargs, cwd);
-        const branches = stdout.split('\n').filter(b => b.trim()).map(b => ({
-          name: b.replace(/^[*\s]+/, '').trim(), current: b.startsWith('*'), remote: b.trim().startswith('remotes/'),
+        const branches = stdout.split('\n').filter(b => typeof b === 'string' && b.trim()).map(b => ({
+          name: b.replace(/^[*\s]+/, '').trim(), current: b.startsWith('*'), remote: (typeof b === 'string' ? b.trim() : '').startsWith('remotes/'),
         }));
         return { ok: true, dir, branches, count: branches.length };
       } else if (action === 'create') {
