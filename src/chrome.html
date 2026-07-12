@@ -405,6 +405,12 @@
   --font-display: "Space Grotesk", "Inter", -apple-system, system-ui, sans-serif;
   --font-body: "Inter", "DM Sans", -apple-system, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  --shadow-fast: 0 1px 2px rgba(15, 15, 30, 0.06), 0 0 0 1px rgba(15, 15, 30, 0.04);
+  --shadow-mid: 0 4px 12px rgba(15, 15, 30, 0.08), 0 0 0 1px rgba(15, 15, 30, 0.06);
+  --shadow-deep: 0 12px 32px rgba(15, 15, 30, 0.12), 0 0 0 1px rgba(15, 15, 30, 0.08);
+  --shadow-glow-gold: 0 0 0 1px var(--gold-line), 0 4px 24px rgba(245, 158, 11, 0.18);
+  --shadow-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(15, 15, 30, 0.04);
 }
 
 /* ============ Aurora Mesh Background (Light) ============ */
@@ -4900,14 +4906,7 @@ body.v18-sidebar-open .browser-frame {
 </div>
 
 <!-- V23.5: Skills Panel (Dia 따라잡기) -->
-<div class="v23-skills-panel" id="v23SkillsPanel" hidden>
-  <div class="v23-skills-title">
-    <span class="v23-skill-icon">⚡</span>
-    <span style="font-weight: 700; font-family: var(--font-display);">Skills</span>
-    <button class="v23-skills-close" id="v23SkillsClose">✕</button>
-  </div>
-  <div id="v23SkillsList" class="v23-skills-list"></div>
-</div>
+
 
 <!-- V23.5: Tab Groups UI -->
 <div id="v23TabGroups" class="tab-groups" hidden>
@@ -4932,38 +4931,16 @@ body.v18-sidebar-open .browser-frame {
 </div>
 
 <!-- V24: Morning Brief Panel -->
-<div id="v24MorningBrief" hidden>
-  <div class="brief-container" id="v24BriefContainer">
-    <!-- Filled by MorningBriefManager.renderBrief() -->
-  </div>
-</div>
+
 
 <!-- V24: Boosts Panel -->
-<div id="v24BoostsPanel" hidden>
-  <div class="v24-boosts-header">
-    <span>🎨 Boosts (사이트별 CSS 커스터마이즈)</span>
-    <button class="v24-boost-add">+ 추가</button>
-  </div>
-  <div id="v24BoostsList" class="v24-boost-list"></div>
-</div>
+
 
 <!-- V24: Live Folders Panel -->
-<div id="v24LiveFoldersPanel" hidden>
-  <div class="v24-folders-header">
-    <span>📡 Live Folders (RSS 자동 업데이트)</span>
-    <button class="v24-folder-add">+ 추가</button>
-  </div>
-  <div id="v24FoldersList" class="v24-folder-grid"></div>
-</div>
+
 
 <!-- V24: Easels Panel -->
-<div id="v24EaselsPanel" hidden>
-  <div class="v24-easels-header">
-    <span>🖼 Easels (스크린샷+그리기)</span>
-    <button class="v24-easel-add">+ 새 Easel</button>
-  </div>
-  <div id="v24EaselsList" class="v24-easel-grid"></div>
-</div>
+
 
 <!-- V25: Voice Mode Indicator -->
 <button class="v25-voice-indicator" id="v25VoiceIndicator" aria-label="Voice Mode">
@@ -4984,17 +4961,22 @@ body.v18-sidebar-open .browser-frame {
 
 <aside id="v18Sidebar" role="complementary" aria-label="Hermes Inspector">
   <div id="v18SidebarTabs">
-    <button class="v18-sidebar-tab active" data-tab="spaces" data-tooltip="Spaces (Cmd+1)">💼</button>
-    <button class="v18-sidebar-tab" data-tab="skills" data-tooltip="Skills (Cmd+2)">⚡</button>
-    <button class="v18-sidebar-tab" data-tab="memories" data-tooltip="Memories (Cmd+3)">🧠</button>
-    <button class="v18-sidebar-tab" data-tab="history" data-tooltip="History (Cmd+4)">📜</button>
-    <button class="v18-sidebar-tab" data-tab="notes" data-tooltip="Notes (Cmd+5)">📝</button>
-    <button class="v18-sidebar-tab" data-tab="clips" data-tooltip="Clips (Cmd+6)">✂</button>
-    <button class="v18-sidebar-tab" data-tab="boosts" data-tooltip="Boosts (Cmd+7)">🎨</button>
+    <button class="v18-sidebar-tab active" data-tab="spaces" data-tooltip="Spaces">💼</button>
+    <button class="v18-sidebar-tab" data-tab="skills" data-tooltip="Skills">⚡</button>
+    <button class="v18-sidebar-tab" data-tab="memories" data-tooltip="Memories">🧠</button>
+    <button class="v18-sidebar-tab" data-tab="history" data-tooltip="History">📜</button>
+    <button class="v18-sidebar-tab" data-tab="notes" data-tooltip="Notes">📝</button>
+    <button class="v18-sidebar-tab" data-tab="clips" data-tooltip="Clips">✂</button>
+    <button class="v18-sidebar-tab" data-tab="boosts" data-tooltip="Boosts">🎨</button>
     <button class="v18-sidebar-tab" data-tab="easels" data-tooltip="Easels">🖼</button>
     <button class="v18-sidebar-tab" data-tab="livefolders" data-tooltip="Live Folders">📡</button>
     <button class="v18-sidebar-tab" data-tab="brief" data-tooltip="Morning Brief">☀</button>
     <button class="v18-sidebar-tab" data-tab="atc" data-tooltip="ATC Routes">✈</button>
+    <button class="v18-sidebar-tab" data-tab="tabgroups" data-tooltip="Tab Groups">📁</button>
+    <button class="v18-sidebar-tab" data-tab="pause" data-tooltip="Pause">⏸</button>
+    <button class="v18-sidebar-tab" data-tab="instantlinks" data-tooltip="Instant Links">⚡</button>
+    <button class="v18-sidebar-tab" data-tab="synthesis" data-tooltip="Synthesis">🔗</button>
+    <button class="v18-sidebar-tab" data-tab="decks" data-tooltip="Decks">📑</button>
   </div>
   <div class="v18-sidebar-content" id="v18SidebarContent">
     <!-- Dynamically rendered -->

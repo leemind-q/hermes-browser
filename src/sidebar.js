@@ -77,6 +77,11 @@ class SidebarController {
       case 'livefolders': this.renderLiveFolders(); break;
       case 'brief': this.renderBrief(); break;
       case 'atc': this.renderATC(); break;
+      case 'tabgroups': this.renderTabGroups(); break;
+      case 'pause': this.renderPause(); break;
+      case 'instantlinks': this.renderInstantLinks(); break;
+      case 'synthesis': this.renderSynthesis(); break;
+      case 'decks': this.renderDecks(); break;
     }
   }
 
@@ -96,8 +101,8 @@ class SidebarController {
   renderSkills() {
     if (!window.skillsManager) { this.content.innerHTML = '<div class="v18-empty">SkillsManager 미초기화</div>'; return; }
     const skills = window.skillsManager.list();
-    this.content.innerHTML = `<div class="v18-panel-header"><span class="v18-panel-title">⚡ Skills</span><button class="v18-panel-action" onclick="window.showV22Toast && showV22Toast('Cmd+K → / skill 입력', 'info')">⌨ 실행</button></div>` +
-      skills.map(s => `<div class="v18-item" onclick="window.skillsManager.execute('${s.command}'); window.sidebarController.renderSkills()"><div class="v18-item-title">${s.icon} ${s.name}</div><div class="v18-item-meta">${s.command} · ${s.category}</div><div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">${s.description}</div></div>`).join('');
+    this.content.innerHTML = `<div class="v18-panel-header"><span class="v18-panel-title">⚡ Skills (8)</span><button class="v18-panel-action" onclick="window.showV22Toast && showV22Toast('Cmd+K → /skill 입력으로 실행', 'info')">⌨ 실행</button></div>` +
+      skills.map(s => `<div class="v18-item" onclick="window.skillsManager.execute('${s.command}').then(() => window.sidebarController.renderSkills());"><div class="v18-item-title">${s.icon} ${s.name}</div><div class="v18-item-meta">${s.command} · ${s.category}</div><div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">${s.description}</div></div>`).join('');
   }
 
   renderMemories() {
@@ -157,7 +162,7 @@ class SidebarController {
     const presets = window.liveFoldersManager.getPresets();
     this.content.innerHTML = `<div class="v18-panel-header"><span class="v18-panel-title">📡 Live Folders</span><button class="v18-panel-action" onclick="window.liveFoldersManager.create(window.liveFoldersManager.getPresets()[0].name, window.liveFoldersManager.getPresets()[0].source, 'rss'); window.sidebarController.renderLiveFolders()">+ RSS</button></div>` +
       (folders.length === 0 ? '<div class="v18-empty">Folder 없음</div>' :
-        folders.map(f => `<div class="v18-item" onclick="window.liveFoldersManager.fetchFolder('${f.id}')"><div class="v18-item-title">📡 ${f.name}</div><div class="v18-item-meta">${f.items.length}개 · ${f.type}</div></div>`).join('')) +
+        folders.map(f => `<div class="v18-item" onclick="window.liveFoldersManager.fetchFolder('${f.id}').then(() => window.sidebarController.renderLiveFolders())"><div class="v18-item-title">📡 ${f.name}</div><div class="v18-item-meta">${f.items.length}개 · ${f.type}</div></div>`).join('')) +
       `<div style="margin-top:12px; padding:8px; background:var(--bg-elevated); border-radius:var(--r-sm); font-size:11px;"><b>Available:</b><br>${presets.slice(0, 6).map(p => '• ' + p.name).join('<br>')}</div>`;
   }
 
