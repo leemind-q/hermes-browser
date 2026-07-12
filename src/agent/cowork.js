@@ -1185,6 +1185,16 @@ class CoworkService {
     };
     return map[ext] || 'application/octet-stream';
   }
+
+
+  _gitBin() {
+    const candidates = ['git', '/usr/bin/git', '/usr/local/bin/git', 'git.exe', 'C:\\Program Files\\Git\\cmd\\git.exe'];
+    for (const c of candidates) {
+      try { if (c.includes('/') || c.includes('\\')) require('fs').accessSync(c); return c; } catch {}
+    }
+    return 'git';
+  }
+
 }
 
 module.exports = { CoworkService };
