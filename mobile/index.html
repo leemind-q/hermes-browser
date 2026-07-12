@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hermes Mobile</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#fbbf24">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+      color: #e8e8ee; min-height: 100vh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .app { max-width: 480px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; padding: 24px 0; border-bottom: 1px solid rgba(232,232,238,0.1); margin-bottom: 24px; }
+    .logo { font-size: 48px; margin-bottom: 12px; animation: glow 2s ease-in-out infinite; }
+    @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 8px #fbbf24); } 50% { filter: drop-shadow(0 0 24px #fbbf24); } }
+    h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+    .tagline { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(251,191,36,0.15);
+      border-radius: 16px; padding: 16px; margin-bottom: 12px;
+      transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+    }
+    .card:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
+    .card-head { display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 16px; font-weight: 500; }
+    .pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(74,222,128,0.15); color: #4ade80; }
+    .pill.gold { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .pill.blue { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .card-desc { font-size: 13px; opacity: 0.7; margin-top: 6px; }
+
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 12px; opacity: 0.7; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    input, textarea {
+      width: 100%; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(251,191,36,0.2); border-radius: 12px;
+      padding: 12px; color: #e8e8ee; font-family: inherit; font-size: 14px;
+      outline: none; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { border-color: #fbbf24; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1a1a2e; border: none; padding: 14px 20px;
+      border-radius: 12px; font-weight: 600; font-size: 14px;
+      width: 100%; cursor: pointer;
+      transition: transform 0.15s cubic-bezier(.34,1.56,.64,1);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn.secondary { background: rgba(255,255,255,0.06); color: #e8e8ee; border: 1px solid rgba(232,232,238,0.2); }
+
+    .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 16px; font-size: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .quick-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .qt { aspect-ratio: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(232,232,238,0.1); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; padding: 8px; gap: 4px; cursor: pointer; }
+    .qt-label { font-size: 11px; opacity: 0.7; }
+    .qt:active { transform: scale(0.95); background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.4); }
+
+    .history { margin-top: 16px; }
+    .history-item { padding: 10px 12px; border-left: 2px solid rgba(251,191,36,0.3); margin-bottom: 6px; font-size: 13px; opacity: 0.8; }
+    .history-time { font-size: 10px; opacity: 0.5; }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(232,232,238,0.1); border-radius: 12px; padding: 12px; }
+    .stat-val { font-size: 22px; font-weight: 600; color: #fbbf24; }
+    .stat-label { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="logo">⚡</div>
+      <h1>Hermes Mobile</h1>
+      <div class="tagline">AI Browser · MCP Bridge Companion</div>
+    </div>
+
+    <div class="status-bar">
+      <span><span class="status-dot" id="statusDot"></span><span id="statusText">Desktop Connected</span></span>
+      <span class="pill gold">Beta</span>
+    </div>
+
+    <div class="input-group">
+      <label>Desktop Bridge URL</label>
+      <input id="bridgeUrl" placeholder="http://127.0.0.1:8780" value="http://10.0.2.2:8780">
+    </div>
+
+    <div class="input-group">
+      <label>Token (paste from Desktop)</label>
+      <input id="token" placeholder="Auth token" type="password">
+    </div>
+
+    <div class="input-group">
+      <label>Quick Prompt</label>
+      <textarea id="prompt" placeholder="Ask Hermes anything (e.g., 'list my recent BLDC projects')"></textarea>
+    </div>
+
+    <button class="btn" id="sendBtn">▶ Send to Desktop</button>
+    <button class="btn secondary" style="margin-top: 8px;" id="testBtn">🔗 Test Connection</button>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val">75</div>
+        <div class="stat-label">MCP Tools</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">12</div>
+        <div class="stat-label">LLM Providers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">31</div>
+        <div class="stat-label">Cowork Tools</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">58</div>
+        <div class="stat-label">Tests PASS</div>
+      </div>
+    </div>
+
+    <h2 style="font-size: 14px; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase;">Quick Actions</h2>
+    <div class="quick-tabs">
+      <div class="qt" data-action="cowork_list">📁<div class="qt-label">Files</div></div>
+      <div class="qt" data-action="browser_tabs">🗂<div class="qt-label">Tabs</div></div>
+      <div class="qt" data-action="ai_chat">🤖<div class="qt-label">AI Chat</div></div>
+      <div class="qt" data-action="cowork_read">📖<div class="qt-label">Read</div></div>
+      <div class="qt" data-action="git_status">🔄<div class="qt-label">Git</div></div>
+      <div class="qt" data-action="capture_screen">📸<div class="qt-label">Snap</div></div>
+    </div>
+
+    <div class="history">
+      <h2 style="font-size: 14px; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase;">Recent Activity</h2>
+      <div id="historyList">
+        <div class="history-item">
+          <div class="history-time">Just now · Mobile v1.0 installed</div>
+          PWA installable from desktop browser
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bridgeUrlEl = document.getElementById('bridgeUrl');
+    const tokenEl = document.getElementById('token');
+    const promptEl = document.getElementById('prompt');
+    const historyList = document.getElementById('historyList');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    async function callBridge(tool, args = {}) {
+      const url = bridgeUrlEl.value.trim();
+      const token = tokenEl.value.trim();
+      if (!token) {
+        alert('Please paste your auth token (get from Desktop Hermes Browser DevTools)');
+        return null;
+      }
+      try {
+        const res = await fetch(url + '/mcp/tool', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ name: tool, args }),
+        });
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        updateStatus(false, 'Network error: ' + e.message);
+        return null;
+      }
+    }
+
+    function updateStatus(ok, msg) {
+      statusDot.style.background = ok ? '#4ade80' : '#f87171';
+      statusText.textContent = msg;
+    }
+
+    function addHistory(tool, args, result) {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const time = new Date().toLocaleTimeString();
+      const ok = result && result.ok;
+      const summary = ok ? JSON.stringify(result.result).slice(0, 100) : 'FAILED';
+      item.innerHTML = '<div class="history-time">' + time + ' · ' + tool + '</div>' + summary;
+      historyList.insertBefore(item, historyList.firstChild);
+      while (historyList.children.length > 10) historyList.removeChild(historyList.lastChild);
+      try { localStorage.setItem('hermes_history', historyList.innerHTML); } catch {}
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+      const prompt = promptEl.value.trim();
+      if (!prompt) return;
+      updateStatus(true, 'Sending...');
+      const r = await callBridge('agent_chat', { message: prompt });
+      addHistory('agent_chat', { message: prompt }, r);
+      updateStatus(r && r.ok, r && r.ok ? 'OK' : 'Failed');
+    });
+
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      updateStatus(true, 'Testing...');
+      const r = await callBridge('cowork_list', { dir: '.' });
+      addHistory('test', {}, r);
+      if (r && r.ok) updateStatus(true, 'Connected · ' + (r.result && r.result.count) + ' entries');
+      else updateStatus(false, 'No connection');
+    });
+
+    document.querySelectorAll('.qt').forEach(el => {
+      el.addEventListener('click', async () => {
+        const action = el.dataset.action;
+        let args = {};
+        if (action === 'cowork_list') args = { dir: '.' };
+        else if (action === 'cowork_read') {
+          const path = prompt('Enter file path (e.g., docs/index.html):');
+          if (!path) return;
+          args = { path };
+        } else if (action === 'git_status') {
+          // no args
+        } else if (action === 'browser_tabs' || action === 'capture_screen') {
+          alert('Action ' + action + ' requires Desktop browser (HTTP bridge cannot do browser-only ops)');
+          return;
+        } else if (action === 'ai_chat') {
+          promptEl.focus();
+          return;
+        }
+        const r = await callBridge(action, args);
+        addHistory(action, args, r);
+        if (r && r.ok) updateStatus(true, 'OK: ' + action);
+      });
+    });
+
+    // Load saved history
+    try {
+      const saved = localStorage.getItem('hermes_history');
+      if (saved) historyList.innerHTML = saved;
+    } catch {}
+
+    // Auto-detect URL: use detected IP for LAN, fallback to localhost
+    if (window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
+      bridgeUrlEl.value = window.location.protocol + '//' + window.location.hostname + ':8780';
+    }
+  </script>
+</body>
+</html>

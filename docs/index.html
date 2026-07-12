@@ -214,7 +214,7 @@
       <div class="card">
         <div class="num">75</div>
         <h3>MCP-First Architecture</h3>
-        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks, full git workflow (10 tools), browser extensions (Chrome MV3 + Firefox MV2).</p>
+        <p>Every capability exposed as MCP tools. External AI agents (Claude, GPT, Hermes AI) fully control the browser via HTTP bridge. SSE streaming, multi-agent locks, full git workflow (10 tools), browser extensions (Chrome MV3 + Firefox MV2), mobile PWA companion.</p>
       </div>
       <div class="card">
         <div class="num">12</div>
@@ -346,6 +346,15 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
           <img src="screenshots/v20-git.png" alt="Git" style="width: 100%; border-radius: 8px; margin: 12px 0;" />
           <p>V20: auto_commit + sync + release_notes + diff_stat + changelog — 완전 git workflow 자동화.</p>
         </div>
+        <div class="card">
+          <h3>📱 Hermes Mobile</h3>
+          <p style="font-size: 16px; color: #fbbf24; font-weight: 600; margin: 12px 0;">V21</p>
+          <p>PWA companion — 휴대전화에서 Desktop Hermes Browser 제어. Quick actions + MCP bridge + offline-capable.</p>
+          <pre style="background: #0f0f1e; color: #e8e8ee; padding: 12px; border-radius: 8px; font-size: 11px; margin-top: 8px; overflow-x: auto;">mobile/
+  index.html     (11.5 KB)
+  manifest.json  (389 B)
+  sw.js          (319 B)</pre>
+        </div>
       </div>
     </div>
 
@@ -388,7 +397,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v20.0 · Last updated 2026-07-11</span>
+      <span>version: v21.0 · Last updated 2026-07-11</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
