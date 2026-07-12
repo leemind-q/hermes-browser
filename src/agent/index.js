@@ -822,4 +822,15 @@ class AgentService {
 
 module.exports = { AgentService };
   // V22: YouTube transcript
-  async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); }
+  async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); 
+  async coworkGitCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitCommit(args); }
+  async coworkGitPush(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitPush(args); }
+  async coworkGitPull(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitPull(args); }
+  async coworkGitBranch(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitBranch(args); }
+  async coworkGitCheckout(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitCheckout(args); }
+  async coworkGitAutoCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitAutoCommit(args); }
+  async coworkGitSync(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitSync(args); }
+  async coworkGitReleaseNotes(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitReleaseNotes(args); }
+  async coworkGitDiffStat(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitDiffStat(args); }
+  async coworkGitChangelog(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitChangelog(args); }
+}
