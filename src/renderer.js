@@ -2180,6 +2180,25 @@ window.dispatchCommand = function dispatchCommand(intent, value) {
 
 window.addEventListener('DOMContentLoaded', init);
 
+// ============ V23.3: SVG Icon Library (moved from chrome.html inline) ============
+window.svgIcon = function(name, size = 16) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.verticalAlign = 'middle';
+  const use = document.createElementNS('http://www.w3.org/1999/svg', 'use');
+  use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#i-' + name);
+  use.setAttribute('href', '#i-' + name);
+  svg.appendChild(use);
+  return svg;
+};
+window.svgIconHTML = function(name, size = 16) {
+  return `<svg width="${size}" height="${size}" aria-hidden="true" style="vertical-align:middle"><use href="#i-${name}"></use></svg>`;
+};
+console.log('[V23] SVG icon library ready');
+
+
 // ============ V23.3: Theme Toggle (Cmd+Shift+L) ============
 function toggleV23Theme() {
   const html = document.documentElement;
@@ -2281,7 +2300,11 @@ window.V23Pages = {
 };
 
 
-initV233ChromePages();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initV233ChromePages, 100));
+} else {
+  setTimeout(initV233ChromePages, 100);
+}
 
 // ============ V23: Empty/Error/Loading State Helpers ============
 function showEmptyState(container, opts = {}) {

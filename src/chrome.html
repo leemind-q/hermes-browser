@@ -3665,11 +3665,18 @@ mark {
   <!-- V13 Command palette (Cmd+K) -->
   <div class="cmdk" id="cmdk">
     <div class="cmdk-card">
-      <input type="text" class="cmdk-input" id="cmdkInput" placeholder="명령 입력 — 페이지 검색, LLM 변경, 도구 실행..." />
+      <div class="cmdk-head">
+        <span class="cmdk-icon">⌘</span>
+        <input type="text" class="cmdk-input" id="cmdkInput" placeholder="Type a command, search, or ask AI..." autocomplete="off" spellcheck="false" />
+        <span class="cmdk-esc">ESC</span>
+      </div>
       <div class="cmdk-list" id="cmdkList"></div>
-      <div class="cmdk-footer">
-        <span><kbd>↑</kbd> <kbd>↓</kbd> navigate · <kbd>Enter</kbd> select</span>
-        <span><kbd>Esc</kbd> close</span>
+      <div class="cmdk-foot">
+        <span class="cmdk-hint"><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span class="cmdk-hint"><kbd>↵</kbd> Select</span>
+        <span class="cmdk-hint"><kbd>⌘K</kbd> Toggle</span>
+        <span class="cmdk-spacer"></span>
+        <span class="cmdk-ai-badge"><span class="live-dot"></span> AI Ready</span>
       </div>
     </div>
   </div>
@@ -3905,24 +3912,7 @@ mark {
 </svg>
 
 <!-- Helper: inline SVG usage -->
-<script>
-window.svgIcon = function(name, size = 16) {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', size);
-  svg.setAttribute('height', size);
-  svg.setAttribute('aria-hidden', 'true');
-  svg.style.verticalAlign = 'middle';
-  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#i-' + name);
-  use.setAttribute('href', '#i-' + name);
-  svg.appendChild(use);
-  return svg;
-};
-window.svgIconHTML = function(name, size = 16) {
-  return `<svg width="${size}" height="${size}" aria-hidden="true" style="vertical-align:middle"><use href="#i-${name}"></use></svg>`;
-};
-console.log('[V23] SVG icon library ready (24 icons)');
-</script>
+
 
 
 <!-- V23.1: Chrome Pages Overlay (settings / history / downloads) -->
