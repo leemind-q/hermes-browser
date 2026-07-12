@@ -480,6 +480,7 @@ function listTools() {
     { name: 'cowork_git_changelog', description: 'Auto-detect last tag and generate changelog (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, fromTag: { type: 'string' }, toRef: { type: 'string' } } } },
     // === V22 YouTube ===
     { name: 'cowork_youtube_transcript', description: 'Extract YouTube video transcript/captions (V22).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxChars: { type: 'number' } }, required: ['url'] } },
+    { name: 'cowork_youtube_summary', description: 'YouTube summary pipeline (V22: transcript → preview).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxSegments: { type: 'number' } }, required: ['url'] } },
   ];
 }
 

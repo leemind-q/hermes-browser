@@ -829,6 +829,7 @@ class AgentService {
   async coworkGitDiffStat(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitDiffStat(args); }
   async coworkGitChangelog(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitChangelog(args); }
   async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); }
+  async coworkYoutubeSummary(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeSummary(args); }
 }
 
 module.exports = { AgentService };

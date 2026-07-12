@@ -1211,7 +1211,28 @@ class CoworkService {
   }
 
 
-  _gitBin() {
+    // V22: YouTube summary pipeline (transcript → first N segments → prompt-ready)
+  async youtubeSummary(args) {
+    const { url, languages = 'ko,en', maxSegments = 30 } = args || {};
+    if (!url) return { ok: false, error: 'url required' };
+    const tr = await this.youtubeTranscript({ url, languages, maxChars: 999999 });
+    if (!tr.ok) return { ok: false, error: 'transcript failed: ' + tr.error, videoId: tr.videoId };
+    const segments = (tr.segments || []).slice(0, maxSegments);
+    const preview = segments.map(s => s.text).join(' ').slice(0, 600);
+    return {
+      ok: true,
+      url,
+      videoId: tr.videoId,
+      languages: tr.languages,
+      segmentCount: segments.length,
+      totalSegments: tr.segmentCount,
+      previewForLlm: preview,
+      fullText: tr.fullText.slice(0, 4000),
+      hint: 'Pass previewForLlm to any LLM as prompt context to generate summary.',
+    };
+  }
+
+_gitBin() {
     const candidates = ['git', '/usr/bin/git', '/usr/local/bin/git', 'git.exe', 'C:\\Program Files\\Git\\cmd\\git.exe'];
     for (const c of candidates) {
       try { if (c.includes('/') || c.includes('\\')) require('fs').accessSync(c); return c; } catch {}
