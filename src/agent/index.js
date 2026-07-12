@@ -819,21 +819,6 @@ class AgentService {
   restoreWorkspace(id) { return this.store.restoreWorkspace(id); }
   deleteWorkspace(id) { return this.store.deleteWorkspace(id); }
 }
-  // V19: Cowork v7 — git workflow (commit/push/pull/branch/checkout)
-  async coworkGitCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitCommit(args); }
-  async coworkGitPush(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPush(args); }
-  async coworkGitPull(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPull(args); }
-  async coworkGitBranch(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitBranch(args); }
-  async coworkGitCheckout(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitCheckout(args); }
-  // V20: Cowork v8 — git workflow patterns
-  async coworkGitAutoCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitAutoCommit(args); }
-  async coworkGitSync(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitSync(args); }
-  async coworkGitReleaseNotes(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitReleaseNotes(args); }
-  async coworkGitDiffStat(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitDiffStat(args); }
-  async coworkGitChangelog(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitChangelog(args); }
-  // V22: YouTube transcript
-  async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); 
-  // V19/V20/V22: Git workflow + YouTube
   async coworkGitCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitCommit(args); }
   async coworkGitPush(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPush(args); }
   async coworkGitPull(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitPull(args); }
