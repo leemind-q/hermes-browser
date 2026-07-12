@@ -465,7 +465,21 @@ function listTools() {
     { name: 'cowork_git_log', description: 'Git log (last N commits).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, limit: { type: 'number' }, branch: { type: 'string' } } } },
     { name: 'cowork_git_diff', description: 'Git diff (staged or unstaged).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, staged: { type: 'boolean' }, file: { type: 'string' }, limit: { type: 'number' } } } },
     { name: 'cowork_git_blame', description: 'Git blame (line-by-line author/date).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, dir: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' } }, required: ['path'] } },
-    { name: 'cowork_git_show', description: 'Git show (commit details with stat).', inputSchema: { type: 'object', properties: { commit: { type: 'string' }, dir: { type: 'string' } } } },
+    { name: 'cowork_git_show', description: 'Git show (commit details with stat).', inputSchema: { type: 'object', properties: { commit: { type: 'string' },,
+    // === V19 ===
+    { name: 'cowork_git_commit', description: 'Git commit with auto-add (V19).', inputSchema: { type: 'object', properties: { message: { type: 'string' }, dir: { type: 'string' }, files: { type: 'array' }, all: { type: 'boolean' }, amend: { type: 'boolean' }, author: { type: 'string' } }, required: ['message'] } },
+    { name: 'cowork_git_push', description: 'Git push to remote (V19).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, remote: { type: 'string' }, branch: { type: 'string' }, force: { type: 'boolean' } } } },
+    { name: 'cowork_git_pull', description: 'Git pull from remote (V19).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, remote: { type: 'string' }, branch: { type: 'string' }, rebase: { type: 'boolean' } } } },
+    { name: 'cowork_git_branch', description: 'Git branch (V19: list/create/delete).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, action: { type: 'string', enum: ['list', 'create', 'delete'] }, name: { type: 'string' }, force: { type: 'boolean' } } } },
+    { name: 'cowork_git_checkout', description: 'Git checkout (V19: branch switch + create new + file restore).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, branch: { type: 'string' }, create: { type: 'boolean' }, file: { type: 'string' } } } },
+    // === V20 ===
+    { name: 'cowork_git_auto_commit', description: 'Auto-commit (V20).', inputSchema: { type: 'object', properties: { message: { type: 'string' }, dir: { type: 'string' }, files: { type: 'array' } }, required: ['message'] } },
+    { name: 'cowork_git_sync', description: 'Sync with remote (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, remote: { type: 'string' }, branch: { type: 'string' }, rebase: { type: 'boolean' } } } },
+    { name: 'cowork_git_release_notes', description: 'Generate release notes (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, limit: { type: 'number' }, fromRef: { type: 'string' }, toRef: { type: 'string' }, format: { type: 'string' } } } },
+    { name: 'cowork_git_diff_stat', description: 'Diff stat per-file (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, staged: { type: 'boolean' }, file: { type: 'string' }, fromRef: { type: 'string' }, toRef: { type: 'string' } } } },
+    { name: 'cowork_git_changelog', description: 'Auto-detect last tag and generate changelog (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, fromTag: { type: 'string' }, toRef: { type: 'string' } } } },
+    // === V22 YouTube ===
+    { name: 'cowork_youtube_transcript', description: 'Extract YouTube video transcript/captions (V22).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxChars: { type: 'number' } }, required: ['url'] } } dir: { type: 'string' } } } },
   ];
 }
 
@@ -637,6 +651,20 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_git_diff': try { return await agent.coworkGitDiff(args); } catch(e) { return { ok: false, error: 'coworkGitDiff: ' + e.message }; }
     case 'cowork_git_blame': try { return await agent.coworkGitBlame(args); } catch(e) { return { ok: false, error: 'coworkGitBlame: ' + e.message }; }
     case 'cowork_git_show': try { return await agent.coworkGitShow(args); } catch(e) { return { ok: false, error: 'coworkGitShow: ' + e.message }; }
+    // === V19 Cowork v7 (git workflow) ===
+    case 'cowork_git_commit': try { return await agent.coworkGitCommit(args); } catch(e) { return { ok: false, error: 'coworkGitCommit: ' + e.message }; }
+    case 'cowork_git_push': try { return await agent.coworkGitPush(args); } catch(e) { return { ok: false, error: 'coworkGitPush: ' + e.message }; }
+    case 'cowork_git_pull': try { return await agent.coworkGitPull(args); } catch(e) { return { ok: false, error: 'coworkGitPull: ' + e.message }; }
+    case 'cowork_git_branch': try { return await agent.coworkGitBranch(args); } catch(e) { return { ok: false, error: 'coworkGitBranch: ' + e.message }; }
+    case 'cowork_git_checkout': try { return await agent.coworkGitCheckout(args); } catch(e) { return { ok: false, error: 'coworkGitCheckout: ' + e.message }; }
+    // === V20 Cowork v8 ===
+    case 'cowork_git_auto_commit': try { return await agent.coworkGitAutoCommit(args); } catch(e) { return { ok: false, error: 'coworkGitAutoCommit: ' + e.message }; }
+    case 'cowork_git_sync': try { return await agent.coworkGitSync(args); } catch(e) { return { ok: false, error: 'coworkGitSync: ' + e.message }; }
+    case 'cowork_git_release_notes': try { return await agent.coworkGitReleaseNotes(args); } catch(e) { return { ok: false, error: 'coworkGitReleaseNotes: ' + e.message }; }
+    case 'cowork_git_diff_stat': try { return await agent.coworkGitDiffStat(args); } catch(e) { return { ok: false, error: 'coworkGitDiffStat: ' + e.message }; }
+    case 'cowork_git_changelog': try { return await agent.coworkGitChangelog(args); } catch(e) { return { ok: false, error: 'coworkGitChangelog: ' + e.message }; }
+    // === V22 YouTube ===
+    case 'cowork_youtube_transcript': try { return await agent.coworkYoutubeTranscript(args); } catch(e) { return { ok: false, error: 'coworkYoutubeTranscript: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);
