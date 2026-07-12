@@ -1537,7 +1537,7 @@ button:focus-visible, .tab:focus-visible {
 /* Bento empty state — shown when no tabs */
 .bento {
   position: absolute;
-  inset: var(--top) var(--gutter) var(--bottom) var(--gutter);
+  inset: var(--top) calc(var(--gutter) + var(--right)) var(--bottom) calc(var(--gutter) + var(--left));
   display: none;
   grid-template-columns: 2fr 1fr 1fr;
   grid-template-rows: auto auto;
@@ -2729,11 +2729,17 @@ mark {
 
   /* === V22: USP badge on left panel (always visible) === */
   .v22-usp-badge {
-    margin: 8px 12px; padding: 8px 12px;
-    background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.1));
-    border: 1px solid rgba(251,191,36,0.2); border-radius: 10px;
-    font-size: 10px; color: #fbbf24; text-align: center;
+    position: fixed;
+    top: 64px;
+    right: 268px;
+    z-index: 100;
+    margin: 0;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.18));
+    border: 1px solid rgba(251,191,36,0.3); border-radius: 999px;
+    font-size: 9px; color: #fbbf24;
     cursor: pointer; transition: all 0.15s;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
   }
   .v22-usp-badge:hover { background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.18)); }
   .v22-usp-badge b { font-size: 11px; }
@@ -3293,34 +3299,7 @@ mark {
 .panel:nth-of-type(5), .card:nth-of-type(5), .workspace-card:nth-of-type(5) { animation-delay: 150ms; }
 
 /* V23.3: USP Badge (FIX MISSING) */
-.v22-usp-badge {
-  position: fixed;
-  bottom: 36px;
-  right: 24px;
-  padding: 8px 14px;
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-  color: var(--text-on-gold);
-  border-radius: var(--r-pill);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: var(--shadow-gold-glow);
-  z-index: 100;
-  transition: all var(--dur) var(--ease-spring);
-  user-select: none;
-}
-.v22-usp-badge:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: var(--shadow-gold-glow), 0 12px 32px rgba(245, 158, 11, 0.4);
-}
-.v22-usp-badge::before {
-  content: "✦";
-  margin-right: 6px;
-  font-size: 14px;
-  text-shadow: 0 0 12px rgba(255,255,255,0.6);
-}
+  /* V28.7: position:fixed duplicate usp-badge removed (was covering Miraecle AI panel) */
 
 /* V23.3: chrome://* Page navigation active states */
 .v23-page-nav-item.active {
@@ -3409,12 +3388,7 @@ mark {
   border-color: var(--gold-line) !important;
   color: #1a1a2e !important;
 }
-:root[data-theme="light"] .v22-usp-badge {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 4px 14px rgba(245, 158, 11, 0.35), 0 12px 28px rgba(245, 158, 11, 0.18) !important;
-}
-
+:root[data-theme="light"] 
 /* When user explicitly chose light via Cmd+Shift+L, override OS */
 :root[data-theme="light"] body {
   background: #f5f5f7 !important;
@@ -4898,7 +4872,7 @@ body.v18-sidebar-open .browser-frame {
 </div>
 
 <!-- V23.3: USP Badge (fixed from missing) -->
-<div class="v22-usp-badge" id="v22UspBadge" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
+<div class="v22-usp-badge" id="v22UspBadge" style="position:fixed !important; top:64px !important; left:50% !important; transform:translateX(-50%) !important; z-index:1000 !important; width:auto !important; height:auto !important; right:auto !important; bottom:auto !important;" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
 
 <!-- V23.5: Browser Memories Panel -->
 <div id="v23MemoryList" class="v23-memories-panel" aria-label="Browser Memories">

@@ -502,6 +502,17 @@ function onBrowserState(s) {
   $('addressInput').value = s.activeUrl || '';
   $('pagePill').textContent = s.activeTitle ? s.activeTitle.slice(0, 34) : '대기';
   renderTabs(s.tabs || [], s.activeTabId);
+  // Hide bento empty state when there are tabs
+  const bento = $('bentoEmpty');
+  if (bento) {
+    const hasTabs = (s.tabs || []).length > 0;
+    bento.dataset.show = hasTabs ? 'false' : 'true';
+    if (!hasTabs) {
+      bento.removeAttribute('hidden');
+    } else {
+      bento.setAttribute('hidden', '');
+    }
+  }
 }
 function onPageContext(ctx) {
   state.context = ctx;
