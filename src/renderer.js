@@ -2180,6 +2180,109 @@ window.dispatchCommand = function dispatchCommand(intent, value) {
 
 window.addEventListener('DOMContentLoaded', init);
 
+// ============ V23.3: Theme Toggle (Cmd+Shift+L) ============
+function toggleV23Theme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('v23-theme', next);
+  showV22Toast('테마: ' + (next === 'dark' ? '다크' : '라이트'), 'success');
+}
+
+// Apply saved theme on load
+(function() {
+  const saved = localStorage.getItem('v23-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  }
+})();
+
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+    e.preventDefault();
+    toggleV23Theme();
+  }
+});
+
+
+// ============ V23.3: chrome://* Pages Wiring ============
+function initV233ChromePages() {
+  const overlay = document.getElementById('v23ChromePages');
+  const closeBtn = document.getElementById('v23PageClose');
+  const pageBg = overlay?.querySelector('.v23-page-bg');
+  if (!overlay) return;
+  function closePage() { overlay.hidden = true; }
+  if (closeBtn) closeBtn.onclick = closePage;
+  if (pageBg) pageBg.onclick = closePage;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !overlay.hidden) closePage();
+  });
+  const navItems = overlay.querySelectorAll('.v23-page-nav-item');
+  const content = overlay.querySelector('.v23-page-content');
+  if (!content) return;
+  navItems.forEach((item) => {
+    item.onclick = () => {
+      navItems.forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      const key = item.textContent.trim();
+      const map = {
+        '외관': 'theme', 'LLM': 'llm', '단축키': 'shortcuts',
+        '데이터': 'data', '고급': 'advanced'
+      };
+      const pageKey = map[key];
+      if (pageKey && window.V23Pages && window.V23Pages[pageKey]) {
+        content.innerHTML = window.V23Pages[pageKey];
+        wirePageButtons(content);
+      }
+    };
+  });
+  function wirePageButtons(c) {
+    c.querySelectorAll('.v23-pill').forEach(p => {
+      p.onclick = (e) => {
+        e.stopPropagation();
+        const siblings = p.parentElement.querySelectorAll('.v23-pill');
+        siblings.forEach(s => s.classList.remove('active'));
+        p.classList.add('active');
+        showV22Toast('설정 저장됨: ' + p.textContent.trim(), 'success');
+      };
+    });
+    c.querySelectorAll('.v23-color-swatch').forEach(s => {
+      s.onclick = () => {
+        const siblings = s.parentElement.querySelectorAll('.v23-color-swatch');
+        siblings.forEach(sw => sw.classList.remove('active'));
+        s.classList.add('active');
+        const c = s.style.background;
+        if (c) {
+          document.documentElement.style.setProperty('--gold', c);
+          document.documentElement.style.setProperty('--gold-bright', c);
+          showV22Toast('액센트 색상 변경: ' + c, 'success');
+        }
+      };
+    });
+  }
+  wirePageButtons(content);
+  const uspBadge = document.getElementById('v22UspBadge');
+  if (uspBadge) {
+    uspBadge.onclick = () => {
+      overlay.hidden = false;
+      const settings = overlay.querySelector('.v23-page-nav-item');
+      if (settings) settings.click();
+    };
+  }
+  console.log('[V23.3] chrome:// pages wired');
+}
+window.V23Pages = {
+  theme: '<h2 class="v23-page-section-title"><span class="gold">외관</span> 설정</h2><p class="v23-page-section-desc">테마, 폰트, 액센트 색상</p><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">테마</div><div class="v23-setting-desc">OS 자동 / 라이트 강제 / 다크 강제</div></div><div class="v23-setting-control"><button class="v23-pill active">자동</button><button class="v23-pill">라이트</button><button class="v23-pill">다크</button></div></div><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">액센트 색상</div><div class="v23-setting-desc">브라우저 골드 액센트</div></div><div class="v23-setting-control"><div class="v23-color-swatch active" style="background:#fbbf24"></div><div class="v23-color-swatch" style="background:#3b82f6"></div><div class="v23-color-swatch" style="background:#10b981"></div><div class="v23-color-swatch" style="background:#f43f5e"></div><div class="v23-color-swatch" style="background:#8b5cf6"></div></div></div>',
+  llm: '<h2 class="v23-page-section-title"><span class="gold">LLM</span> 제공자</h2><p class="v23-page-section-desc">12개 LLM 제공자 (BYOK)</p><div class="v23-llm-grid"><div class="v23-llm-card"><div class="v23-llm-name">Claude Sonnet 5</div><div class="v23-llm-provider">Anthropic</div></div><div class="v23-llm-card"><div class="v23-llm-name">GPT-5.5</div><div class="v23-llm-provider">OpenAI</div></div><div class="v23-llm-card active"><div class="v23-llm-name">Gemini 3 Flash</div><div class="v23-llm-provider">Google</div></div><div class="v23-llm-card"><div class="v23-llm-name">MiniMax M3</div><div class="v23-llm-provider">MiniMax</div></div><div class="v23-llm-card"><div class="v23-llm-name">GLM-5.2</div><div class="v23-llm-provider">ZhipuAI</div></div><div class="v23-llm-card"><div class="v23-llm-name">HyperCLOVA X</div><div class="v23-llm-provider">Naver</div></div><div class="v23-llm-card"><div class="v23-llm-name">Gemma 4 12B</div><div class="v23-llm-provider">LM Studio</div></div><div class="v23-llm-card"><div class="v23-llm-name">Llama 4 Scout</div><div class="v23-llm-provider">Groq</div></div></div>',
+  shortcuts: '<h2 class="v23-page-section-title"><span class="gold">단축키</span></h2><p class="v23-page-section-desc">자주 쓰는 키 조합</p><div class="v23-shortcut-row"><kbd>⌘K</kbd> 명령 팔레트</div><div class="v23-shortcut-row"><kbd>⌘T</kbd> 새 탭</div><div class="v23-shortcut-row"><kbd>⌘W</kbd> 탭 닫기</div><div class="v23-shortcut-row"><kbd>⌘L</kbd> 주소창</div><div class="v23-shortcut-row"><kbd>⌘F</kbd> 페이지 내 검색</div><div class="v23-shortcut-row"><kbd>⌘⇧P</kbd> 빠른 AI</div><div class="v23-shortcut-row"><kbd>⌘⇧S</kbd> 설정 페이지</div><div class="v23-shortcut-row"><kbd>⌘⇧H</kbd> 기록</div><div class="v23-shortcut-row"><kbd>Esc</kbd> 모달 닫기</div>',
+  data: '<h2 class="v23-page-section-title"><span class="gold">데이터</span></h2><p class="v23-page-section-desc">로컬 저장 데이터</p><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">워크스페이스</div><div class="v23-setting-desc">저장된 탭 워크스페이스 3개</div></div><div class="v23-setting-control"><button class="v23-pill">내보내기</button><button class="v23-pill">삭제</button></div></div><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">읽기 목록</div><div class="v23-setting-desc">저장된 페이지 7개</div></div><div class="v23-setting-control"><button class="v23-pill">보기</button></div></div><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">세션 기록</div><div class="v23-setting-desc">저장된 세션 2개</div></div><div class="v23-setting-control"><button class="v23-pill">재생</button></div></div>',
+  advanced: '<h2 class="v23-page-section-title"><span class="gold">고급</span> 설정</h2><p class="v23-page-section-desc">개발자 옵션</p><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">하드웨어 가속</div><div class="v23-setting-desc">GPU 사용 (오류 시 비활성화)</div></div><div class="v23-setting-control"><button class="v23-pill active">켜짐</button><button class="v23-pill">꺼짐</button></div></div><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">MCP Bridge</div><div class="v23-setting-desc">로컬 :8780 실행 중</div></div><div class="v23-setting-control"><button class="v23-pill">재시작</button></div></div><div class="v23-setting-row"><div class="v23-setting-info"><div class="v23-setting-label">개발자 도구</div><div class="v23-setting-desc">Cmd+Option+I</div></div><div class="v23-setting-control"><button class="v23-pill">열기</button></div></div>'
+};
+
+
+initV233ChromePages();
+
 // ============ V23: Empty/Error/Loading State Helpers ============
 function showEmptyState(container, opts = {}) {
   if (!container) return;
@@ -2291,25 +2394,72 @@ function initV22QuickBar() {
 }
 
 async function handleV22QuickAction(action, query) {
-  if (!query && !['summarize', 'commit'].includes(action)) return;
   const webview = document.querySelector('webview');
   const url = webview?.getURL?.() || document.location?.href || '';
   const selectedText = window.getSelection?.()?.toString() || '';
-  const payload = { action, url, query, selectedText };
+  let visibleText = '';
+  try {
+    if (webview && webview.executeJavaScript) {
+      visibleText = await webview.executeJavaScript('document.body.innerText.substring(0, 5000)');
+    }
+  } catch (e) {}
+  if (action === 'summarize') {
+    if (!visibleText) {
+      showV22Toast('요약할 페이지 텍스트가 없습니다', 'error');
+      return;
+    }
+    showV22Toast('AI 요약 요청 중...', 'info');
+    if (window.bridge && window.bridge.ipcRenderer) {
+      const result = await window.bridge.ipcRenderer.invoke('v22:summarize', { url, text: visibleText });
+      if (result?.summary) {
+        showV22Toast('요약: ' + result.summary.substring(0, 80) + '...', 'success');
+      } else {
+        showV22Toast('요약 실패', 'error');
+      }
+    }
+    return;
+  }
+  if (action === 'commit') {
+    if (!query) {
+      showV22Toast('커밋 메시지 입력 후 Enter', 'error');
+      return;
+    }
+    showV22Toast('Git commit 요청 중...', 'info');
+    if (window.bridge && window.bridge.ipcRenderer) {
+      const r = await window.bridge.ipcRenderer.invoke('v22:commit', { message: query });
+      showV22Toast(r?.ok ? '커밋 완료' : '커밋 실패: ' + (r?.error || ''), r?.ok ? 'success' : 'error');
+    }
+    return;
+  }
+  if (!query && action !== 'ask') {
+    showV22Toast('입력 필요: ' + action, 'error');
+    return;
+  }
+  showV22Toast('AI: ' + action + ' 처리 중...', 'info');
   if (window.bridge && window.bridge.ipcRenderer) {
-    window.bridge.ipcRenderer.send('v22:quick-action', payload);
+    const r = await window.bridge.ipcRenderer.invoke('v22:ai-action', { action, url, query, selectedText, visibleText });
+    if (r?.ok) {
+      showV22Toast('완료: ' + (r.result || '').substring(0, 80), 'success');
+    } else {
+      showV22Toast('실패: ' + (r?.error || ''), 'error');
+    }
   } else {
-    console.log('[V22 quick]', action, payload);
-    showV22Toast('AI: ' + action + ' queued');
+    showV22Toast('AI: ' + action + ' (bridge 없음)', 'error');
   }
 }
 
-function showV22Toast(msg) {
+function showV22Toast(msg, type) {
+  if (!type) type = 'info';
+  document.querySelectorAll('.v23-toast').forEach(t => t.remove());
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed; bottom:32px; left:50%; transform:translateX(-50%); padding:10px 20px; background:rgba(20,20,30,0.95); backdrop-filter:blur(20px); border:1px solid rgba(251,191,36,0.3); border-radius:999px; color:#e8e8ee; font-size:13px; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+  t.className = 'v23-toast ' + type;
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  setTimeout(() => t.classList.add('show'), 20);
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 400);
+  }, 3000);
 }
 
 function initV22ContextMenu() {

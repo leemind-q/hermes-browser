@@ -3271,6 +3271,148 @@ mark {
   font-size: 11px;
   color: var(--text-primary);
 }
+
+/* ============ V23.3: Panel Stagger Entrance (FIX MISSING) ============ */
+@keyframes panel-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.panel, .card, .workspace-card {
+  animation: panel-rise var(--dur) var(--ease-soft) both;
+}
+.panel:nth-of-type(1), .card:nth-of-type(1), .workspace-card:nth-of-type(1) { animation-delay: 30ms; }
+.panel:nth-of-type(2), .card:nth-of-type(2), .workspace-card:nth-of-type(2) { animation-delay: 60ms; }
+.panel:nth-of-type(3), .card:nth-of-type(3), .workspace-card:nth-of-type(3) { animation-delay: 90ms; }
+.panel:nth-of-type(4), .card:nth-of-type(4), .workspace-card:nth-of-type(4) { animation-delay: 120ms; }
+.panel:nth-of-type(5), .card:nth-of-type(5), .workspace-card:nth-of-type(5) { animation-delay: 150ms; }
+
+/* V23.3: USP Badge (FIX MISSING) */
+.v22-usp-badge {
+  position: fixed;
+  bottom: 36px;
+  right: 24px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: var(--text-on-gold);
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--shadow-gold-glow);
+  z-index: 100;
+  transition: all var(--dur) var(--ease-spring);
+  user-select: none;
+}
+.v22-usp-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-gold-glow), 0 12px 32px rgba(245, 158, 11, 0.4);
+}
+.v22-usp-badge::before {
+  content: "✦";
+  margin-right: 6px;
+  font-size: 14px;
+  text-shadow: 0 0 12px rgba(255,255,255,0.6);
+}
+
+/* V23.3: chrome://* Page navigation active states */
+.v23-page-nav-item.active {
+  background: linear-gradient(135deg, var(--gold-soft), rgba(245,158,11,0.04));
+  color: var(--gold);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold-bright);
+}
+
+/* V23.3: Premium Toast (replaces inline style) */
+.v23-toast {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translate(-50%, 40px);
+  padding: 12px 24px;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-glass);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  z-index: 10000;
+  opacity: 0;
+  transition: all var(--dur) var(--ease-spring);
+  white-space: nowrap;
+  max-width: 80vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.v23-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.v23-toast.success {
+  background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(16,185,129,0.85));
+  color: white;
+  border-color: var(--green);
+}
+.v23-toast.error {
+  background: linear-gradient(135deg, rgba(244,63,94,0.95), rgba(244,63,94,0.85));
+  color: white;
+  border-color: var(--rose);
+}
+
+/* ============ V23.3: Light Theme Override (data-theme="light") ============ */
+:root[data-theme="light"], html[data-theme="light"] body {
+  background: #f5f5f7 !important;
+  color: #1a1a2e !important;
+}
+:root[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 8%, rgba(251, 191, 36, 0.18), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 10%, rgba(59, 130, 246, 0.13), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 92% 75%, rgba(139, 92, 246, 0.11), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 25% 92%, rgba(16, 185, 129, 0.10), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 70% 85%, rgba(244, 63, 94, 0.06), transparent 50%),
+    linear-gradient(180deg, #f5f5f7 0%, #ececf2 100%) !important;
+}
+:root[data-theme="light"] #sidebar,
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .statusBar,
+:root[data-theme="light"] .toolbar,
+:root[data-theme="light"] .findBar,
+:root[data-theme="light"] .tabsContainer,
+:root[data-theme="light"] #statusBar,
+:root[data-theme="light"] #toolbar,
+:root[data-theme="light"] .addressBar,
+:root[data-theme="light"] .urlBar {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(26, 26, 46, 0.08) !important;
+  color: #1a1a2e !important;
+}
+:root[data-theme="light"] .tab,
+:root[data-theme="light"] .tabItem,
+:root[data-theme="light"] .tab.active,
+:root[data-theme="light"] .iconBtn {
+  color: #1a1a2e !important;
+}
+:root[data-theme="light"] .tabItem:hover,
+:root[data-theme="light"] .iconBtn:hover {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border-color: var(--gold-line) !important;
+  color: #1a1a2e !important;
+}
+:root[data-theme="light"] .v22-usp-badge {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 4px 14px rgba(245, 158, 11, 0.35), 0 12px 28px rgba(245, 158, 11, 0.18) !important;
+}
+
+/* When user explicitly chose light via Cmd+Shift+L, override OS */
+:root[data-theme="light"] body {
+  background: #f5f5f7 !important;
+}
 </style>
 
 
@@ -3868,5 +4010,8 @@ console.log('[V23] SVG icon library ready (24 icons)');
     </div>
   </div>
 </div>
+
+<!-- V23.3: USP Badge (fixed from missing) -->
+<div class="v22-usp-badge" id="v22UspBadge" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
 </body>
 </html>
