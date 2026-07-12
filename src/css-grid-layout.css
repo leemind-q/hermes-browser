@@ -1,0 +1,736 @@
+/* ============================================================
+   Hermes Browser — CSS Grid App Shell Layout
+   Replaces position:absolute layout with CSS Grid.
+   ============================================================
+   Usage: Include after the existing style sheet, or merge into
+   chrome.html <style> block. This file only contains the layout
+   grid, overflow, responsive, and z-index rules — not visual
+   polish (glass, shadows, animations, etc.).
+   ============================================================ */
+
+/* ============================================================
+   1. LAYOUT TOKENS
+   ============================================================ */
+:root {
+  /* === Grid sizing === */
+  --grid-workspace-h: 42px;         /* Workspace switcher row height */
+  --grid-toolbar-h: 52px;           /* Browser toolbar height */
+  --grid-status-h: 28px;            /* Status bar height */
+  --grid-gutter: 12px;              /* Outer margin */
+  --grid-gap: 10px;                 /* Between panes */
+  --grid-left-w: 180px;             /* Left sidebar width */
+  --grid-right-w: 220px;            /* Right AI panel width */
+  --grid-left-rail-w: 36px;         /* Collapsed left rail width */
+
+  /* === z-index master === */
+  --z-modal: 1000;
+  --z-modal-overlay: 900;
+  --z-popover: 500;
+  --z-dropdown: 400;
+  --z-tooltip: 300;
+  --z-progress-bar: 150;
+  --z-settings-panel: 1500;
+  --z-status-bar: 100;
+  --z-fixed-bottom: 50;
+  --z-find-bar: 35;
+  --z-panel-toggle: 26;
+  --z-left-rail: 28;
+  --z-browser-frame: 5;
+  --z-bento-bg: 1;
+  --z-background: 0;
+  --z-virtual-cursor: 9999;
+}
+
+/* ============================================================
+   2. GLOBAL OVERFLOW
+   ============================================================ */
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ============================================================
+   3. APP SHELL — CSS GRID
+   ============================================================
+   Row definitions:
+     Row 1: Workspace Switcher  (40-44px)  [full width]
+     Row 2: Browser Toolbar     (48-54px)  [full width]
+     Row 3: Main Grid Area      (1fr)      [3-column sub-grid]
+     Row 4: Status Bar          (24-30px)  [central webview area]
+
+   Column definitions (Row 3 only):
+     Col 1: Left Sidebar        (var(--grid-left-w))
+     Col 2: Central Webview     (1fr)
+     Col 3: Right AI Panel      (var(--grid-right-w))
+   ============================================================ */
+.app-grid {
+  display: grid;
+  grid-template-rows:
+    var(--grid-workspace-h)          /* Row 1: Workspace Switcher */
+    var(--grid-toolbar-h)             /* Row 2: Browser Toolbar */
+    1fr                               /* Row 3: Main Content */
+    var(--grid-status-h);             /* Row 4: Status Bar */
+  grid-template-columns: 1fr;        /* Single col — rows 1,2,4 span full width */
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* === Row 1: Workspace Switcher (full width) === */
+.app-grid .workspace-switcher-row {
+  grid-row: 1 / 2;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--grid-gutter);
+  z-index: var(--z-browser-frame);
+}
+
+/* === Row 2: Browser Toolbar (full width) === */
+.app-grid .toolbar-row {
+  grid-row: 2 / 3;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--grid-gutter);
+  z-index: var(--z-browser-frame);
+  -webkit-app-region: drag;
+}
+.toolbar-row button,
+.toolbar-row input {
+  -webkit-app-region: no-drag;
+}
+
+/* === Row 3: Main Content Area — 3-column Grid === */
+.app-grid .main-grid {
+  grid-row: 3 / 4;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns:
+    var(--grid-left-w)             /* Left Sidebar */
+    var(--grid-gap)                /* Gap (spacer column) */
+    1fr                            /* Browser View */
+    var(--grid-gap)                /* Gap (spacer column) */
+    var(--grid-right-w);           /* Right AI Panel */
+  grid-template-rows: 1fr;
+  padding: 0 var(--grid-gutter);
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* --- Left Sidebar --- */
+.main-grid .left-sidebar {
+  grid-column: 1 / 2;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: calc(var(--z-browser-frame) + 1);
+  min-height: 0;
+}
+
+/* --- Central Browser View --- */
+.main-grid .browser-view {
+  grid-column: 3 / 4;
+  grid-row: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  z-index: var(--z-browser-frame);
+  min-height: 0;
+  border-radius: var(--radius-browser-bezel, 16px);
+}
+
+/* Webview fills browser view completely */
+.main-grid .browser-view webview,
+.main-grid .browser-view .webview-container,
+.main-grid .browser-view [class*="webview"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+/* Bento empty state (shows when no tabs) */
+.main-grid .bento-area {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow-y: auto;
+  z-index: var(--z-bento-bg);
+}
+.main-grid .bento-area[data-show="true"] {
+  display: grid;
+}
+
+/* --- Right AI Panel --- */
+.main-grid .right-panel {
+  grid-column: 5 / 6;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: calc(var(--z-browser-frame) + 1);
+  min-height: 0;
+}
+
+/* Right panel: chat area scrolls */
+.right-panel .chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+/* Right panel: input area bottom-fixed */
+.right-panel .input-area {
+  flex: 0 0 auto;
+  padding: 10px;
+  border-top: 1px solid var(--border-soft, rgba(26, 26, 46, 0.06));
+}
+
+/* === Row 4: Status Bar (central webview only) === */
+.app-grid .status-bar-row {
+  grid-row: 4 / 5;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--grid-gutter);
+  z-index: var(--z-status-bar);
+  pointer-events: none;       /* clicks pass through container */
+}
+
+/* The actual status bar pill sits over the central webview column */
+.status-bar-row .status-bar-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 28px;
+  padding: 0 16px;
+  pointer-events: auto;       /* interactive inside the pill */
+  border-radius: 999px;
+  max-width: calc(100vw - var(--grid-left-w) - var(--grid-right-w) - var(--grid-gutter) * 2 - 24px);
+}
+
+
+/* ============================================================
+   4. OVERFLOW POLICIES
+   ============================================================ */
+
+/* 4-a. Tab list: scrollable */
+.left-sidebar .tab-list,
+.left-sidebar .tabs {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* 4-b. Workspace section head + Favorites: shrink-wrap */
+.left-sidebar .section-head {
+  flex: 0 0 auto;
+}
+
+/* 4-c. AI chat messages: scrollable */
+.right-panel .messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+/* 4-d. AI input: bottom-fixed (already done above) */
+
+/* 4-e. Plan card: shrink-wrap with collapse */
+.right-panel .plan-card {
+  flex: 0 0 auto;
+  max-height: 28px;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.right-panel .plan-card.expanded {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* 4-f. All panel sections respect min-height: 0 for flex shrink */
+.left-sidebar > *,
+.right-panel > * {
+  flex-shrink: 0;
+}
+.left-sidebar > .tab-list,
+.left-sidebar > .tabs,
+.right-panel > .chat-scroll,
+.right-panel > .messages {
+  flex-shrink: 1;
+}
+
+
+/* ============================================================
+   5. RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* 5-a. 창 너비 < 1100px: 우측 panel 자동 collapse → overlay */
+@media (max-width: 1099px) {
+  .app-grid .main-grid {
+    grid-template-columns:
+      var(--grid-left-w)
+      var(--grid-gap)
+      1fr
+      0px                          /* Gap collapses */
+      0px;                         /* Right panel collapses */
+  }
+
+  .main-grid .right-panel {
+    position: fixed;
+    z-index: var(--z-popover);     /* Overlay level */
+    top: calc(var(--grid-workspace-h) + var(--grid-toolbar-h));
+    right: var(--grid-gutter);
+    bottom: var(--grid-status-h);
+    width: var(--grid-right-w);
+    transform: translateX(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 400ms cubic-bezier(.34,1.56,.64,1),
+                opacity 400ms ease;
+    border-radius: var(--radius-sidebar, 18px);
+    box-shadow: 0 24px 64px rgba(20, 30, 50, 0.18),
+                0 8px 24px rgba(20, 30, 50, 0.08);
+  }
+
+  .main-grid .right-panel[data-open="true"],
+  .main-grid .right-panel.open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Button to toggle right panel */
+  .panel-toggle.right-toggle {
+    display: grid;
+  }
+
+  /* Status bar adjusts to full available width */
+  .status-bar-row .status-bar-pill {
+    max-width: calc(100vw - var(--grid-left-w) - var(--grid-gutter) * 2 - 24px);
+  }
+}
+
+/* 5-b. 창 너비 < 800px: 좌측 panel auto collapse to icon rail */
+@media (max-width: 799px) {
+  .app-grid .main-grid {
+    grid-template-columns:
+      0px                          /* Left sidebar collapses */
+      0px                          /* Gap collapses */
+      1fr
+      var(--grid-gap)
+      var(--grid-right-w);         /* Right panel still shown or overlay */
+  }
+
+  .main-grid .left-sidebar {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Left rail shows */
+  .left-rail {
+    position: fixed;
+    z-index: var(--z-left-rail);
+    left: var(--grid-gutter);
+    top: calc(var(--grid-workspace-h) + var(--grid-toolbar-h));
+    bottom: var(--grid-status-h);
+    width: var(--grid-left-rail-w);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  /* Status bar: max width adjusts for rail only */
+  .status-bar-row .status-bar-pill {
+    max-width: calc(100vw - var(--grid-left-rail-w) - var(--grid-gutter) * 2 - 24px);
+  }
+
+  /* At < 800px, if right panel is also collapsed, status bar goes full width */
+  .main-grid .right-panel:not([data-open="true"]):not(.open) ~ .status-bar-row .status-bar-pill,
+  .app-grid:has(.right-panel:not([data-open="true"]):not(.open)) .status-bar-row .status-bar-pill {
+    max-width: calc(100vw - var(--grid-left-rail-w) - var(--grid-gutter) * 2 - 24px);
+  }
+}
+
+/* 5-c. Very narrow < 500px: both panels collapse, status bar full */
+@media (max-width: 499px) {
+  .main-grid .right-panel {
+    width: calc(100vw - var(--grid-gutter) * 2);
+    right: var(--grid-gutter);
+  }
+
+  .status-bar-row .status-bar-pill {
+    max-width: calc(100vw - var(--grid-gutter) * 2 - 24px);
+  }
+}
+
+/* 5-d. Expand controls: user toggle explicit */
+.main-grid .left-sidebar[data-collapsed="true"] {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+.main-grid .right-panel[data-collapsed="true"] {
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Left rail visibility when left sidebar is collapsed by toggle */
+.app-grid.left-collapsed .main-grid {
+  grid-template-columns:
+    0px
+    0px
+    1fr
+    var(--grid-gap)
+    var(--grid-right-w);
+}
+.app-grid.left-collapsed .left-rail {
+  display: flex;
+}
+
+/* Browser frame expansion when panels are collapsed */
+.app-grid.left-collapsed .browser-view {
+  /* No extra shift needed — CSS Grid handles it via 0-width columns */
+}
+.app-grid.right-collapsed .browser-view {
+  /* Same — column collapse is automatic */
+}
+.app-grid.left-collapsed.right-collapsed .browser-view {
+  /* Both collapsed → webview spans entire main area */
+}
+
+
+/* ============================================================
+   6. Z-INDEX HIERARCHY
+   ============================================================
+   Layer        Range          Elements
+   ─────────────────────────────────────────────────
+   모달        1000+          .modal, .cmdk (command palette)
+   모달 배경   900            .modal-overlay, .cmdk[data-open] bg
+   설정 패널   1500           .settings-panel (slide from right)
+   사이드 시트 950            .side-sheet (memory/history/downloads)
+   팝오버     500-999        .settings-popover, .action-log-popover, .toast
+   드롭다운   400-499        .dropdown, .select-menu
+   툴팁       300-399        [data-tooltip], .tooltip
+   찾기 바    35             .find-bar
+   프로그레스 150            .progress-bar
+   상태바     100            .status-bar, .status-bar-row
+   하단 고정  50             .save-toast, .ai-fab (bottom indicators)
+   패널 토글  26             .panel-toggle
+   좌측 레일  28             .left-rail
+   브라우저   5              .browser-view, .browser-frame
+   벤토 배경  1              .bento-area
+   배경       0              body::before, body::after, .aurora
+   가상 커서  9999           .virtual-cursor (always on top)
+   ============================================================ */
+
+/* === Z-INDEX: Virtual Cursor (always on top) === */
+.virtual-cursor {
+  z-index: var(--z-virtual-cursor) !important;
+}
+
+/* === Z-INDEX: Settings Panel (slide from right) === */
+.settings-panel {
+  z-index: var(--z-settings-panel) !important;
+}
+
+/* === Z-INDEX: Modal Dialogs + Command Palette === */
+.modal,
+.cmdk {
+  z-index: var(--z-modal) !important;
+}
+.modal[data-open="true"] {
+  z-index: var(--z-modal) !important;
+}
+
+/* Modal overlay backdrop */
+.modal-overlay,
+.cmdk[data-open="true"] {
+  z-index: calc(var(--z-modal) - 100) !important;
+}
+
+/* === Z-INDEX: Side sheets (memory, history, downloads) === */
+.side-sheet,
+[id$="Modal"] {
+  z-index: var(--z-popover) !important;
+}
+
+/* === Z-INDEX: Popovers === */
+.settings-popover,
+.action-log-popover,
+.toast,
+.popover,
+[role="dialog"]:not(.modal) {
+  z-index: var(--z-popover) !important;
+}
+
+/* === Z-INDEX: Progress bar === */
+.progress-bar {
+  z-index: var(--z-progress-bar) !important;
+}
+
+/* === Z-INDEX: Dropdowns === */
+.dropdown,
+.select-menu,
+.dropdown-menu {
+  z-index: var(--z-dropdown) !important;
+}
+
+/* === Z-INDEX: Tooltips === */
+.tooltip,
+[data-tooltip]::after,
+.tooltip-content {
+  z-index: var(--z-tooltip) !important;
+}
+
+/* === Z-INDEX: Find bar === */
+.find-bar {
+  z-index: var(--z-find-bar) !important;
+}
+
+/* === Z-INDEX: Panel toggles (side collapse buttons) === */
+.panel-toggle {
+  z-index: var(--z-panel-toggle) !important;
+}
+
+/* === Z-INDEX: Left rail (icon rail when sidebar collapsed) === */
+.left-rail {
+  z-index: var(--z-left-rail) !important;
+}
+
+/* === Z-INDEX: Status bar === */
+.status-bar,
+.status-bar-row {
+  z-index: var(--z-status-bar) !important;
+}
+
+/* === Z-INDEX: Fixed bottom indicators === */
+.save-toast,
+.ai-fab,
+.fixed-bottom-indicator,
+[data-fixed-bottom="true"] {
+  z-index: var(--z-fixed-bottom) !important;
+}
+
+/* === Z-INDEX: Main content === */
+.browser-view,
+.browser-frame,
+webview {
+  z-index: var(--z-browser-frame) !important;
+}
+
+.bento-area {
+  z-index: var(--z-bento-bg) !important;
+}
+
+/* Workspace switcher sits above toolbars but below modals */
+.workspace-switcher-row {
+  z-index: calc(var(--z-browser-frame) + 2) !important;
+}
+
+/* Background aurora/texture */
+body::before,
+body::after,
+.aurora {
+  z-index: var(--z-background) !important;
+}
+
+
+/* ============================================================
+   7. LEGACY SUPPORT — map old class names to new grid positions
+   ============================================================
+   These let the existing JS code (which references .left, .right,
+   .topbar, .browser-frame, .status-bar) continue working until
+   the JS is updated to use the new grid class names.
+   ============================================================ */
+
+/* Legacy topbar → grid toolbar row */
+.app-grid .topbar {
+  grid-row: 2 / 3;
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: var(--z-browser-frame);
+}
+
+/* Legacy left sidebar → grid column 1 */
+.app-grid .left {
+  grid-column: 1 / 2;
+  grid-row: 1 / -1;
+  position: relative;
+  width: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  overflow-y: auto;
+  z-index: calc(var(--z-browser-frame) + 1);
+}
+
+/* Legacy right panel → grid column 5 */
+.app-grid .right {
+  grid-column: 5 / 6;
+  grid-row: 1 / -1;
+  position: relative;
+  width: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  overflow: hidden;
+  z-index: calc(var(--z-browser-frame) + 1);
+  transition: transform 400ms cubic-bezier(.34,1.56,.64,1),
+              opacity 400ms ease;
+}
+
+/* Legacy browser frame → cental column */
+.app-grid .browser-frame {
+  grid-column: 3 / 4;
+  grid-row: 1 / -1;
+  position: relative;
+  width: auto;
+  height: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  z-index: var(--z-browser-frame);
+}
+
+/* Legacy status bar → central area only */
+.app-grid .status-bar {
+  position: fixed;
+  left: auto;
+  right: auto;
+  bottom: 12px;
+  z-index: var(--z-status-bar);
+  /* The current inline styles handle positioning via left/right vars.
+     With Grid, these are overridden by the placement above. */
+}
+
+
+/* ============================================================
+   8. COLLAPSED STATE ADJUSTMENTS
+   ============================================================ */
+
+/* When left sidebar is collapsed via class */
+.app-grid.left-collapsed .main-grid {
+  grid-template-columns:
+    0px
+    0px
+    1fr
+    var(--grid-gap)
+    var(--grid-right-w);
+}
+
+/* When right panel is collapsed via class */
+.app-grid.right-collapsed .main-grid {
+  grid-template-columns:
+    var(--grid-left-w)
+    var(--grid-gap)
+    1fr
+    0px
+    0px;
+}
+
+/* When both are collapsed */
+.app-grid.left-collapsed.right-collapsed .main-grid {
+  grid-template-columns:
+    0px
+    0px
+    1fr
+    0px
+    0px;
+}
+
+/* Legacy class compatibility for collapsed states */
+.app-grid .left.collapsed {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  padding: 0;
+}
+
+.app-grid .right.collapsed {
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* ============================================================
+   9. RESPONSIVE COLLAPSED OVERRIDES (legacy compat)
+   ============================================================ */
+@media (max-width: 1099px) {
+  .app-grid .right {
+    position: fixed;
+    z-index: var(--z-popover);
+    top: calc(var(--grid-workspace-h) + var(--grid-toolbar-h));
+    right: var(--grid-gutter);
+    bottom: var(--grid-status-h);
+    width: var(--grid-right-w);
+    transform: translateX(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 400ms cubic-bezier(.34,1.56,.64,1),
+                opacity 400ms ease;
+  }
+  .app-grid .right[data-open="true"],
+  .app-grid .right.open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 799px) {
+  .app-grid .left {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+  }
+}

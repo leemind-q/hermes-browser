@@ -180,8 +180,9 @@ function bindEvents() {
       const tabs = window.hermes?.tabs?.list?.() || [];
       const el = $('sbTabsCount');
       if (el) el.textContent = String(tabs.length);
+      // V29: bento hidden always - browser-first UX
       const bento = $('bentoEmpty');
-      if (bento) bento.dataset.show = tabs.length === 0 ? 'true' : 'false';
+      if (bento) bento.dataset.show = 'false';
     } catch {}
   }
   setTimeout(refreshStatusBarTabs, 200);

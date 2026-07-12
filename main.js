@@ -20,15 +20,15 @@ app.commandLine.appendSwitch('no-default-browser-check');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 
 const UI = {
-  left: 144,
-  right: 248,
-  top: 54,
-  gutter: 12,
-  gap: 10,
-  bottom: 12,
+  left: 240,    // V29: matches --left (was 144)
+  right: 300,   // V29: matches --right (was 248)
+  top: 40,      // V29: matches --top workspace switcher height (was 54)
+  gutter: 6,    // V29: matches --gutter (was 12)
+  gap: 6,       // V29: matches --gap (was 10)
+  bottom: 30,   // V29: matches --bottom status bar height + clearance (was 12)
   frameInset: 8,
   bezelRadius: 24,
-  rail: 36,
+  rail: 40,     // V29: collapsed icon rail width (was 36)
   minBrowserWidth: 560,
   minBrowserHeight: 380,
 };
