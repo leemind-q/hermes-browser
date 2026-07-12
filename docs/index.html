@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v22.0 · Last updated 2026-07-12</span>
+      <span>version: v23.1 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -465,5 +465,43 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
       <div class="diff-card"><div class="diff-number">100%</div><div class="diff-label">Open Source</div><div class="diff-detail">AGPL-3 / self-hosted</div></div>
     </div>
 
+
+    <h2 style="margin-top: 80px;">V23.1 — AsIDE-Grade Design Polish</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      Day 2-4 통합 작업: 5-Layer Aurora Mesh 배경 + 4-Layer Shadow + Spring Motion + Premium Gold Accent
+    </p>
+
+    <div class="differentiator-grid">
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">DESIGN TOKENS</div>
+        <h3 style="margin-top: 8px;">Color & Glow System</h3>
+        <p>12단계 gold/blue/violet/green/rose 색상 + 각 색상별 glow 변수 쌍 (예: --gold-glow = rgba(245,158,11,0.35))</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">SHADOWS</div>
+        <h3 style="margin-top: 8px;">4-Layer Glass Shadow</h3>
+        <p>inset highlight (1px) + tight contact (4-16px) + mid spread (12-40px) + ambient diffuse (24-64px). 단일 shadow-md로는 부족한 깊이감.</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">MOTION</div>
+        <h3 style="margin-top: 8px;">Spring Physics</h3>
+        <p>3단 easing: cubic-bezier(0.34, 1.56, 0.64, 1) spring + smooth + soft. 모든 hover/click에 transform 적용. tab stagger entrance 60-340ms.</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">AURORA</div>
+        <h3 style="margin-top: 8px;">Aurora Mesh Background</h3>
+        <p>5개의 radial gradient (gold/blue/violet/green/rose) + linear gradient + 22초 alternate 애니메이션 + CSS grid texture overlay</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">GLASS</div>
+        <h3 style="margin-top: 8px;">Premium Glassmorphism</h3>
+        <p>backdrop-filter blur(28-36px) saturate(180%) + rgba(255,255,255,0.72) 배경 + 1px white inner highlight + 카드 hover lift -3px</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">POLISH</div>
+        <h3 style="margin-top: 8px;">Empty/Error/Loading States</h3>
+        <p>empty/error/loading state 템플릿 + showEmptyState/showErrorState/showLoadingState 헬퍼 + fade-up 애니메이션</p>
+      </div>
+    </div>
 </body>
 </html>

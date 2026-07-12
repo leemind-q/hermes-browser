@@ -9,6 +9,308 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+/* ============ Day 2-4: Premium Polish Layer (V23.1) ============ */
+
+/* === Tab Sidebar (AsIDE Vertical Tabs) === */
+#tabBar, .tabList, [data-zone="tabs"] {
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3)) !important;
+  border-right: 1px solid var(--border-soft) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  padding: 8px 6px;
+  gap: 4px;
+}
+.tabItem, .tab {
+  position: relative;
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  margin: 2px 0;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-spring);
+  border: 1px solid transparent;
+}
+.tabItem:hover, .tab:hover {
+  background: rgba(255,255,255,0.7);
+  border-color: var(--border-soft);
+  transform: translateX(2px);
+}
+.tabItem.active, .tab.active {
+  background: linear-gradient(135deg, rgba(245,158,11,0.14), rgba(245,158,11,0.06)) !important;
+  border-color: var(--gold-line) !important;
+  box-shadow: 0 0 0 1px var(--gold-glow), 0 6px 18px rgba(245,158,11,0.16) !important;
+  transform: translateX(3px);
+}
+.tabItem.active::after, .tab.active::after {
+  content: "";
+  position: absolute;
+  left: -1px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 60%;
+  background: var(--gold-bright);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* Tab favicon circle */
+.tabFavicon {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* === Toolbar (Top chrome) === */
+#toolbar, .toolbar {
+  height: 52px !important;
+  padding: 0 16px !important;
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  border-bottom: 1px solid var(--border-soft) !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toolbarBtn {
+  width: 32px; height: 32px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-spring);
+}
+.toolbarBtn:hover {
+  background: rgba(255,255,255,0.7);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+.toolbarBtn:active { transform: translateY(0); }
+
+/* === Find Bar (Cmd+F) === */
+#findBar {
+  background: rgba(255,255,255,0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--gold-line) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-gold-glow), 0 12px 40px rgba(0,0,0,0.08) !important;
+  padding: 8px 12px;
+  animation: find-bar-slide var(--dur) var(--ease-spring) both;
+}
+@keyframes find-bar-slide {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === Status Bar (bottom) === */
+#statusBar, .statusBar {
+  height: 28px;
+  padding: 0 16px;
+  background: rgba(255,255,255,0.5) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  border-top: 1px solid var(--border-soft) !important;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* === Loading Indicator (AsIDE-grade) === */
+.loading, [data-loading="true"]::before {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid var(--border-medium);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === Empty State (Premium) === */
+.emptyState, [data-empty="true"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  gap: 16px;
+  animation: fade-up var(--dur-slow) var(--ease-spring) both;
+}
+.emptyState .icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-soft), rgba(59,130,246,0.08));
+  display: flex;
+  align-items: center; justify-content: center;
+  font-size: 28px;
+  box-shadow: var(--shadow-glass);
+  border: 1px solid var(--border-medium);
+}
+.emptyState h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.emptyState p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === Error State === */
+.errorState {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 24px;
+  gap: 16px;
+  text-align: center;
+  animation: fade-up var(--dur) var(--ease-spring) both;
+}
+.errorState .icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(244,63,94,0.12), rgba(245,158,11,0.08));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  border: 1px solid rgba(244,63,94,0.2);
+}
+
+/* === Modal/Popover (V23 Premium) === */
+.modal, .popover, [role="dialog"] {
+  background: var(--bg-overlay) !important;
+  backdrop-filter: blur(36px) saturate(180%) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--r-xl) !important;
+  box-shadow: var(--shadow-deep) !important;
+  animation: modal-pop var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* === Sheet (bottom drawer) === */
+.sheet, [data-sheet="true"] {
+  background: var(--bg-overlay) !important;
+  backdrop-filter: blur(36px) saturate(180%) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
+  box-shadow: 0 -20px 60px rgba(26,26,46,0.12) !important;
+  animation: sheet-slide-up var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes sheet-slide-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === Toast (V23 Premium) === */
+.toast {
+  background: var(--bg-overlay) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-glass) !important;
+  animation: toast-slide var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes toast-slide {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* === Search Input (Cmd+K Quick Bar) === */
+.searchInput, [data-search="true"] {
+  background: rgba(255,255,255,0.95) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--r-md) !important;
+  font-family: var(--font-body) !important;
+  font-size: 14px !important;
+  padding: 12px 16px;
+  transition: all var(--dur) var(--ease-smooth) !important;
+}
+.searchInput:focus, [data-search="true"]:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-soft), var(--shadow-gold-glow) !important;
+  outline: none !important;
+}
+
+/* === Card Hover Lift === */
+.card, .panel {
+  transition: transform var(--dur) var(--ease-spring),
+              box-shadow var(--dur) var(--ease-smooth) !important;
+}
+.card:hover, .panel:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glass-hover) !important;
+}
+
+/* === Premium Divider === */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  margin: 12px 0;
+}
+
+/* === Gold Accent Edge (special surfaces) === */
+.goldEdge {
+  position: relative;
+  border: 1px solid var(--border-medium);
+}
+.goldEdge::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--gold-bright), transparent 40%, transparent 60%, var(--gold-bright));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* === Settings Popover Items === */
+.popoverItem, .menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-smooth);
+}
+.popoverItem:hover, .menuItem:hover {
+  background: rgba(245,158,11,0.08);
+}
+.popoverItem .label, .menuItem .label {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.popoverItem .shortcut, .menuItem .shortcut {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 4px;
+}
+
+
 /* ============ AsIDE-Grade Design System (V23) ============ */
 :root {
   /* Accent System — gold primary (BLDC component tone) */
@@ -2884,5 +3186,31 @@ mark {
         <div class="v22-menu-item" data-action="commit">🔧 Git commit changes in workspace</div>
         <div class="v22-menu-item" data-action="scrap">📋 Save as research note (wiki-ingest)</div>
     </div>
+
+    <!-- ============ V23: Empty/Error States ============ -->
+    <template id="emptyStateTemplate">
+      <div class="emptyState">
+        <div class="icon">✨</div>
+        <h3 class="empty-title">All clear</h3>
+        <p class="empty-desc">Nothing here yet. Start by creating a new tab or opening a workspace.</p>
+      </div>
+    </template>
+
+    <template id="errorStateTemplate">
+      <div class="errorState">
+        <div class="icon">⚠️</div>
+        <h3 class="error-title">Something went wrong</h3>
+        <p class="error-desc">An unexpected error occurred. Try reloading the page or restarting the browser.</p>
+      </div>
+    </template>
+
+    <template id="loadingStateTemplate">
+      <div class="emptyState" data-loading-template="true">
+        <div class="icon"><span class="loading"></span></div>
+        <h3 class="loading-title">Loading</h3>
+        <p class="loading-desc">Please wait...</p>
+      </div>
+    </template>
+
 </body>
 </html>

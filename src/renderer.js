@@ -2180,6 +2180,47 @@ window.dispatchCommand = function dispatchCommand(intent, value) {
 
 window.addEventListener('DOMContentLoaded', init);
 
+// ============ V23: Empty/Error/Loading State Helpers ============
+function showEmptyState(container, opts = {}) {
+  if (!container) return;
+  const tpl = document.getElementById('emptyStateTemplate');
+  if (!tpl) return;
+  const node = tpl.content.cloneNode(true);
+  if (opts.icon) node.querySelector('.icon').textContent = opts.icon;
+  if (opts.title) node.querySelector('.empty-title').textContent = opts.title;
+  if (opts.desc) node.querySelector('.empty-desc').textContent = opts.desc;
+  container.innerHTML = '';
+  container.appendChild(node);
+}
+
+function showErrorState(container, opts = {}) {
+  if (!container) return;
+  const tpl = document.getElementById('errorStateTemplate');
+  if (!tpl) return;
+  const node = tpl.content.cloneNode(true);
+  if (opts.icon) node.querySelector('.icon').textContent = opts.icon;
+  if (opts.title) node.querySelector('.error-title').textContent = opts.title;
+  if (opts.desc) node.querySelector('.error-desc').textContent = opts.desc;
+  container.innerHTML = '';
+  container.appendChild(node);
+}
+
+function showLoadingState(container, opts = {}) {
+  if (!container) return;
+  const tpl = document.getElementById('loadingStateTemplate');
+  if (!tpl) return;
+  const node = tpl.content.cloneNode(true);
+  if (opts.title) node.querySelector('.loading-title').textContent = opts.title;
+  if (opts.desc) node.querySelector('.loading-desc').textContent = opts.desc;
+  container.innerHTML = '';
+  container.appendChild(node);
+}
+
+window.V23States = { showEmptyState, showErrorState, showLoadingState };
+console.log('[V23] Empty/Error/Loading state helpers ready');
+
+
+
 
 // ============ V22: USP showcase ============
 function initV22() {
