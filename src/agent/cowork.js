@@ -1158,6 +1158,30 @@ class CoworkService {
   }
 
 
+  // V22: YouTube transcript via Python youtube-transcript-api
+  async youtubeTranscript(args) {
+    const { url, languages = 'ko,en', maxChars = 8000 } = args || {};
+    if (!url) return { ok: false, error: 'url required' };
+    const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+    if (!m) return { ok: false, error: 'invalid YouTube URL' };
+    const videoId = m[1];
+    try {
+      const { spawn } = require('child_process');
+      const pyScript = `from youtube_transcript_api import YouTubeTranscriptApi; import json; api = YouTubeTranscriptApi(); t = api.fetch('${videoId}', languages='${languages}'.split(',')); print(json.dumps({"segments":[{"text":s.text,"start":s.start,"duration":s.duration} for s in t[:200]], "video_id": "${videoId}"}))`;
+      const result = await new Promise((resolve, reject) => {
+        const proc = spawn('python3', ['-c', pyScript]);
+        let stdout = '', stderr = '';
+        proc.stdout.on('data', (d) => stdout += d);
+        proc.stderr.on('data', (d) => stderr += d);
+        proc.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr)));
+        setTimeout(() => proc.kill(), 30000);
+      });
+      const data = JSON.parse(result);
+      const fullText = data.segments.map(s => s.text).join(' ');
+      return { ok: true, url, videoId, languages: languages.split(','), segmentCount: data.segments.length, fullText: fullText.slice(0, maxChars), totalChars: fullText.length };
+    } catch (e) { return { ok: false, error: e.message, videoId }; }
+  }
+
   _guessMime(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const map = {
