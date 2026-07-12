@@ -1,4 +1,4 @@
-name: Update Pages with V14/V15 content
+name: Update Pages with V14/V15/V20 content
 
 on:
   push:
@@ -19,19 +19,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js (for any preprocessing)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Inject V14/V15 release info
+      - name: Inject V14/V15/V20 release info
         id: meta
         run: |
           TODAY=$(date -u +"%Y-%m-%d")
           COMMITS=$(git rev-list --count HEAD)
           echo "commits=${COMMITS}" >> $GITHUB_OUTPUT
           echo "today=${TODAY}" >> $GITHUB_OUTPUT
-          sed -i "s|version: 'v[0-9]*'|version: 'v14.${COMMITS}'|g" docs/index.html || true
+          sed -i "s|version: 'v[0-9]*'|version: 'v20.${COMMITS}'|g" docs/index.html || true
           sed -i "s|Last updated [0-9-]*|Last updated ${TODAY}|g" docs/index.html || true
           echo "Updated with commits=${COMMITS}, date=${TODAY}"
 
@@ -45,22 +45,32 @@ jobs:
 
       - name: Push to gh-pages branch
         run: |
-          # Use git push with explicit refspec — works even if branch doesn't exist yet
           git checkout -b gh-pages 2>/dev/null || git checkout gh-pages
-          # Clean everything except .git
           find . -mindepth 1 -not -path './.git*' -delete 2>/dev/null || true
-          # Restore docs/ + WORKFLOW.md + index.html
           git checkout main -- docs/ || true
-          # Move docs content to root
           if [ -d docs ]; then
             cp -r docs/* .
             rm -rf docs
           fi
-          # Add CNAME
           echo "leemind-q.github.io" > CNAME
-          # Stage and commit
           git add -A
-          git diff --cached --quiet || git commit -m "V14/V15 Pages deploy: $(date -u +%FT%TZ) [skip ci]"
-          # Push with force (overwrite)
+          git diff --cached --quiet || git commit -m "V20 Pages deploy: $(date -u +%FT%TZ) [skip ci]"
           git push -f origin gh-pages || (echo "Push failed, trying push with upstream" && git push -u origin gh-pages --force)
           echo "gh-pages pushed"
+
+      - name: Verify Pages deploy
+        run: |
+          echo "=== Pages stats check ==="
+          echo "Files deployed: $(git ls-tree -r --name-only gh-pages | wc -l)"
+          echo "Screenshots: $(git ls-tree -r --name-only gh-pages docs/screenshots/ 2>/dev/null | grep -c .png || echo 0)"
+          echo ""
+          echo "=== Tools count (from manifest) ==="
+          # Pull from main and count MCP tools
+          git checkout main --
+          if [ -f src/mcp-bridge.js ]; then
+            TOTAL=$(grep -c "{ name: '" src/mcp-bridge.js)
+            COWORK=$(grep -c "{ name: 'cowork_" src/mcp-bridge.js)
+            echo "Total MCP tools: $TOTAL"
+            echo "Cowork tools: $COWORK"
+          fi
+          git checkout gh-pages --
