@@ -481,6 +481,9 @@ function listTools() {
     // === V22 YouTube ===
     { name: 'cowork_youtube_transcript', description: 'Extract YouTube video transcript/captions (V22).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxChars: { type: 'number' } }, required: ['url'] } },
     { name: 'cowork_youtube_summary', description: 'YouTube summary pipeline (V22: transcript → preview).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxSegments: { type: 'number' } }, required: ['url'] } },
+
+    { name: 'cowork_github_pr_list', description: 'GitHub PR list (V22: gh CLI).', inputSchema: { type: 'object', properties: { repo: { type: 'string' }, state: { type: 'string' }, limit: { type: 'number' }, headBranch: { type: 'string' } }, required: ['repo'] } },
+    { name: 'cowork_github_search_repos', description: 'GitHub repo search (V22: gh CLI).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' }, sort: { type: 'string' } }, required: ['query'] } },
   ];
 }
 

@@ -1225,6 +1225,78 @@ class CoworkService {
     };
   }
 
+  // V22: GitHub PR list (uses gh CLI)
+  async githubPrList(args) {
+    const { repo, state = 'open', limit = 10, headBranch } = args || {};
+    if (!repo) return { ok: false, error: 'repo required (format: owner/name)' };
+    try {
+      const { spawn } = require('child_process');
+      const cmd = ['pr', 'list', '--repo', repo, '--state', state, '--limit', String(limit), '--json', 'number,title,state,author,headRefName,createdAt,url'];
+      if (headBranch) cmd.push('--head', headBranch);
+      const result = await new Promise((resolve, reject) => {
+        const proc = spawn(this._ghBin(), cmd, { cwd: this.workspaceRoot || process.cwd() });
+        let stdout = '', stderr = '';
+        proc.stdout.on('data', (d) => stdout += d);
+        proc.stderr.on('data', (d) => stderr += d);
+        proc.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr || `exit ${code}`)));
+        setTimeout(() => proc.kill(), 30000);
+      });
+      const prs = JSON.parse(result);
+      return {
+        ok: true,
+        repo,
+        state,
+        count: prs.length,
+        prs: prs.map(pr => ({
+          number: pr.number,
+          title: pr.title,
+          state: pr.state,
+          author: pr.author?.login || pr.author,
+          headBranch: pr.headRefName,
+          createdAt: pr.createdAt,
+          url: pr.url,
+        })),
+      };
+    } catch (e) {
+      return { ok: false, error: e.message || String(e), repo };
+    }
+  }
+
+  // V22: GitHub repo search (uses gh CLI)
+  async githubSearchRepos(args) {
+    const { query, limit = 10, sort = 'stars' } = args || {};
+    if (!query) return { ok: false, error: 'query required' };
+    try {
+      const { spawn } = require('child_process');
+      const result = await new Promise((resolve, reject) => {
+        const proc = spawn(this._ghBin(), ['search', 'repos', query, '--limit', String(limit), '--sort', sort, '--json', 'name,fullName,description,stargazersCount,url,language'], { cwd: this.workspaceRoot || process.cwd() });
+        let stdout = '', stderr = '';
+        proc.stdout.on('data', (d) => stdout += d);
+        proc.stderr.on('data', (d) => stderr += d);
+        proc.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr || `exit ${code}`)));
+        setTimeout(() => proc.kill(), 30000);
+      });
+      const repos = JSON.parse(result);
+      return {
+        ok: true,
+        query,
+        count: repos.length,
+        repos: repos.map(r => ({
+          name: r.name,
+          fullName: r.fullName,
+          description: r.description,
+          stars: r.stargazersCount,
+          language: r.language,
+          url: r.url,
+        })),
+      };
+    } catch (e) {
+      return { ok: false, error: e.message || String(e), query };
+    }
+  }
+
+
+
   _guessMime(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const map = {
@@ -1282,6 +1354,20 @@ _gitBin() {
     }
     return 'git';
   }
+
+  // V22: Resolve gh CLI binary path
+  _ghBin() {
+    const candidates = ['/home/taewoo/.local/bin/gh', '/usr/local/bin/gh', '/usr/bin/gh', 'gh'];
+    for (const c of candidates) {
+      if (c.includes('/')) {
+        try { require('fs').accessSync(c); return c; } catch {}
+      } else {
+        return c;
+      }
+    }
+    return 'gh';
+  }
+
 
 }
 

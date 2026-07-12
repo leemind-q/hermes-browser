@@ -830,6 +830,9 @@ class AgentService {
   async coworkGitChangelog(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.gitChangelog(args); }
   async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); }
   async coworkYoutubeSummary(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeSummary(args); }
+  // V22: GitHub tools (V22)
+  async coworkGithubPrList(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.githubPrList(args); }
+  async coworkGithubSearchRepos(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.githubSearchRepos(args); }
 }
 
 module.exports = { AgentService };
