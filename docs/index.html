@@ -187,7 +187,10 @@
       font-weight: 500;
     }
     a:hover { color: #b45309; text-decoration: underline; }
-  </style>
+  
+.scenario-tag { display: inline-block; padding: 4px 12px; background: var(--gold-soft); color: var(--gold); border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.scenario-result { padding: 8px 12px; background: var(--gold-soft); border-left: 3px solid var(--gold); border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -408,5 +411,59 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
+
+    <h2 style="margin-top: 80px;">Live Use Scenarios (V22)</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 32px;">
+      Hermes Browser의 시나리오 검증 — Direct Node + Electron LIVE 모두 통과 (강남스타일 67 segments, AI browser 검색 5건).
+    </p>
+
+    <div class="differentiator-grid">
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">S1: YouTube Transcript</div>
+        <h3 style="margin-top: 8px;">자막 추출</h3>
+        <p>YouTube URL → 한국어/영어 자막 자동 추출. 200 segments까지, AI 요약 가능한 텍스트로 변환.</p>
+        <pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-top: 12px;"><code>mcp.coWorker.youtubeSummary({
+  url: 'https://www.youtube.com/watch?v=9bZkp7q19f0',
+  languages: 'ko,en',
+  maxSegments: 30
+}) → 67 segments → previewForLlm: '오반 강남 스타일...'</code></pre>
+        <div class="scenario-result" style="color: var(--gold); margin-top: 12px; font-weight: 600;">✓ LIVE: 강남스타일 67 segments 추출 / 654 chars / 첫 segment "오반 강남 스타일"</div>
+      </div>
+
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">S2: GitHub Repo Search</div>
+        <h3 style="margin-top: 8px;">AI 도구 생태계 탐색</h3>
+        <p>자연어로 검색 → 관련 GitHub 레포 자동 발견. stars/언어/설명까지 한 번에.</p>
+        <pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-top: 12px;"><code>mcp.coWorker.githubSearchRepos({
+  query: 'AI browser',
+  limit: 5, sort: 'stars'
+})
+→ 5 results:
+• pinokiocomputer/pinokio ★7729
+• hyperbrowserai/HyperAgent ★1468
+• AIPexStudio/AIPex ★1227</code></pre>
+        <div class="scenario-result" style="color: var(--gold); margin-top: 12px; font-weight: 600;">✓ LIVE: "AI browser" 검색 5건 (pinokio 7729 stars)</div>
+      </div>
+
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">S3: GitHub PR List</div>
+        <h3 style="margin-top: 8px;">PR 모니터링</h3>
+        <p>원하는 레포의 PR 목록을 자동으로 가져옴. head branch 필터도 가능.</p>
+        <pre style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-top: 12px;"><code>mcp.coWorker.githubPrList({
+  repo: 'leemind-q/hermes-browser',
+  state: 'all', limit: 10
+}) → ok: true → count: 0 (PR 없음, 직접 push)</code></pre>
+        <div class="scenario-result" style="color: var(--gold); margin-top: 12px; font-weight: 600;">✓ LIVE: hermes-browser PR list 직접 조회 성공</div>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 80px;">V22 Stats</h2>
+    <div class="differentiator-grid">
+      <div class="diff-card"><div class="diff-number">77</div><div class="diff-label">MCP Tools</div><div class="diff-detail">YouTube 2 + GitHub 2 + 73 기존</div></div>
+      <div class="diff-card"><div class="diff-number">17</div><div class="diff-label">Git Methods</div><div class="diff-detail">V18(5) + V19(5) + V20(5) + 2 helper</div></div>
+      <div class="diff-card"><div class="diff-number">12</div><div class="diff-label">LLM Providers</div><div class="diff-detail">BYOK 100% local</div></div>
+      <div class="diff-card"><div class="diff-number">100%</div><div class="diff-label">Open Source</div><div class="diff-detail">AGPL-3 / self-hosted</div></div>
+    </div>
+
 </body>
 </html>

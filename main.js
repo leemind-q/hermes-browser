@@ -1,12 +1,23 @@
 // main.js — Hermes Browser v1
 // Clean Electron + WebContentsView browser shell with agent tool bridge.
 
+
+process.on('uncaughtException', (e) => console.log('[uncaughtException]', e?.stack || e?.message || e));
+process.on('unhandledRejection', (e) => console.log('[unhandledRejection]', e?.stack || e?.message || e));
+process.on('exit', (code) => console.log('[process exit]', code));
 const { app, BrowserWindow, WebContentsView, ipcMain, shell, safeStorage, screen, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { AgentService } = require('./src/agent');
 const { TaskScheduler } = require('./src/agent/scheduler');
 const { BridgeSpawner } = require('./src/mcp-bridge-spawner');
+
+// V22 GPU/Extension safety switches (Electron GPU init failure fix)
+app.commandLine.appendSwitch('disable-extensions');
+app.commandLine.appendSwitch('disable-component-extensions-with-background-pages');
+app.commandLine.appendSwitch('disable-default-apps');
+app.commandLine.appendSwitch('no-default-browser-check');
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
 
 const UI = {
   left: 144,

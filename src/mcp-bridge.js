@@ -669,6 +669,9 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_git_changelog': try { return await agent.coworkGitChangelog(args); } catch(e) { return { ok: false, error: 'coworkGitChangelog: ' + e.message }; }
     // === V22 YouTube ===
     case 'cowork_youtube_transcript': try { return await agent.coworkYoutubeTranscript(args); } catch(e) { return { ok: false, error: 'coworkYoutubeTranscript: ' + e.message }; }
+    case 'cowork_youtube_summary': try { return await agent.coworkYoutubeSummary(args); } catch(e) { return { ok: false, error: 'coworkYoutubeSummary: ' + e.message }; }
+    case 'cowork_github_pr_list': try { return await agent.coworkGithubPrList(args); } catch(e) { return { ok: false, error: 'coworkGithubPrList: ' + e.message }; }
+    case 'cowork_github_search_repos': try { return await agent.coworkGithubSearchRepos(args); } catch(e) { return { ok: false, error: 'coworkGithubSearchRepos: ' + e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);
