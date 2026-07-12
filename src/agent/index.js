@@ -822,7 +822,7 @@ class AgentService {
 
 module.exports = { AgentService };
   // V22: YouTube transcript
-  async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args); 
+  async coworkYoutubeTranscript(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.youtubeTranscript(args);
   async coworkGitCommit(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitCommit(args); }
   async coworkGitPush(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitPush(args); }
   async coworkGitPull(args) { if (!this.cowork) return { ok: false, error: "CoworkService not initialized" }; return this.cowork.GitPull(args); }
