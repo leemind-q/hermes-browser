@@ -950,12 +950,15 @@ class CoworkService {
   /** Simple glob match: *.txt → /\.txt$/, *.{txt,md} → /\.(txt|md)$/ */
   _globMatch(name, glob) {
     if (!glob || glob === '*') return true;
-    // Convert glob → regex
-    const re = glob
-      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.')
-      .replace(/\{([a-z,/]+)\}/gi, (_, p) => '(' + p.split(',').join('|') + ')');
+    // Step 1: brace expansion (preserves injected ( | ) as group/alternation)
+    let expanded = glob.replace(/\{([a-z,/]+)\}/g, (_, p) => '(' + p.split(',').join('|') + ')');
+    // Step 2: escape literal specials BUT preserve injected group markers
+    const OPEN = '', CLOSE = '', PIPE = '';
+    expanded = expanded.replace(/\(/g, OPEN).replace(/\)/g, CLOSE).replace(/\|/g, PIPE);
+    let re = expanded.replace(/[.+^$\\[\]\\]/g, '\\$&');
+    re = re.replace(new RegExp(OPEN, 'g'), '(').replace(new RegExp(CLOSE, 'g'), ')').replace(new RegExp(PIPE, 'g'), '|');
+    // Step 3: convert glob wildcards
+    re = re.replace(/\*/g, '.*').replace(/\?/g, '.');
     return new RegExp('^' + re + '$', 'i').test(name);
   }
 

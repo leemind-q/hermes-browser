@@ -484,6 +484,31 @@ function listTools() {
 
     { name: 'cowork_github_pr_list', description: 'GitHub PR list (V22: gh CLI).', inputSchema: { type: 'object', properties: { repo: { type: 'string' }, state: { type: 'string' }, limit: { type: 'number' }, headBranch: { type: 'string' } }, required: ['repo'] } },
     { name: 'cowork_github_search_repos', description: 'GitHub repo search (V22: gh CLI).', inputSchema: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' }, sort: { type: 'string' } }, required: ['query'] } },
+    {
+      name: 'cowork_google_calendar_today',
+      description: 'Google Calendar 오늘 일정 조회',
+      inputSchema: { type: 'object', properties: {}, required: [] }
+    },
+    {
+      name: 'cowork_gmail_unread',
+      description: 'Gmail 읽지 않은 메일 조회',
+      inputSchema: { type: 'object', properties: { limit: { type: 'number' } }, required: [] }
+    },
+    {
+      name: 'cowork_summarize_text',
+      description: '텍스트 요약 (LLM 또는 extractive fallback)',
+      inputSchema: { type: 'object', properties: { text: { type: 'string' }, maxChars: { type: 'number' } }, required: ['text'] }
+    },
+    {
+      name: 'cowork_pptx_export',
+      description: 'PPTX export (PptxGenJS 통합 pending)',
+      inputSchema: { type: 'object', properties: { title: { type: 'string' }, slides: { type: 'array' } }, required: ['title', 'slides'] }
+    },
+    {
+      name: 'cowork_fetch_url',
+      description: 'URL fetch (User-Agent 헤더 포함)',
+      inputSchema: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] }
+    },
   ];
 }
 
@@ -672,6 +697,11 @@ async function dispatchTool(agent, name, args) {
     case 'cowork_youtube_summary': try { return await agent.coworkYoutubeSummary(args); } catch(e) { return { ok: false, error: 'coworkYoutubeSummary: ' + e.message }; }
     case 'cowork_github_pr_list': try { return await agent.coworkGithubPrList(args); } catch(e) { return { ok: false, error: 'coworkGithubPrList: ' + e.message }; }
     case 'cowork_github_search_repos': try { return await agent.coworkGithubSearchRepos(args); } catch(e) { return { ok: false, error: 'coworkGithubSearchRepos: ' + e.message }; }
+    case 'cowork_google_calendar_today': try { return await agent.googleCalendarToday(args); } catch(e) { return { ok: false, error: e.message }; }
+    case 'cowork_gmail_unread': try { return await agent.gmailUnread(args); } catch(e) { return { ok: false, error: e.message }; }
+    case 'cowork_summarize_text': try { return await agent.summarizeText(args); } catch(e) { return { ok: false, error: e.message }; }
+    case 'cowork_pptx_export': try { return await agent.pptxExport(args); } catch(e) { return { ok: false, error: e.message }; }
+    case 'cowork_fetch_url': try { return await agent.fetchUrl(args); } catch(e) { return { ok: false, error: e.message }; }
     // === V12 Browser extensions ===
     case 'browser_extract_table': return await extractTable(args);
     case 'browser_download_file': return await downloadFile(args);

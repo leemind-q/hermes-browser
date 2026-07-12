@@ -2300,65 +2300,45 @@ window.V23Pages = {
 };
 
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initV233ChromePages, 100);
-    setTimeout(initV235Spaces, 200);
-    setTimeout(initV235Skills, 250);
-    setTimeout(initV235Memories, 300);
-    setTimeout(initV235TabGroups, 350);
-    setTimeout(initV235AISearch, 400);
-  setTimeout(initV24Boosts, 500);
-  setTimeout(initV24Easel, 510);
-  setTimeout(initV24LiveFolders, 520);
-  setTimeout(initV24MorningBrief, 530);
-    setTimeout(initV24ATC, 540);
-    setTimeout(initV24Pause, 550);
-    setTimeout(initV24InstantLinks, 560);
-    setTimeout(initV24Synthesis, 570);
-    setTimeout(initV24Decks, 580);
-  setTimeout(initV25Omnibox, 600);
-  setTimeout(initV25TabSearch, 620);
-  setTimeout(initV25WebClipper, 640);
-  setTimeout(initV25History, 660);
-  setTimeout(initV25Notes, 680);
-  setTimeout(initV25Voice, 700);
-  setTimeout(initV18Sidebar, 750);
-  setTimeout(initV18Sidebar, 750);
-  setTimeout(initV18Sidebar, 750);
-  setTimeout(initV18Sidebar, 750);
-    setTimeout(initV25Omnibox, 600);
-    setTimeout(initV25TabSearch, 620);
-    setTimeout(initV25WebClipper, 640);
-    setTimeout(initV25History, 660);
-    setTimeout(initV25Notes, 680);
-    setTimeout(initV25Voice, 700);
-    setTimeout(initV24Boosts, 500);
-    setTimeout(initV24Easel, 510);
-    setTimeout(initV24LiveFolders, 520);
-    setTimeout(initV24MorningBrief, 530);
-    setTimeout(initV24ATC, 540);
-    setTimeout(initV24Pause, 550);
-    setTimeout(initV24InstantLinks, 560);
-    setTimeout(initV24Synthesis, 570);
-    setTimeout(initV24Decks, 580);
-  setTimeout(initV25Omnibox, 600);
-  setTimeout(initV25TabSearch, 620);
-  setTimeout(initV25WebClipper, 640);
-  setTimeout(initV25History, 660);
-  setTimeout(initV25Notes, 680);
-  setTimeout(initV25Voice, 700);
-    setTimeout(initV25Omnibox, 600);
-    setTimeout(initV25TabSearch, 620);
-    setTimeout(initV25WebClipper, 640);
-    setTimeout(initV25History, 660);
-    setTimeout(initV25Notes, 680);
-    setTimeout(initV25Voice, 700);
+const initSequence = [
+  { fn: 'initV233ChromePages', delay: 100 },
+  { fn: 'initV235Spaces', delay: 200 },
+  { fn: 'initV235Skills', delay: 250 },
+  { fn: 'initV235Memories', delay: 300 },
+  { fn: 'initV235TabGroups', delay: 350 },
+  { fn: 'initV235AISearch', delay: 400 },
+  { fn: 'initV24Boosts', delay: 500 },
+  { fn: 'initV24Easel', delay: 510 },
+  { fn: 'initV24LiveFolders', delay: 520 },
+  { fn: 'initV24MorningBrief', delay: 530 },
+  { fn: 'initV24ATC', delay: 540 },
+  { fn: 'initV24Pause', delay: 550 },
+  { fn: 'initV24InstantLinks', delay: 560 },
+  { fn: 'initV24Synthesis', delay: 570 },
+  { fn: 'initV24Decks', delay: 580 },
+  { fn: 'initV25Omnibox', delay: 600 },
+  { fn: 'initV25TabSearch', delay: 620 },
+  { fn: 'initV25WebClipper', delay: 640 },
+  { fn: 'initV25History', delay: 660 },
+  { fn: 'initV25Notes', delay: 680 },
+  { fn: 'initV25Voice', delay: 700 },
+  { fn: 'initV18Sidebar', delay: 750 },
+];
+
+function runInitSequence() {
+  initSequence.forEach(({ fn, delay }) => {
+    if (typeof window[fn] === 'function') {
+      setTimeout(window[fn], delay);
+    } else {
+      console.warn('[INIT] Missing function:', fn);
+    }
   });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runInitSequence);
 } else {
-  setTimeout(initV233ChromePages, 100);
-  setTimeout(initV235Spaces, 200);
-  setTimeout(initV235Skills, 250);
+  runInitSequence();
 }
 
 

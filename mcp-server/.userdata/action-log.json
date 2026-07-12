@@ -1,5 +1,154 @@
 [
   {
+    "ts": "2026-07-12T15:16:14.981Z",
+    "action": "openTab",
+    "params": {
+      "url": "https://google.com"
+    },
+    "result": {
+      "ok": true,
+      "tabId": 2,
+      "url": "https://search.naver.com/search.naver?query=%EA%B3%A0%EC%96%91%EC%9D%B4"
+    },
+    "tabId": 2,
+    "url": "https://google.com",
+    "site": "google.com",
+    "reversible": true,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.977Z",
+    "action": "takeScreenshot",
+    "params": {},
+    "result": {
+      "ok": true,
+      "dataUrl": "data:image/png;base64,AAA"
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": false,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.976Z",
+    "action": "inspectPage",
+    "params": {},
+    "result": {
+      "ok": true,
+      "context": {
+        "ok": true,
+        "text": "btn",
+        "rect": {
+          "x": 100,
+          "y": 100,
+          "width": 80,
+          "height": 30
+        }
+      }
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": false,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.975Z",
+    "action": "getVisibleText",
+    "params": {},
+    "result": {
+      "ok": true,
+      "text": "page text content"
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": false,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.973Z",
+    "action": "click",
+    "params": {
+      "selector": ".btn"
+    },
+    "result": {
+      "ok": true,
+      "text": "btn",
+      "rect": {
+        "x": 100,
+        "y": 100,
+        "width": 80,
+        "height": 30
+      }
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": true,
+    "riskLevel": "medium",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.270Z",
+    "action": "search",
+    "params": {
+      "query": "고양이",
+      "engine": "naver"
+    },
+    "result": {
+      "ok": true,
+      "query": "고양이",
+      "url": "https://search.naver.com/search.naver?query=%EA%B3%A0%EC%96%91%EC%9D%B4"
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": false,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.269Z",
+    "action": "search",
+    "params": {
+      "query": "cats"
+    },
+    "result": {
+      "ok": true,
+      "query": "cats",
+      "url": "https://www.google.com/search?q=cats"
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": false,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
+    "ts": "2026-07-12T15:16:14.267Z",
+    "action": "navigate",
+    "params": {
+      "url": "example.com"
+    },
+    "result": {
+      "ok": true,
+      "url": "https://example.com"
+    },
+    "tabId": 1,
+    "url": "https://example.com",
+    "site": "example.com",
+    "reversible": true,
+    "riskLevel": "low",
+    "approved": false
+  },
+  {
     "ts": "2026-07-10T13:22:41.607Z",
     "action": "openTab",
     "params": {

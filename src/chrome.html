@@ -6,6 +6,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
   <title>Miraecle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -2745,6 +2747,13 @@ mark {
   .v22-usp-badge:hover { background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.18)); }
   .v22-usp-badge b { font-size: 11px; }
 
+  /* V22: Glass card for feature grid */
+  .v22-glass-card {
+    background: rgba(255,255,255,0.04);
+    padding: 10px 8px;
+    border-radius: 10px;
+  }
+
   /* === V22: AI context menu auto-fill === */
   .v22-llm-pick {
     background: rgba(0,0,0,0.4); border-radius: 12px; padding: 6px;
@@ -4703,16 +4712,16 @@ body.v18-sidebar-open .browser-frame {
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 24px; font-size: 12px;">
-                <div style="background:rgba(255,255,255,0.04); padding: 10px 8px; border-radius: 10px;">
+                <div class="v22-glass-card">
                     <b style="color:#fbbf24">🔒 100% Local</b><br><span style="opacity:0.6">BYOK or offline. No data leaves.</span>
                 </div>
-                <div style="background:rgba(255,255,255,0.04); padding: 10px 8px; border-radius: 10px;">
+                <div class="v22-glass-card">
                     <b style="color:#fbbf24">⚙️ Git Built-in</b><br><span style="opacity:0.6">commit/push/diff from any page</span>
                 </div>
-                <div style="background:rgba(255,255,255,0.04); padding: 10px 8px; border-radius: 10px;">
+                <div class="v22-glass-card">
                     <b style="color:#fbbf24">🦊 Chrome+FF</b><br><span style="opacity:0.6">Works in both browsers</span>
                 </div>
-                <div style="background:rgba(255,255,255,0.04); padding: 10px 8px; border-radius: 10px;">
+                <div class="v22-glass-card">
                     <b style="color:#fbbf24">📱 Mobile PWA</b><br><span style="opacity:0.6">Control from phone</span>
                 </div>
             </div>
