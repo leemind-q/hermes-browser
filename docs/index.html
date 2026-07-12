@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v23.1 · Last updated 2026-07-12</span>
+      <span>version: v23.2 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -466,7 +466,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
 
-    <h2 style="margin-top: 80px;">V23.1 — AsIDE-Grade Design Polish</h2>
+    <h2 style="margin-top: 80px;">V23.2 — Command Palette + Icons + chrome://* Pages</h2>
     <p style="color: var(--text-secondary); margin-bottom: 24px;">
       Day 2-4 통합 작업: 5-Layer Aurora Mesh 배경 + 4-Layer Shadow + Spring Motion + Premium Gold Accent
     </p>
@@ -501,6 +501,44 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <div class="scenario-tag">POLISH</div>
         <h3 style="margin-top: 8px;">Empty/Error/Loading States</h3>
         <p>empty/error/loading state 템플릿 + showEmptyState/showErrorState/showLoadingState 헬퍼 + fade-up 애니메이션</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 80px;">V23.2 — Premium Command Palette + Icon Library + chrome://* Pages</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      10점 만점까지: 가장 자주 쓰는 UI (Cmd+K) + 24 SVG icons + settings 페이지 premium redesign
+    </p>
+
+    <div class="differentiator-grid">
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">CMD+K</div>
+        <h3 style="margin-top: 8px;">Premium Command Palette</h3>
+        <p>AsIDE 스타일 헤더 (⌘ icon + ESC chip) + cmdk-foot hints (↑↓ Navigate · ↵ Select · ⌘K Toggle) + gold AI Ready 배지 + item hover translateX(2px)</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">ICONS</div>
+        <h3 style="margin-top: 8px;">SVG Icon Library (24)</h3>
+        <p>search / arrow / close / refresh / plus / sparkles / settings / zap / folder / link / terminal / history / bookmark / download / home — stroke-based, 24x24, currentColor 상속</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">MOTION</div>
+        <h3 style="margin-top: 8px;">Inter-Page Transitions</h3>
+        <p>page-fade-in (translateY 8px) + cmdk-in (translateY -12px scale 0.96) + sheet slide-up + tooltip-in + ripple-expand + shimmer skeleton + pulse-ring</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">PAGES</div>
+        <h3 style="margin-top: 8px;">chrome://* Premium Pages</h3>
+        <p>920px modal card with backdrop blur(36px) saturate(180%) + nav sidebar + theme picker pill + color swatches + LLM grid + shortcuts list</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">RIPPLE</div>
+        <h3 style="margin-top: 8px;">Click Ripple Effect</h3>
+        <p>radial-gradient gold glow expanding to scale(4) in 600ms — 모든 클릭 가능 요소에 추가 가능</p>
+      </div>
+      <div class="diff-card" style="text-align: left;">
+        <div class="scenario-tag">TOOLTIPS</div>
+        <h3 style="margin-top: 8px;">Premium Tooltips</h3>
+        <p>data-tooltip 속성만 추가하면 자동 툴팁 — slide-in 애니메이션 + dark text bubble</p>
       </div>
     </div>
 </body>

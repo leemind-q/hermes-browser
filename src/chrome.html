@@ -2744,6 +2744,533 @@ mark {
     background: rgba(0,0,0,0.4); border-radius: 12px; padding: 6px;
     margin-bottom: 4px;
   }
+
+/* ============ V23.1: Premium CmdK Redesign ============ */
+.cmdk-card {
+  background: var(--bg-overlay) !important;
+  backdrop-filter: blur(36px) saturate(180%) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--r-xl) !important;
+  box-shadow: var(--shadow-deep), 0 0 0 1px var(--gold-glow), 0 0 80px rgba(245, 158, 11, 0.12) !important;
+  overflow: hidden;
+  width: 620px !important;
+  max-width: 92vw;
+  animation: cmdk-in var(--dur-slow) var(--ease-spring) both !important;
+}
+@keyframes cmdk-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cmdk-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), transparent);
+}
+.cmdk-icon {
+  font-size: 18px;
+  color: var(--gold);
+  text-shadow: 0 0 12px var(--gold-glow);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.cmdk-input {
+  flex: 1;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  font-family: var(--font-body) !important;
+  font-size: 16px !important;
+  color: var(--text-primary) !important;
+  padding: 0 !important;
+  letter-spacing: -0.01em;
+}
+.cmdk-input::placeholder {
+  color: var(--text-tertiary);
+}
+.cmdk-esc {
+  padding: 4px 10px;
+  background: rgba(26,26,46,0.06);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+.cmdk-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.4);
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.cmdk-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cmdk-hint kbd {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  min-width: 18px; height: 18px;
+  padding: 0 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.cmdk-spacer { flex: 1; }
+.cmdk-ai-badge {
+  display: inline-flex;
+  align-items: center; gap: 6px;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: var(--text-on-gold);
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-gold-glow);
+}
+.cmdk-ai-badge::before {
+  /* live-dot inherits color */
+}
+
+/* CmdK list items */
+.cmdk-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+  border: 1px solid transparent;
+}
+.cmdk-item:hover, .cmdk-item.active {
+  background: linear-gradient(135deg, var(--gold-soft), transparent);
+  border-color: var(--gold-line);
+  transform: translateX(2px);
+}
+.cmdk-item-icon {
+  width: 28px; height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-soft);
+}
+.cmdk-item-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.cmdk-item-shortcut {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 4px;
+}
+
+/* ============ V23.1: Inter-Page Transitions ============ */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.998); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes page-slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes page-zoom-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.view, .tabContent, webview, .contentView {
+  animation: page-fade-in var(--dur) var(--ease-soft) both;
+}
+
+/* Ripple click effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-glow), transparent);
+  transform: scale(0);
+  animation: ripple-expand 600ms var(--ease-soft);
+  pointer-events: none;
+}
+@keyframes ripple-expand {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Hover micro-interaction: scale + glow */
+.microHover {
+  transition: transform var(--dur-fast) var(--ease-spring),
+              filter var(--dur-fast) var(--ease-smooth) !important;
+}
+.microHover:hover {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.05);
+}
+
+/* Click feedback: brief scale-down */
+.microClick:active {
+  transform: scale(0.96);
+  transition: transform 80ms var(--ease-smooth) !important;
+}
+
+/* Skeleton shimmer for loading */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-elevated) 0%,
+    rgba(245,158,11,0.08) 50%,
+    var(--bg-elevated) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Glow trail on focus */
+.glowTrail:focus-within {
+  box-shadow: 0 0 0 4px var(--gold-soft),
+              var(--shadow-gold-glow) !important;
+}
+
+/* Floating action: gold pulsing ring */
+.pulseRing {
+  position: relative;
+}
+.pulseRing::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid var(--gold);
+  opacity: 0;
+  animation: pulse-ring 2s var(--ease-smooth) infinite;
+  pointer-events: none;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0;   }
+}
+
+/* Tooltip with gold accent */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--text-primary);
+  color: white;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  z-index: 10000;
+  animation: tooltip-in var(--dur-fast) var(--ease-spring) both;
+  pointer-events: none;
+}
+@keyframes tooltip-in {
+  from { opacity: 0; transform: translate(-50%, 4px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Premium divider line with gradient */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  margin: 16px 0;
+  border: 0;
+}
+
+/* Section label (uppercase tracking) */
+.sectionLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  margin: 0 0 12px;
+  padding: 0 4px;
+}
+
+/* ============ V23.1: chrome://* Pages ============ */
+.v23-chrome-page {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: v23-page-in var(--dur) var(--ease-soft) both;
+}
+@keyframes v23-page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.v23-chrome-page[hidden] { display: none; }
+.v23-page-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 30, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.v23-page-card {
+  position: relative;
+  width: 920px;
+  max-width: 96vw;
+  max-height: 88vh;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-deep), 0 0 0 1px var(--gold-glow), 0 0 80px rgba(245,158,11,0.15);
+  overflow: hidden;
+  animation: v23-card-rise var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes v23-card-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.v23-page-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), transparent);
+}
+.v23-page-icon {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: var(--text-on-gold);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-gold-glow);
+}
+.v23-page-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.v23-page-meta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.v23-page-close {
+  width: 28px; height: 28px;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all var(--dur-fast) var(--ease-smooth);
+}
+.v23-page-close:hover {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: white;
+}
+.v23-page-body {
+  display: flex;
+  height: calc(88vh - 70px);
+  max-height: 720px;
+}
+.v23-page-nav {
+  width: 200px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--border-soft);
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.v23-page-nav-item {
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+}
+.v23-page-nav-item:hover {
+  background: var(--gold-soft);
+  color: var(--text-primary);
+}
+.v23-page-nav-item.active {
+  background: linear-gradient(135deg, var(--gold-soft), rgba(245,158,11,0.04));
+  color: var(--gold);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold-bright);
+}
+.v23-page-content {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+.v23-page-section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.v23-page-section-desc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0 0 24px;
+}
+.v23-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v23-setting-info { flex: 1; }
+.v23-setting-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.v23-setting-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.v23-setting-control {
+  display: flex;
+  gap: 8px;
+}
+.v23-pill {
+  padding: 6px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+}
+.v23-pill:hover { border-color: var(--gold-line); color: var(--text-primary); }
+.v23-pill.active {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: var(--text-on-gold);
+  border-color: var(--gold);
+  box-shadow: var(--shadow-gold-glow);
+}
+.v23-color-swatch {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-medium);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-smooth);
+}
+.v23-color-swatch:hover { transform: scale(1.1); }
+.v23-color-swatch.active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+.v23-llm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.v23-llm-card {
+  padding: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  transition: all var(--dur-fast) var(--ease-spring);
+}
+.v23-llm-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-glass); }
+.v23-llm-card.active {
+  background: linear-gradient(135deg, var(--gold-soft), transparent);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold-glow);
+}
+.v23-llm-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.v23-llm-provider {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.v23-shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-soft);
+}
+.v23-shortcut-row kbd {
+  display: inline-flex;
+  align-items: center;
+  min-width: 36px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
 </style>
 
 
@@ -3212,5 +3739,134 @@ mark {
       </div>
     </template>
 
+
+<!-- V23.1: Icon Library (24x24 SVG stroke) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6M12 19h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.74 9.74 0 0 0-6.74 2.74L3 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5M12 7v5l4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 22V12h6v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- Helper: inline SVG usage -->
+<script>
+window.svgIcon = function(name, size = 16) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.verticalAlign = 'middle';
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#i-' + name);
+  use.setAttribute('href', '#i-' + name);
+  svg.appendChild(use);
+  return svg;
+};
+window.svgIconHTML = function(name, size = 16) {
+  return `<svg width="${size}" height="${size}" aria-hidden="true" style="vertical-align:middle"><use href="#i-${name}"></use></svg>`;
+};
+console.log('[V23] SVG icon library ready (24 icons)');
+</script>
+
+
+<!-- V23.1: Chrome Pages Overlay (settings / history / downloads) -->
+<div id="v23ChromePages" class="v23-chrome-page" data-page="settings" hidden>
+  <div class="v23-page-bg"></div>
+  <div class="v23-page-card">
+    <div class="v23-page-head">
+      <div class="v23-page-icon"><svg width="20" height="20"><use href="#i-settings"></use></svg></div>
+      <div class="v23-page-title">Settings</div>
+      <div class="v23-page-meta">v23.1 · Hermes Browser</div>
+      <button class="v23-page-close" id="v23PageClose">✕</button>
+    </div>
+    <div class="v23-page-body">
+      <nav class="v23-page-nav">
+        <div class="v23-page-nav-item active">외관</div>
+        <div class="v23-page-nav-item">LLM</div>
+        <div class="v23-page-nav-item">단축키</div>
+        <div class="v23-page-nav-item">데이터</div>
+        <div class="v23-page-nav-item">고급</div>
+      </nav>
+      <div class="v23-page-content">
+        <h2 class="v23-page-section-title"><span class="gold">외관</span> 설정</h2>
+        <p class="v23-page-section-desc">테마, 폰트, 타이포그래피 조정</p>
+
+        <div class="v23-setting-row">
+          <div class="v23-setting-info">
+            <div class="v23-setting-label">테마</div>
+            <div class="v23-setting-desc">OS 테마 따라 자동 / 라이트 강제 / 다크 강제</div>
+          </div>
+          <div class="v23-setting-control">
+            <button class="v23-pill active">자동</button>
+            <button class="v23-pill">라이트</button>
+            <button class="v23-pill">다크</button>
+          </div>
+        </div>
+
+        <div class="v23-setting-row">
+          <div class="v23-setting-info">
+            <div class="v23-setting-label">액센트 색상</div>
+            <div class="v23-setting-desc">브라우저 골드 액센트 색상</div>
+          </div>
+          <div class="v23-setting-control">
+            <div class="v23-color-swatch active" style="background:#fbbf24"></div>
+            <div class="v23-color-swatch" style="background:#3b82f6"></div>
+            <div class="v23-color-swatch" style="background:#10b981"></div>
+            <div class="v23-color-swatch" style="background:#f43f5e"></div>
+            <div class="v23-color-swatch" style="background:#8b5cf6"></div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="v23-page-section-title"><span class="gold">LLM</span> 제공자</h2>
+        <p class="v23-page-section-desc">12개 LLM 제공자 (BYOK)</p>
+
+        <div class="v23-llm-grid">
+          <div class="v23-llm-card">
+            <div class="v23-llm-name">Claude Sonnet</div>
+            <div class="v23-llm-provider">Anthropic</div>
+          </div>
+          <div class="v23-llm-card">
+            <div class="v23-llm-name">GPT-5</div>
+            <div class="v23-llm-provider">OpenAI</div>
+          </div>
+          <div class="v23-llm-card active">
+            <div class="v23-llm-name">Gemini 3 Flash</div>
+            <div class="v23-llm-provider">Google</div>
+          </div>
+          <div class="v23-llm-card">
+            <div class="v23-llm-name">MiniMax M3</div>
+            <div class="v23-llm-provider">MiniMax</div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="v23-page-section-title"><span class="gold">단축키</span></h2>
+        <div class="v23-shortcut-row"><kbd>⌘K</kbd> 명령 팔레트</div>
+        <div class="v23-shortcut-row"><kbd>⌘T</kbd> 새 탭</div>
+        <div class="v23-shortcut-row"><kbd>⌘W</kbd> 탭 닫기</div>
+        <div class="v23-shortcut-row"><kbd>⌘L</kbd> 주소창</div>
+        <div class="v23-shortcut-row"><kbd>⌘F</kbd> 페이지 내 검색</div>
+        <div class="v23-shortcut-row"><kbd>⌘⇧P</kbd> 빠른 AI</div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
