@@ -465,7 +465,7 @@ function listTools() {
     { name: 'cowork_git_log', description: 'Git log (last N commits).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, limit: { type: 'number' }, branch: { type: 'string' } } } },
     { name: 'cowork_git_diff', description: 'Git diff (staged or unstaged).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, staged: { type: 'boolean' }, file: { type: 'string' }, limit: { type: 'number' } } } },
     { name: 'cowork_git_blame', description: 'Git blame (line-by-line author/date).', inputSchema: { type: 'object', properties: { path: { type: 'string' }, dir: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' } }, required: ['path'] } },
-    { name: 'cowork_git_show', description: 'Git show (commit details with stat).', inputSchema: { type: 'object', properties: { commit: { type: 'string' },,
+    { name: 'cowork_git_show', description: 'Git show (commit details with stat).', inputSchema: { type: 'object', properties: { commit: { type: 'string' }, dir: { type: 'string' } } } },
     // === V19 ===
     { name: 'cowork_git_commit', description: 'Git commit with auto-add (V19).', inputSchema: { type: 'object', properties: { message: { type: 'string' }, dir: { type: 'string' }, files: { type: 'array' }, all: { type: 'boolean' }, amend: { type: 'boolean' }, author: { type: 'string' } }, required: ['message'] } },
     { name: 'cowork_git_push', description: 'Git push to remote (V19).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, remote: { type: 'string' }, branch: { type: 'string' }, force: { type: 'boolean' } } } },
@@ -479,7 +479,7 @@ function listTools() {
     { name: 'cowork_git_diff_stat', description: 'Diff stat per-file (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, staged: { type: 'boolean' }, file: { type: 'string' }, fromRef: { type: 'string' }, toRef: { type: 'string' } } } },
     { name: 'cowork_git_changelog', description: 'Auto-detect last tag and generate changelog (V20).', inputSchema: { type: 'object', properties: { dir: { type: 'string' }, fromTag: { type: 'string' }, toRef: { type: 'string' } } } },
     // === V22 YouTube ===
-    { name: 'cowork_youtube_transcript', description: 'Extract YouTube video transcript/captions (V22).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxChars: { type: 'number' } }, required: ['url'] } } dir: { type: 'string' } } } },
+    { name: 'cowork_youtube_transcript', description: 'Extract YouTube video transcript/captions (V22).', inputSchema: { type: 'object', properties: { url: { type: 'string' }, languages: { type: 'string' }, maxChars: { type: 'number' } }, required: ['url'] } },
   ];
 }
 

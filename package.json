@@ -16,10 +16,13 @@
     "build": "npm run lint"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "electron": "^33.0.0"
   },
   "allowScripts": {
     "electron@33.4.11": true
+  },
+  "dependencies": {
+    "youtube-transcript-api": "^3.0.6"
   }
 }
