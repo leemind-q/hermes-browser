@@ -730,7 +730,7 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
             /* === Default = light tokens === */
     :root {
       /* === Layout — high-density compact panels === */
-      --left: 220px; --right: 248px; --top: 54px;
+      --left: 180px; --right: 220px; --top: 54px;
       --gutter: 12px; --gap: 10px; --bottom: 46px;
       --sb-pad: 10px; --sb-gap: 10px; --sb-sec-gap: 16px;
       --sb-row-h: 28px; --sb-card-pad: 8px 10px;
@@ -1474,15 +1474,16 @@ button:focus-visible, .tab:focus-visible {
 
 /* Status bar — bottom pill */
 .status-bar {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  bottom: 6px;
-  height: 26px;
+  position: fixed;
+  left: 180px;
+  right: 220px;
+  bottom: 12px;
+  height: 28px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
-  padding: 0 12px;
+  padding: 0 16px;
   background: var(--glass-bg-strong);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -1494,6 +1495,8 @@ button:focus-visible, .tab:focus-visible {
   z-index: 90;
   pointer-events: auto;
   animation: sb-fade-up .42s var(--ease-spring-soft) both;
+  max-width: calc(100vw - 180px - 220px - 24px);
+  margin: 0 auto;
 }
 @keyframes sb-fade-up { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
 
