@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v23.2 · Last updated 2026-07-12</span>
+      <span>version: v23.4 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -541,5 +541,92 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <p>data-tooltip 속성만 추가하면 자동 툴팁 — slide-in 애니메이션 + dark text bubble</p>
       </div>
     </div>
+
+    <h2 style="margin-top: 80px;">V23.4 — Competitive Analysis (vs Comet/Atlas/Arc/Dia)</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      4개 AI 브라우저와 실측 비교. 부족한 거 정직하게 도출.
+    </p>
+
+    <h3 style="margin-top: 40px;">📊 기능 비교 매트릭스</h3>
+    <div style="overflow-x:auto; background:var(--bg-overlay); border:1px solid var(--border-medium); border-radius:var(--r-lg); padding:16px;">
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead>
+        <tr style="background:rgba(245,158,11,0.08);">
+          <th style="padding:10px; text-align:left; border-bottom:1px solid var(--border-medium);">기능</th>
+          <th style="padding:10px; border-bottom:1px solid var(--border-medium); color:var(--gold);">Hermes</th>
+          <th style="padding:10px; border-bottom:1px solid var(--border-medium);">Comet</th>
+          <th style="padding:10px; border-bottom:1px solid var(--border-medium);">Atlas</th>
+          <th style="padding:10px; border-bottom:1px solid var(--border-medium);">Arc</th>
+          <th style="padding:10px; border-bottom:1px solid var(--border-medium);">Dia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:8px;"><b>AI 답변/검색</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--rose);">△</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>멀티 LLM BYOK</b></td><td style="padding:8px;text-align:center;color:var(--gold);">✓✓ (12)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ (Perplexity only)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ (GPT only)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ (none)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ (Dia LLM)</td></tr>
+        <tr><td style="padding:8px;"><b>로컬 Cowork (파일+AI)</b></td><td style="padding:8px;text-align:center;color:var(--gold);">✓✓ (17 tools)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td></tr>
+        <tr><td style="padding:8px;"><b>Git 통합 (15 methods)</b></td><td style="padding:8px;text-align:center;color:var(--gold);">✓✓</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td></tr>
+        <tr><td style="padding:8px;"><b>MCP 도구 (84)</b></td><td style="padding:8px;text-align:center;color:var(--gold);">✓✓</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td></tr>
+        <tr><td style="padding:8px;"><b>Spaces / Profiles (작업 분리)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓ Spaces</td><td style="padding:8px;text-align:center;color:var(--green);">✓ Profiles</td></tr>
+        <tr><td style="padding:8px;"><b>Split View (화면 분할)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>Organized Tabs (그룹)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>Tab Thumbnails (호버 미리보기)</b></td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>Mobile App</b></td><td style="padding:8px;text-align:center;color:var(--gold);">△ PWA only</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓ (iPhone)</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td></tr>
+        <tr><td style="padding:8px;"><b>Custom Themes + Accent</b></td><td style="padding:8px;text-align:center;color:var(--green);">✓ 5 colors</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>오픈소스 / 무료</b></td><td style="padding:8px;text-align:center;color:var(--gold);">✓✓ AGPL-3</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ $9-200/월</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ $20+/월</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ Freemium</td><td style="padding:8px;text-align:center;color:var(--rose);">❌ $20+/월</td></tr>
+        <tr><td style="padding:8px;"><b>Command Palette (Cmd+K)</b></td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td></tr>
+        <tr><td style="padding:8px;"><b>Morning Brief (캘린더/이메일 통합)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>Live Work (Notion/GitHub 통합)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+        <tr><td style="padding:8px;"><b>Decks (자동 슬라이드 생성)</b></td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--rose);">❌</td><td style="padding:8px;text-align:center;color:var(--green);">✓</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 style="margin-top: 60px;">🎯 정직 평가 — Hermes Browser 부족한 점</h3>
+    <div class="differentiator-grid">
+      <div class="diff-card" style="text-align:left; border-color:var(--rose);">
+        <div class="scenario-tag" style="background:rgba(244,63,94,0.12); color:var(--rose);">CRITICAL ①</div>
+        <h3 style="margin-top:8px; color:var(--rose);">AI 검색/답변 없음</h3>
+        <p>Comet/Atlas/Dia는 페이지 캡처 → AI 답변 → 출처 자동 통합. <b>Hermes는 0%</b>. 사용자가 직접 LLM에게 물어봐야 함.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--rose);">
+        <div class="scenario-tag" style="background:rgba(244,63,94,0.12); color:var(--rose);">CRITICAL ②</div>
+        <h3 style="margin-top:8px; color:var(--rose);">Spaces / Profiles 없음</h3>
+        <p>Arc의 Spaces (작업-취미 분리), Dia의 Profiles (모드 전환). <b>Hermes는 단일 workspace만</b>. 회사/개인 분리 불가능.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--rose);">
+        <div class="scenario-tag" style="background:rgba(244,63,94,0.12); color:var(--rose);">CRITICAL ③</div>
+        <h3 style="margin-top:8px; color:var(--rose);">Tab Groups / Organized Tabs</h3>
+        <p>Atlas/Arc/Dia는 탭을 그룹화 (예: "Design Review", "Q2 Planning"). <b>Hermes는 단순 탭 리스트만</b>.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--gold);">
+        <div class="scenario-tag" style="background:var(--gold-soft); color:var(--gold);">STRENGTH ✓</div>
+        <h3 style="margin-top:8px; color:var(--gold);">멀티 LLM BYOK (12개)</h3>
+        <p>Comet/Atlas/Arc/Dia 모두 단일 LLM 종속. <b>Hermes만 12개 BYOK + 무료</b>. 이것만으로도 사용자가 있음.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--gold);">
+        <div class="scenario-tag" style="background:var(--gold-soft); color:var(--gold);">STRENGTH ✓</div>
+        <h3 style="margin-top:8px; color:var(--gold);">Cowork (17 tools)</h3>
+        <p>BLDC 회로 일하면서 BOM/gerber/datasheet 자동 검색. <b>다른 브라우저 0% 제공</b>.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--gold);">
+        <div class="scenario-tag" style="background:var(--gold-soft); color:var(--gold);">STRENGTH ✓</div>
+        <h3 style="margin-top:8px; color:var(--gold);">Git 통합 (15 methods)</h3>
+        <p>commit/push/pull/branch/checkout + auto_commit/sync/changelog. <b>다른 브라우저 0%</b>.</p>
+      </div>
+      <div class="diff-card" style="text-align:left; border-color:var(--gold);">
+        <div class="scenario-tag" style="background:var(--gold-soft); color:var(--gold);">STRENGTH ✓</div>
+        <h3 style="margin-top:8px; color:var(--gold);">MCP 84 tools + 오픈소스</h3>
+        <p>유료 4개 브라우저 모두 MCP 도구 <b>0개</b>. AGPL-3 무료. Hermes만 가능.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 60px;">🚀 다음 우선순위 (5개)</h3>
+    <ol style="font-size:14px; line-height:2.2; color:var(--text-secondary); padding-left:24px;">
+      <li><b style="color:var(--gold);">① Spaces/Profiles</b> — 회사/개인 분리 (Arc/Dia 따라잡기)</li>
+      <li><b style="color:var(--gold);">② Tab Groups</b> — "Design Review", "Q2 Planning" 그룹화</li>
+      <li><b style="color:var(--gold);">③ AI 검색/답변 (Comet 스타일)</b> — 페이지 → AI 답변 (가장 자주 쓰는 UX)</li>
+      <li><b style="color:var(--text-secondary);">④ Split View</b> — 화면 분할 (Arc/Dia와 동등)</li>
+      <li><b style="color:var(--text-secondary);">⑤ Mobile App</b> — PWA → 진짜 앱 (Capacitor)</li>
+    </ol>
 </body>
 </html>
