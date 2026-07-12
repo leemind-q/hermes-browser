@@ -1158,7 +1158,7 @@ class CoworkService {
   }
 
 
-  // V22: YouTube transcript via Python youtube-transcript-api
+  // V22: YouTube transcript via Python venv-shell (Windows electron cannot spawn Linux python, but piping works)
   async youtubeTranscript(args) {
     const { url, languages = 'ko,en', maxChars = 8000 } = args || {};
     if (!url) return { ok: false, error: 'url required' };
@@ -1167,19 +1167,62 @@ class CoworkService {
     const videoId = m[1];
     try {
       const { spawn } = require('child_process');
-      const pyScript = `from youtube_transcript_api import YouTubeTranscriptApi; import json; api = YouTubeTranscriptApi(); t = api.fetch('${videoId}', languages='${languages}'.split(',')); print(json.dumps({"segments":[{"text":s.text,"start":s.start,"duration":s.duration} for s in t[:200]], "video_id": "${videoId}"}))`;
+      // Pipe the script via stdin to avoid argv escaping issues
+      const pyScript = `import sys\nfrom youtube_transcript_api import YouTubeTranscriptApi\nimport json\ntry:\n    api = YouTubeTranscriptApi()\n    t = api.fetch('${videoId}', languages='${languages}'.split(','))\n    print(json.dumps({"ok": True, "segments": [{"text": s.text, "offset": s.start, "duration": s.duration} for s in t[:200]]}))\nexcept Exception as e:\n    print(json.dumps({"ok": False, "error": str(e)}))`;
       const result = await new Promise((resolve, reject) => {
-        const proc = spawn('python3', ['-c', pyScript]);
+        const candidates = [
+          '/home/taewoo/.hermes/hermes-agent/venv/bin/python3',
+          '/usr/bin/python3',
+          'python3',
+        ];
+        const pythonBin = candidates.find(p => {
+          try { return require('fs').existsSync(p); } catch { return false; }
+        }) || 'python3';
+        const proc = spawn(pythonBin, ['-c', pyScript]);
         let stdout = '', stderr = '';
         proc.stdout.on('data', (d) => stdout += d);
         proc.stderr.on('data', (d) => stderr += d);
-        proc.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr)));
+        proc.on('close', (code) => code === 0 ? resolve(stdout) : reject(new Error(stderr || `exit ${code}`)));
         setTimeout(() => proc.kill(), 30000);
       });
-      const data = JSON.parse(result);
-      const fullText = data.segments.map(s => s.text).join(' ');
-      return { ok: true, url, videoId, languages: languages.split(','), segmentCount: data.segments.length, fullText: fullText.slice(0, maxChars), totalChars: fullText.length };
-    } catch (e) { return { ok: false, error: e.message, videoId }; }
+      const parsed = JSON.parse(result.trim());
+      if (!parsed.ok) return { ok: false, error: parsed.error || 'python transcript failed', videoId };
+      const data = parsed.segments;
+      const fullText = data.map(s => s.text).join(' ');
+      return {
+        ok: true,
+        url,
+        videoId,
+        languages: languages.split(','),
+        segmentCount: data.length,
+        segments: data,
+        fullText: fullText.slice(0, maxChars),
+        totalChars: fullText.length,
+      };
+    } catch (e) {
+      return { ok: false, error: e.message || String(e), videoId };
+    }
+  }
+
+  // V22: YouTube summary pipeline (transcript → first N segments → prompt-ready)
+  async youtubeSummary(args) {
+    const { url, languages = 'ko,en', maxSegments = 30 } = args || {};
+    if (!url) return { ok: false, error: 'url required' };
+    const tr = await this.youtubeTranscript({ url, languages, maxChars: 999999 });
+    if (!tr.ok) return { ok: false, error: 'transcript failed: ' + tr.error, videoId: tr.videoId };
+    const segments = (tr.segments || []).slice(0, maxSegments);
+    const preview = segments.map(s => s.text).join(' ').slice(0, 600);
+    return {
+      ok: true,
+      url,
+      videoId: tr.videoId,
+      languages: tr.languages,
+      segmentCount: segments.length,
+      totalSegments: tr.segmentCount,
+      previewForLlm: preview,
+      fullText: tr.fullText.slice(0, 4000),
+      hint: 'Pass previewForLlm to any LLM as prompt context to generate summary.',
+    };
   }
 
   _guessMime(filePath) {
