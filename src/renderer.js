@@ -2308,6 +2308,24 @@ if (document.readyState === 'loading') {
     setTimeout(initV235Memories, 300);
     setTimeout(initV235TabGroups, 350);
     setTimeout(initV235AISearch, 400);
+  setTimeout(initV24Boosts, 500);
+  setTimeout(initV24Easel, 510);
+  setTimeout(initV24LiveFolders, 520);
+  setTimeout(initV24MorningBrief, 530);
+    setTimeout(initV24ATC, 540);
+    setTimeout(initV24Pause, 550);
+    setTimeout(initV24InstantLinks, 560);
+    setTimeout(initV24Synthesis, 570);
+    setTimeout(initV24Decks, 580);
+    setTimeout(initV24Boosts, 500);
+    setTimeout(initV24Easel, 510);
+    setTimeout(initV24LiveFolders, 520);
+    setTimeout(initV24MorningBrief, 530);
+    setTimeout(initV24ATC, 540);
+    setTimeout(initV24Pause, 550);
+    setTimeout(initV24InstantLinks, 560);
+    setTimeout(initV24Synthesis, 570);
+    setTimeout(initV24Decks, 580);
   });
 } else {
   setTimeout(initV233ChromePages, 100);
@@ -2952,6 +2970,932 @@ function initV235AISearch() {
 window.initV235AISearch = initV235AISearch;
 window.AISearchPanel = AISearchPanel;
 console.log('[V23.5] Tab Groups + AI Search modules loaded');
+
+
+// ============ V24: Arc Boosts (사이트별 CSS 커스터마이즈) ============
+class BoostsManager {
+  constructor() {
+    this.boosts = this.load();
+    this.activeStyleEl = null;
+    this.startTracking();
+    console.log('[V24] BoostsManager ready (' + this.boosts.length + ' boosts)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-boosts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-boosts', JSON.stringify(this.boosts));
+    } catch (e) {}
+  }
+
+  create(name, domain, css, description = '') {
+    const id = 'boost_' + Date.now();
+    this.boosts.push({ id, name, domain, css, description, createdAt: new Date().toISOString(), enabled: true });
+    this.save();
+    if (window.showV22Toast) showV22Toast('Boost 생성: ' + name, 'success');
+    return id;
+  }
+
+  remove(id) {
+    this.boosts = this.boosts.filter(b => b.id !== id);
+    this.save();
+    if (window.showV22Toast) showV22Toast('Boost 삭제됨', 'info');
+  }
+
+  toggle(id) {
+    const boost = this.boosts.find(b => b.id === id);
+    if (boost) {
+      boost.enabled = !boost.enabled;
+      this.save();
+      this.applyBoosts(this.getCurrentDomain());
+    }
+  }
+
+  getCurrentDomain() {
+    const webview = document.querySelector('webview');
+    if (webview && webview.getURL) {
+      try {
+        const url = webview.getURL();
+        return new URL(url).hostname.replace('www.', '');
+      } catch (e) {}
+    }
+    return '';
+  }
+
+  getBoostsForDomain(domain) {
+    return this.boosts.filter(b => b.enabled && b.domain === domain);
+  }
+
+  applyBoosts(domain) {
+    if (!this.activeStyleEl) {
+      this.activeStyleEl = document.createElement('style');
+      this.activeStyleEl.id = 'v24-active-boosts';
+      document.head.appendChild(this.activeStyleEl);
+    }
+    const matches = this.getBoostsForDomain(domain);
+    const combined = matches.map(b => `/* ${b.name} (${b.domain}) */\n${b.css}`).join('\n\n');
+    this.activeStyleEl.textContent = combined;
+    return matches.length;
+  }
+
+  startTracking() {
+    setInterval(() => {
+      const domain = this.getCurrentDomain();
+      if (domain && domain !== this._lastDomain) {
+        const count = this.applyBoosts(domain);
+        this._lastDomain = domain;
+        if (count > 0 && window.showV22Toast) {
+          showV22Toast(`${count}개 Boost 적용: ${domain}`, 'success');
+        }
+      }
+    }, 3000);
+  }
+
+  // Preset boost templates
+  getPresets() {
+    return [
+      {
+        name: '다크 모드 강제',
+        domain: 'twitter.com',
+        css: 'html { filter: invert(1) hue-rotate(180deg) !important; } img { filter: invert(1) hue-rotate(180deg) !important; }'
+      },
+      {
+        name: '깔끔한 GitHub',
+        domain: 'github.com',
+        css: '.Header { backdrop-filter: blur(20px) !important; } .markdown-body { font-family: "JetBrains Mono", monospace !important; }'
+      },
+      {
+        name: '광고 제거',
+        domain: 'naver.com',
+        css: '.ad_area, .ad_box, [class*="ad-"], [id*="ad-"] { display: none !important; }'
+      },
+      {
+        name: '고대비 모드',
+        domain: '',
+        css: 'body { background: #000 !important; color: #fff !important; }'
+      },
+    ];
+  }
+
+  applyPreset(preset) {
+    return this.create(preset.name, preset.domain, preset.css);
+  }
+}
+
+let boostsManager;
+window.boostsManager = null;
+
+function initV24Boosts() {
+  boostsManager = new BoostsManager();
+  window.boostsManager = boostsManager;
+}
+
+window.initV24Boosts = initV24Boosts;
+window.BoostsManager = BoostsManager;
+console.log('[V24] Boosts module ready');
+
+
+// ============ V24: Arc Easel (스크린샷+그리기) ============
+class EaselManager {
+  constructor() {
+    this.easels = this.load();
+    this.currentCanvas = null;
+    this.isDrawing = false;
+    console.log('[V24] EaselManager ready (' + this.easels.length + ' easels)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-easels');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-easels', JSON.stringify(this.easels));
+    } catch (e) {}
+  }
+
+  create(name = 'New Easel') {
+    const id = 'easel_' + Date.now();
+    const easel = {
+      id,
+      name,
+      items: [],  // screenshots + drawings
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.easels.push(easel);
+    this.save();
+    return easel;
+  }
+
+  remove(id) {
+    this.easels = this.easels.filter(e => e.id !== id);
+    this.save();
+  }
+
+  addItem(easelId, item) {
+    const easel = this.easels.find(e => e.id === easelId);
+    if (!easel) return null;
+    const newItem = {
+      id: 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      type: item.type || 'image',  // image | text | drawing
+      data: item.data,
+      title: item.title || '',
+      annotations: item.annotations || [],
+      createdAt: new Date().toISOString()
+    };
+    easel.items.push(newItem);
+    easel.updatedAt = new Date().toISOString();
+    this.save();
+    return newItem;
+  }
+
+  annotateItem(easelId, itemId, annotation) {
+    const easel = this.easels.find(e => e.id === easelId);
+    if (!easel) return;
+    const item = easel.items.find(i => i.id === itemId);
+    if (item) {
+      item.annotations.push({
+        type: annotation.type || 'text',  // text | draw | rect | arrow
+        ...annotation,
+        createdAt: new Date().toISOString()
+      });
+      this.save();
+    }
+  }
+
+  async capturePageScreenshot() {
+    try {
+      const webview = document.querySelector('webview');
+      if (!webview) return null;
+      const image = await webview.capturePage();
+      return image.toDataURL();
+    } catch (e) {
+      // Fallback: html2canvas-like or canvas approach
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1280;
+        canvas.height = 800;
+        return canvas.toDataURL();  // empty fallback
+      } catch (e2) {
+        return null;
+      }
+    }
+  }
+
+  captureCurrentPage(easelId) {
+    this.capturePageScreenshot().then(dataUrl => {
+      if (!dataUrl) {
+        if (window.showV22Toast) showV22Toast('스크린샷 실패', 'error');
+        return;
+      }
+      const item = this.addItem(easelId, {
+        type: 'image',
+        data: dataUrl,
+        title: document.title || window.location.href,
+        sourceUrl: document.querySelector('webview')?.getURL?.() || ''
+      });
+      if (window.showV22Toast) showV22Toast('스크린샷 추가됨', 'success');
+      return item;
+    });
+  }
+
+  exportEasel(easelId) {
+    const easel = this.easels.find(e => e.id === easelId);
+    if (!easel) return null;
+    return {
+      name: easel.name,
+      items: easel.items,
+      exportedAt: new Date().toISOString()
+    };
+  }
+}
+
+let easelManager;
+window.easelManager = null;
+
+function initV24Easel() {
+  easelManager = new EaselManager();
+  window.easelManager = easelManager;
+}
+
+window.initV24Easel = initV24Easel;
+window.EaselManager = EaselManager;
+console.log('[V24] Easel module ready');
+
+
+// ============ V24: Arc Live Folders (자동 업데이트 탭) ============
+class LiveFoldersManager {
+  constructor() {
+    this.folders = this.load();
+    this.startPolling();
+    console.log('[V24] LiveFoldersManager ready (' + this.folders.length + ' folders)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-live-folders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-live-folders', JSON.stringify(this.folders));
+    } catch (e) {}
+  }
+
+  create(name, source, type = 'rss') {
+    const id = 'livefolder_' + Date.now();
+    const folder = {
+      id,
+      name,
+      source,  // RSS URL or API URL
+      type,    // rss | json | html
+      items: [],
+      lastFetched: null,
+      refreshInterval: 300000,  // 5 min
+      createdAt: new Date().toISOString()
+    };
+    this.folders.push(folder);
+    this.save();
+    if (window.showV22Toast) showV22Toast('Live Folder 생성: ' + name, 'success');
+    this.fetchFolder(id);
+    return id;
+  }
+
+  remove(id) {
+    this.folders = this.folders.filter(f => f.id !== id);
+    this.save();
+  }
+
+  async fetchFolder(id) {
+    const folder = this.folders.find(f => f.id === id);
+    if (!folder) return;
+    try {
+      const r = await fetch(folder.source);
+      const text = await r.text();
+      // Parse RSS
+      if (folder.type === 'rss') {
+        folder.items = this.parseRSS(text);
+      } else if (folder.type === 'json') {
+        folder.items = JSON.parse(text).slice(0, 20);
+      } else {
+        folder.items = [{ title: 'Fetched', content: text.substring(0, 200), url: folder.source }];
+      }
+      folder.lastFetched = new Date().toISOString();
+      this.save();
+    } catch (e) {
+      console.warn('[V24] Live Folder fetch failed:', e.message);
+      folder.lastFetched = new Date().toISOString();
+      folder.lastError = e.message;
+      this.save();
+    }
+  }
+
+  parseRSS(xmlText) {
+    const items = [];
+    const itemMatches = xmlText.matchAll(/<item[^>]*>([\s\S]*?)<\/item>/gi);
+    let i = 0;
+    for (const match of itemMatches) {
+      if (i++ >= 20) break;
+      const inner = match[1];
+      const title = (inner.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '';
+      const link = (inner.match(/<link[^>]*>([\s\S]*?)<\/link>/i) || [])[1] || '';
+      const desc = (inner.match(/<description[^>]*>([\s\S]*?)<\/description>/i) || [])[1] || '';
+      const pubDate = (inner.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i) || [])[1] || '';
+      items.push({
+        title: this.stripTags(title).trim(),
+        link: link.trim(),
+        description: this.stripTags(desc).trim().substring(0, 200),
+        pubDate: pubDate.trim()
+      });
+    }
+    return items;
+  }
+
+  stripTags(s) {
+    return s.replace(/<[^>]+>/g, '');
+  }
+
+  startPolling() {
+    setInterval(() => {
+      this.folders.forEach(f => {
+        if (!f.refreshInterval) return;
+        const last = f.lastFetched ? new Date(f.lastFetched).getTime() : 0;
+        const now = Date.now();
+        if (now - last > f.refreshInterval) {
+          this.fetchFolder(f.id);
+        }
+      });
+    }, 30000);  // Check every 30s
+  }
+
+  // Presets
+  getPresets() {
+    return [
+      { name: 'GitHub Trending', source: 'https://mshibanami.github.io/GitHubTrendingRSS/weekly/all.xml', type: 'rss' },
+      { name: 'Hacker News Top', source: 'https://hnrss.org/frontpage', type: 'rss' },
+      { name: 'Hacker News Best', source: 'https://hnrss.org/best', type: 'rss' },
+      { name: 'Hacker News New', source: 'https://hnrss.org/newest', type: 'rss' },
+      { name: 'Lobsters', source: 'https://lobste.rs/rss', type: 'rss' },
+      { name: 'TED Talks', source: 'https://feeds.feedburner.com/TEDTalks_video', type: 'rss' }
+    ];
+  }
+}
+
+let liveFoldersManager;
+window.liveFoldersManager = null;
+
+function initV24LiveFolders() {
+  liveFoldersManager = new LiveFoldersManager();
+  window.liveFoldersManager = liveFoldersManager;
+}
+
+window.initV24LiveFolders = initV24LiveFolders;
+window.LiveFoldersManager = LiveFoldersManager;
+console.log('[V24] LiveFolders module ready');
+
+
+// ============ V24: Dia Morning Brief (캘린더+이메일) ============
+class MorningBriefManager {
+  constructor() {
+    this.today = new Date().toISOString().split('T')[0];
+    this.lastBrief = this.load();
+    this.cachedEvents = [];
+    this.cachedEmails = [];
+    this.cachedTasks = [];
+    this.generateBrief();
+    console.log('[V24] MorningBriefManager ready');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-morning-brief');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  }
+
+  save(brief) {
+    try {
+      localStorage.setItem('hermes-morning-brief', JSON.stringify(brief));
+    } catch (e) {}
+  }
+
+  // Mock data sources — would connect to Google Calendar/Gmail API in production
+  async fetchCalendarEvents() {
+    // Production: would call Google Calendar API via cowork
+    return [
+      { id: 'evt1', title: 'BLDC 회로 검토 미팅', start: '09:30', end: '10:30', attendees: ['김팀장', '이대리'] },
+      { id: 'evt2', title: 'BD69730FV datasheet 분석', start: '14:00', end: '15:00', attendees: [] },
+      { id: 'evt3', title: 'AutoCAD PcbDoc Gerber export', start: '16:00', end: '17:00', attendees: ['박과장'] }
+    ];
+  }
+
+  async fetchEmails() {
+    return [
+      { id: 'mail1', from: 'jjun0525@oec.co.kr', subject: 'BLDC 드라이버 IC 샘플 도착', time: '08:42', unread: true },
+      { id: 'mail2', from: 'kim@vendor.com', subject: '[견적] 저전압 BLDC reference design', time: '07:15', unread: true },
+      { id: 'mail3', from: 'github-noreply', subject: 'leemind-q/hermes-browser PR #7', time: '06:30', unread: false }
+    ];
+  }
+
+  async fetchTasks() {
+    return [
+      { id: 't1', title: '회로 17페이지 회로도 작성', priority: 'high', due: 'today' },
+      { id: 't2', title: 'BD69730FV BOM 작성', priority: 'high', due: 'today' },
+      { id: 't3', title: 'Git 커밋 sync', priority: 'medium', due: 'today' },
+      { id: 't4', title: 'Hermes Browser V24 polish', priority: 'low', due: 'this week' }
+    ];
+  }
+
+  async generateBrief() {
+    const [events, emails, tasks] = await Promise.all([
+      this.fetchCalendarEvents(),
+      this.fetchEmails(),
+      this.fetchTasks()
+    ]);
+    this.cachedEvents = events;
+    this.cachedEmails = emails;
+    this.cachedTasks = tasks;
+    
+    const brief = {
+      date: this.today,
+      generatedAt: new Date().toISOString(),
+      greeting: this.getGreeting(),
+      summary: {
+        eventsCount: events.length,
+        unreadEmails: emails.filter(e => e.unread).length,
+        tasksToday: tasks.filter(t => t.due === 'today').length,
+        highPriorityTasks: tasks.filter(t => t.priority === 'high').length
+      },
+      events,
+      emails,
+      tasks,
+      insights: this.generateInsights(events, emails, tasks)
+    };
+    this.lastBrief = brief;
+    this.save(brief);
+    return brief;
+  }
+
+  getGreeting() {
+    const h = new Date().getHours();
+    if (h < 6) return '🌙 늦은 시간';
+    if (h < 12) return '☀ 좋은 아침';
+    if (h < 18) return '🌤 좋은 오후';
+    return '🌙 좋은 저녁';
+  }
+
+  generateInsights(events, emails, tasks) {
+    const insights = [];
+    if (events.length > 0) {
+      insights.push(`오늘 회의 ${events.length}개 예정`);
+    }
+    const unread = emails.filter(e => e.unread).length;
+    if (unread > 0) {
+      insights.push(`읽지 않은 메일 ${unread}개`);
+    }
+    const highTasks = tasks.filter(t => t.priority === 'high').length;
+    if (highTasks > 0) {
+      insights.push(`높은 우선순위 작업 ${highTasks}개`);
+    }
+    if (events.some(e => e.title.includes('BLDC') || e.title.includes('회로'))) {
+      insights.push('오늘 회로 일 위주 일정입니다 — Gerber/BOM 준비 추천');
+    }
+    return insights;
+  }
+
+  renderBrief() {
+    if (!this.lastBrief) return '';
+    const b = this.lastBrief;
+    return `
+      <div class="brief-container">
+        <div class="brief-greeting">${b.greeting}</div>
+        <div class="brief-summary">
+          <div class="brief-stat"><span class="stat-num">${b.summary.eventsCount}</span><span class="stat-label">회의</span></div>
+          <div class="brief-stat"><span class="stat-num">${b.summary.unreadEmails}</span><span class="stat-label">읽지 않은 메일</span></div>
+          <div class="brief-stat"><span class="stat-num">${b.summary.tasksToday}</span><span class="stat-label">오늘 작업</span></div>
+          <div class="brief-stat"><span class="stat-num">${b.summary.highPriorityTasks}</span><span class="stat-label">긴급</span></div>
+        </div>
+        <div class="brief-section">
+          <h4>📅 오늘 일정</h4>
+          ${b.events.map(e => `
+            <div class="brief-event">
+              <span class="event-time">${e.start}-${e.end}</span>
+              <span class="event-title">${e.title}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="brief-section">
+          <h4>✉ 메일</h4>
+          ${b.emails.map(m => `
+            <div class="brief-email ${m.unread ? 'unread' : ''}">
+              <span class="email-from">${m.from.split('@')[0]}</span>
+              <span class="email-subject">${m.subject}</span>
+              <span class="email-time">${m.time}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="brief-section">
+          <h4>📋 작업</h4>
+          ${b.tasks.map(t => `
+            <div class="brief-task priority-${t.priority}">
+              <span class="task-priority"></span>
+              <span class="task-title">${t.title}</span>
+              <span class="task-due">${t.due}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="brief-insights">
+          ${b.insights.map(i => `<div class="insight">💡 ${i}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+}
+
+let morningBriefManager;
+window.morningBriefManager = null;
+
+function initV24MorningBrief() {
+  morningBriefManager = new MorningBriefManager();
+  window.morningBriefManager = morningBriefManager;
+}
+
+window.initV24MorningBrief = initV24MorningBrief;
+window.MorningBriefManager = MorningBriefManager;
+console.log('[V24] MorningBrief module ready');
+
+
+// ============ V24: Arc Air Traffic Control (링크 라우팅) ============
+class AirTrafficControlManager {
+  constructor() {
+    this.routes = this.load();
+    this.defaultSpace = 'work';
+    console.log('[V24] AirTrafficControlManager ready (' + this.routes.length + ' routes)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-atc-routes');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-atc-routes', JSON.stringify(this.routes));
+    } catch (e) {}
+  }
+
+  addRoute(pattern, spaceKey, description = '') {
+    const id = 'route_' + Date.now();
+    this.routes.push({ id, pattern, spaceKey, description });
+    this.save();
+    if (window.showV22Toast) showV22Toast('Route 추가: ' + pattern + ' → ' + spaceKey, 'success');
+  }
+
+  remove(id) {
+    this.routes = this.routes.filter(r => r.id !== id);
+    this.save();
+  }
+
+  routeLink(url) {
+    for (const r of this.routes) {
+      const regex = new RegExp(r.pattern, 'i');
+      if (regex.test(url)) {
+        return r.spaceKey;
+      }
+    }
+    return this.defaultSpace;
+  }
+
+  // Pre-defined route presets
+  getPresets() {
+    return [
+      { pattern: 'github\.com|gitlab\.com|stackoverflow', spaceKey: 'development', description: 'Dev sites → 개발 공간' },
+      { pattern: 'github\.com/leemind-q', spaceKey: 'work', description: 'Hermes-Browser 회사 프로젝트 → 업무' },
+      { pattern: 'youtube\.com|netflix\.com|spotify\.com', spaceKey: 'personal', description: 'Media → 개인 공간' },
+      { pattern: 'naver\.com|daum\.net', spaceKey: 'personal', description: '한국 검색 → 개인' },
+      { pattern: 'oec\.co\.kr|jjun0525\.com', spaceKey: 'work', description: '회사 도메인 → 업무' }
+    ];
+  }
+}
+
+let atcManager;
+window.atcManager = null;
+
+function initV24ATC() {
+  atcManager = new AirTrafficControlManager();
+  window.atcManager = atcManager;
+}
+
+window.initV24ATC = initV24ATC;
+window.AirTrafficControlManager = AirTrafficControlManager;
+
+// ============ V24: Comet Pause Assistant ============
+class PauseAssistantManager {
+  constructor() {
+    this.isPaused = false;
+    this.pauseDuration = 0;
+    this.pauseStartTime = null;
+    console.log('[V24] PauseAssistantManager ready');
+  }
+
+  pause(durationMs = 0) {
+    this.isPaused = true;
+    this.pauseStartTime = Date.now();
+    this.pauseDuration = durationMs;
+    if (window.showV22Toast) showV22Toast('AI 어시스턴트 일시중지됨', 'info');
+    if (durationMs > 0) {
+      setTimeout(() => this.resume(), durationMs);
+    }
+  }
+
+  resume() {
+    this.isPaused = false;
+    this.pauseStartTime = null;
+    if (window.showV22Toast) showV22Toast('AI 어시스턴트 재개', 'success');
+  }
+
+  isCurrentlyPaused() {
+    return this.isPaused;
+  }
+
+  getPauseDuration() {
+    if (!this.isPaused || !this.pauseStartTime) return 0;
+    return Date.now() - this.pauseStartTime;
+  }
+}
+
+let pauseManager;
+window.pauseManager = null;
+
+function initV24Pause() {
+  pauseManager = new PauseAssistantManager();
+  window.pauseManager = pauseManager;
+}
+
+window.initV24Pause = initV24Pause;
+window.PauseAssistantManager = PauseAssistantManager;
+
+// ============ V24: Arc Instant Links (다중 사이트 동시 열기) ============
+class InstantLinksManager {
+  constructor() {
+    this.lastOpened = [];
+    console.log('[V24] InstantLinksManager ready');
+  }
+
+  openMulti(urls, layout = 'tabs') {
+    // Open multiple URLs in tabs or splits
+    if (window.showV22Toast) showV22Toast(`${urls.length}개 사이트 동시 열기`, 'success');
+    return urls.map((u, i) => ({
+      url: u,
+      tabId: 'tab_' + Date.now() + '_' + i,
+      layout
+    }));
+  }
+
+  // Pre-defined instant link packs
+  getPacks() {
+    return [
+      {
+        name: '개발자 뉴스',
+        urls: ['https://news.ycombinator.com', 'https://github.com/trending', 'https://lobste.rs'],
+        icon: '💻'
+      },
+      {
+        name: '한국 뉴스',
+        urls: ['https://news.naver.com', 'https://www.daum.net', 'https://n.news.naver.com'],
+        icon: '📰'
+      },
+      {
+        name: '기술 블로그',
+        urls: ['https://techcrunch.com', 'https://theverge.com', 'https://arstechnica.com'],
+        icon: '✍'
+      },
+      {
+        name: '회로 자료',
+        urls: ['https://www.altium.com', 'https://www.ti.com', 'https://www.analog.com'],
+        icon: '⚡'
+      }
+    ];
+  }
+
+  executePack(pack) {
+    return this.openMulti(pack.urls);
+  }
+}
+
+let instantLinksManager;
+window.instantLinksManager = null;
+
+function initV24InstantLinks() {
+  instantLinksManager = new InstantLinksManager();
+  window.instantLinksManager = instantLinksManager;
+}
+
+window.initV24InstantLinks = initV24InstantLinks;
+window.InstantLinksManager = InstantLinksManager;
+console.log('[V24] ATC + Pause + Instant Links modules ready');
+
+
+// ============ V24: Dia Synthesis (도구 통합) ============
+class SynthesisManager {
+  constructor() {
+    this.syntheses = this.load();
+    console.log('[V24] SynthesisManager ready (' + this.syntheses.length + ' syntheses)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-syntheses');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-syntheses', JSON.stringify(this.syntheses));
+    } catch (e) {}
+  }
+
+  // Synthesis = gather data from multiple sources into a single report
+  async gather(sources, query) {
+    const results = [];
+    for (const source of sources) {
+      try {
+        const r = await this.fetchFromSource(source, query);
+        results.push({ source, data: r, status: 'ok' });
+      } catch (e) {
+        results.push({ source, error: e.message, status: 'error' });
+      }
+    }
+    return {
+      id: 'syn_' + Date.now(),
+      query,
+      sources: results,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  async fetchFromSource(source, query) {
+    // Mock — would call actual APIs
+    if (source === 'gmail') {
+      return { emails: [], query };
+    }
+    if (source === 'notion') {
+      return { pages: [], query };
+    }
+    if (source === 'github') {
+      // Could call actual github API
+      return { repos: [], query };
+    }
+    return { source, query };
+  }
+
+  generateReport(synthesis) {
+    // Generate a unified report from gathered data
+    return {
+      title: synthesis.query || 'Synthesis Report',
+      sections: synthesis.sources.map(s => ({
+        title: s.source,
+        content: s.data || s.error
+      })),
+      generatedAt: synthesis.createdAt
+    };
+  }
+
+  // Preset synthesis queries
+  getPresets() {
+    return [
+      { name: '오늘 작업 요약', sources: ['gmail', 'github', 'calendar'], query: '오늘 처리할 항목들' },
+      { name: '프로젝트 진행', sources: ['github', 'notion'], query: '최근 변경사항' },
+      { name: '주간 회고', sources: ['gmail', 'github', 'calendar'], query: '이번 주 활동' }
+    ];
+  }
+}
+
+let synthesisManager;
+window.synthesisManager = null;
+
+function initV24Synthesis() {
+  synthesisManager = new SynthesisManager();
+  window.synthesisManager = synthesisManager;
+}
+
+window.initV24Synthesis = initV24Synthesis;
+window.SynthesisManager = SynthesisManager;
+
+// ============ V24: Dia Decks (자동 슬라이드) ============
+class DecksManager {
+  constructor() {
+    this.decks = this.load();
+    console.log('[V24] DecksManager ready (' + this.decks.length + ' decks)');
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('hermes-decks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('hermes-decks', JSON.stringify(this.decks));
+    } catch (e) {}
+  }
+
+  generateDeck(topic, sourceData) {
+    // Auto-generate slide structure from topic + source data
+    const id = 'deck_' + Date.now();
+    const deck = {
+      id,
+      title: topic,
+      slides: this.buildSlides(topic, sourceData),
+      createdAt: new Date().toISOString()
+    };
+    this.decks.push(deck);
+    this.save();
+    if (window.showV22Toast) showV22Toast('Deck 생성: ' + topic, 'success');
+    return deck;
+  }
+
+  buildSlides(topic, data) {
+    // Generate 5-7 slides from topic
+    return [
+      { id: 1, type: 'title', title: topic, subtitle: 'AI 자동 생성', content: '' },
+      { id: 2, type: 'overview', title: '개요', content: this.overviewContent(topic) },
+      { id: 3, type: 'detail', title: '주요 포인트', content: this.pointsContent(data) },
+      { id: 4, type: 'data', title: '데이터', content: this.dataContent(data) },
+      { id: 5, type: 'summary', title: '결론', content: this.summaryContent(topic) }
+    ];
+  }
+
+  overviewContent(topic) {
+    return [
+      { type: 'text', content: `${topic}에 대한 자동 생성 개요입니다.` },
+      { type: 'list', items: ['배경', '목적', '범위'] }
+    ];
+  }
+
+  pointsContent(data) {
+    return [
+      { type: 'list', items: data && data.points ? data.points : ['핵심 1', '핵심 2', '핵심 3'] }
+    ];
+  }
+
+  dataContent(data) {
+    return [
+      { type: 'chart', data: data && data.chart ? data.chart : { type: 'bar', values: [3, 5, 8, 4] } }
+    ];
+  }
+
+  summaryContent(topic) {
+    return [
+      { type: 'text', content: `${topic}에 대한 핵심 요약입니다.` }
+    ];
+  }
+
+  exportToPPTX(deckId) {
+    // Would use pptxgenjs in production
+    return {
+      deckId,
+      exportedAt: new Date().toISOString(),
+      format: 'pptx',
+      status: 'pending_implementation'
+    };
+  }
+}
+
+let decksManager;
+window.decksManager = null;
+
+function initV24Decks() {
+  decksManager = new DecksManager();
+  window.decksManager = decksManager;
+}
+
+window.initV24Decks = initV24Decks;
+window.DecksManager = DecksManager;
+console.log('[V24] Synthesis + Decks modules ready');
+
+
+
+
+
+
 
 
 // ============ V23: Empty/Error/Loading State Helpers ============

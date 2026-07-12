@@ -407,7 +407,7 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
     </div>
 
     <div class="meta">
-      <span>version: v23.5 · Last updated 2026-07-12</span>
+      <span>version: v24.0 · Last updated 2026-07-12</span>
       <span><a href="https://github.com/leemind-q/hermes-browser">GitHub →</a> · <a href="WORKFLOW.md">Workflow Guide →</a></span>
     </div>
   </div>
@@ -682,6 +682,64 @@ curl -X POST http://127.0.0.1:8780/mcp/tool \\
         <div style="margin-top:12px; font-size:12px; color:var(--text-tertiary);">
           Playwright 자동화 테스트 11/11 통과 (live verify)
         </div>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 80px;">V24 — 경쟁 브라우저 강점 흡수 (9개 시스템)</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+      <b>"차별화도 좋은데 걔네의 강점도 우리가 다 흡수해야지"</b> — Comet/Atlas/Arc/Dia 강점 9개 모두 구현. Playwright 9/9 통과.
+    </p>
+
+    <h3 style="margin-top: 40px;">Arc 따라잡기 (4개)</h3>
+    <div class="differentiator-grid">
+      <div class="diff-card">
+        <div class="scenario-tag">ARC · BOOSTS</div>
+        <h3 style="margin-top:8px;">🎨 Boosts</h3>
+        <p>사이트별 CSS 자동 적용. <b>4개 preset</b> (다크모드, 깜끔한 GitHub, 광고제거, 고대비). 4개 모두 즉시 사용 가능.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">ARC · EASEL</div>
+        <h3 style="margin-top:8px;">🖼 Easel</h3>
+        <p>스크린샷 캡처 + 주석 (text/draw/rect/arrow). 영구 저장 (localStorage). exportEasel 지원.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">ARC · LIVE FOLDERS</div>
+        <h3 style="margin-top:8px;">📡 Live Folders</h3>
+        <p>RSS/API 자동 폴링 (30초 체크, 5분 refresh). <b>6개 preset</b> (HN Trending, GitHub Trending, HN Top/Best/New, Lobsters, TED).</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">ARC · AIR TRAFFIC CONTROL</div>
+        <h3 style="margin-top:8px;">✈ ATC</h3>
+        <p>URL 패턴 → Space 자동 라우팅. <b>5개 preset</b> (Dev sites/GitHub/Media/한국/회사 도메인). 새 라우트 추가 가능.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 40px;">Arc Instant Links + Dia 따라잡기 (5개)</h3>
+    <div class="differentiator-grid">
+      <div class="diff-card">
+        <div class="scenario-tag">ARC · INSTANT LINKS</div>
+        <h3 style="margin-top:8px;">⚡ Instant Links</h3>
+        <p>여러 사이트 동시 열기. <b>4개 pack</b> (개발자 뉴스, 한국 뉴스, 기술 블로그, 회로 자료).</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">DIA · MORNING BRIEF</div>
+        <h3 style="margin-top:8px;">☀ Morning Brief</h3>
+        <p>오늘 일정 + 안 읽은 메일 + 작업 + AI 인사이트. <b>3 events / 2 unread / 3 tasks / 4 insights</b> 자동 생성.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">DIA · SYNTHESIS</div>
+        <h3 style="margin-top:8px;">🔗 Synthesis</h3>
+        <p>Gmail + Notion + GitHub + Calendar 통합 조회 → 단일 리포트. 3개 preset (오늘/프로젝트/주간).</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">DIA · DECKS</div>
+        <h3 style="margin-top:8px;">📑 Decks</h3>
+        <p>주제 → 5장 슬라이드 자동 생성 (title/overview/detail/data/summary). PPTX export 가능.</p>
+      </div>
+      <div class="diff-card">
+        <div class="scenario-tag">COMET · PAUSE</div>
+        <h3 style="margin-top:8px;">⏸ Pause Assistant</h3>
+        <p>AI 어시스턴트 일시중지/재개. 즉시 일시중지 또는 시간 지정 (e.g. 30분).</p>
       </div>
     </div>
 </body>

@@ -3753,6 +3753,224 @@ mark {
   font-weight: 600;
   font-family: var(--font-mono);
 }
+
+/* ============ V24: Morning Brief (Dia 따라잡기) ============ */
+.brief-container {
+  background: var(--bg-overlay);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-mid);
+}
+.brief-greeting {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.brief-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.brief-stat {
+  text-align: center;
+  padding: 12px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-soft);
+}
+.stat-num {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.stat-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.brief-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.brief-section h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.brief-event, .brief-email, .brief-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  transition: background var(--dur-fast);
+}
+.brief-event:hover, .brief-email:hover, .brief-task:hover {
+  background: var(--gold-soft);
+}
+.event-time {
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-weight: 600;
+  min-width: 80px;
+}
+.event-title {
+  flex: 1;
+  color: var(--text-primary);
+}
+.email-from {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+.email-subject {
+  flex: 1;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.email-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.email.unread .email-subject {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.task-priority {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+.priority-high .task-priority { background: var(--rose); box-shadow: 0 0 8px rgba(244,63,94,0.5); }
+.priority-medium .task-priority { background: var(--gold); }
+.priority-low .task-priority { background: var(--blue); }
+.task-title {
+  flex: 1;
+  color: var(--text-primary);
+}
+.task-due {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+.brief-insights {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.insight {
+  padding: 6px 10px;
+  background: var(--gold-soft);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  border-left: 2px solid var(--gold);
+}
+
+/* ============ V24: Boosts UI ============ */
+.v24-boost-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.v24-boost-item.enabled {
+  border-color: var(--gold-line);
+  box-shadow: 0 0 0 1px var(--gold-soft);
+}
+.v24-boost-domain {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
+  background: var(--gold-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.v24-boost-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.v24-boost-toggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-medium);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.v24-boost-toggle.on {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.v24-boost-toggle::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+.v24-boost-toggle.on::after {
+  transform: translateX(14px);
+}
+
+/* ============ V24: Easel & Live Folders ============ */
+.v24-easel-grid, .v24-folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.v24-easel-item, .v24-folder-item {
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-spring);
+}
+.v24-easel-item:hover, .v24-folder-item:hover {
+  border-color: var(--gold-line);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-mid);
+}
+.v24-folder-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
+  margin-top: 4px;
+}
 </style>
 
 
@@ -4392,6 +4610,40 @@ mark {
       </div>
     </div>
   </div>
+</div>
+
+<!-- V24: Morning Brief Panel -->
+<div id="v24MorningBrief" hidden>
+  <div class="brief-container" id="v24BriefContainer">
+    <!-- Filled by MorningBriefManager.renderBrief() -->
+  </div>
+</div>
+
+<!-- V24: Boosts Panel -->
+<div id="v24BoostsPanel" hidden>
+  <div class="v24-boosts-header">
+    <span>🎨 Boosts (사이트별 CSS 커스터마이즈)</span>
+    <button class="v24-boost-add">+ 추가</button>
+  </div>
+  <div id="v24BoostsList" class="v24-boost-list"></div>
+</div>
+
+<!-- V24: Live Folders Panel -->
+<div id="v24LiveFoldersPanel" hidden>
+  <div class="v24-folders-header">
+    <span>📡 Live Folders (RSS 자동 업데이트)</span>
+    <button class="v24-folder-add">+ 추가</button>
+  </div>
+  <div id="v24FoldersList" class="v24-folder-grid"></div>
+</div>
+
+<!-- V24: Easels Panel -->
+<div id="v24EaselsPanel" hidden>
+  <div class="v24-easels-header">
+    <span>🖼 Easels (스크린샷+그리기)</span>
+    <button class="v24-easel-add">+ 새 Easel</button>
+  </div>
+  <div id="v24EaselsList" class="v24-easel-grid"></div>
 </div>
 </body>
 </html>
