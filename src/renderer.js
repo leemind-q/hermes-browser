@@ -83,15 +83,16 @@ if (appFrame) {
   $('backBtn').addEventListener('click', () => action('goBack'));
   $('forwardBtn').addEventListener('click', () => action('goForward'));
   $('reloadBtn').addEventListener('click', () => action('reload'));
-  SettingsPopover.init();
+  window.HermesModules?.settingsPopover?.init?.();
+  window.HermesModules?.sidebarToggle?.init?.();
   // V22 init (welcome + USP + quickbar + context menu)
   initV22();
-  $('settingsBtn').addEventListener('click', (e) => { e.stopPropagation(); SettingsPopover.toggle(); });
+  $('settingsBtn').addEventListener('click', (e) => { e.stopPropagation(); window.HermesModules?.settingsPopover?.toggle?.(); });
   $('favoriteBtn').addEventListener('click', addCurrentBookmark);
   $('favToggle').addEventListener('click', toggleFavorites);
   $('newGroupBtn').addEventListener('click', createTabGroup);
   $('planToggle').addEventListener('click', togglePlan);
-  $('leftToggle').addEventListener('click', toggleLeftPanel);
+  $('leftToggle').addEventListener('click', () => window.HermesModules?.sidebarToggle?.toggle?.('left'));
 
 // V38: Textarea autosize for promptInput
 window.__autosizePrompt = () => {
@@ -167,8 +168,8 @@ if (document.readyState === 'loading') {
 })();
 
 
-  $('railExpand')?.addEventListener('click', toggleLeftPanel);
-  $('rightToggle').addEventListener('click', toggleRightPanel);
+  $('railExpand')?.addEventListener('click', () => window.HermesModules?.sidebarToggle?.toggle?.('left'));
+  $('rightToggle').addEventListener('click', () => window.HermesModules?.sidebarToggle?.toggle?.('right'));
   $('findBtn').addEventListener('click', toggleFindBar);
   $('findCloseBtn').addEventListener('click', () => hideFindBar());
   $('findInput').addEventListener('input', (e) => { if (e.target.value) window.hermes.browser.findInPage(e.target.value); else window.hermes.browser.stopFind(); });
@@ -179,8 +180,8 @@ if (document.readyState === 'loading') {
   $('memoryType').addEventListener('change', loadMemoryEditor);
   $('memorySave').addEventListener('click', saveMemoryEditor);
   $('memoryCancel').addEventListener('click', () => hideSheet('memoryModal'));
-  $('settingsClose').addEventListener('click', () => SettingsPopover.close());
-  $('settingsCancel').addEventListener('click', () => SettingsPopover.close());
+  $('settingsClose').addEventListener('click', () => window.HermesModules?.settingsPopover?.close?.());
+  $('settingsCancel').addEventListener('click', () => window.HermesModules?.settingsPopover?.close?.());
   $('settingsSave').addEventListener('click', saveSettings);
   // V12: provider presets + test
   $('providerSelect').addEventListener('change', applyProviderPreset);
@@ -463,10 +464,10 @@ async function saveSettings() {
   if (!next.apiKey) state.settings.apiKey = '';
   $('connText').textContent = `${state.settings.provider} · ${state.settings.model}`;
   $('connText').title = `${state.settings.provider} · ${state.settings.gatewayUrl} · ${state.settings.model}`;
-  SettingsPopover.close();
+  window.HermesModules?.settingsPopover?.close?.();
   log('settings', '저장됨');
 }
-function openSettings() { SettingsPopover.open(); }
+function openSettings() { window.HermesModules?.settingsPopover?.open?.(); }
 
 function setMode(mode) {
   state.mode = mode;
@@ -1336,91 +1337,11 @@ function createTabGroup() {
 }
 
 
-// === Settings Popover Component ===
-const SettingsPopover = (() => {
-  let outsideCleanup = null;
-  const menuConfig = [
-    { group: 'settingsQuickList', key: 'print', icon: 'i-print', label: '인쇄', status: '현재 페이지', run: async () => { await window.hermes.browser.print(); log('print', 'called'); } },
-    { group: 'settingsQuickList', key: 'downloads', icon: 'i-download', label: '다운로드', status: '목록 열기', run: async () => { close(); await openDownloads(); } },
-    { group: 'settingsQuickList', key: 'read', icon: 'i-book', label: '읽기모드', status: () => state.readModeEnabled ? '활성' : '비활성', run: async () => { const r = await window.hermes.browser.toggleReadMode(); state.readModeEnabled = !!r?.enabled; render(); log('read-mode', state.readModeEnabled ? 'on' : 'off'); } },
-    { group: 'settingsDisplayList', key: 'dark', icon: 'i-moon', label: '다크모드', kind: 'switch', status: () => state.darkModeEnabled ? 'ON' : 'OFF', run: async () => { const r = await window.hermes.browser.toggleDarkMode(); state.darkModeEnabled = !!r?.enabled; render(); log('dark-mode', state.darkModeEnabled ? 'on' : 'off'); } },
-    { group: 'settingsDataList', key: 'history', icon: 'i-clock', label: '방문기록', status: '패널 열기', run: async () => { close(); await openHistory(); } },
-  ];
-  function init() { render(); position(); window.addEventListener('resize', position); }
-  function createIcon(id) {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.classList.add('ui-icon');
-    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttribute('href', `#${id}`);
-    svg.appendChild(use);
-    return svg;
-  }
-  function render() {
-    for (const group of ['settingsQuickList', 'settingsDisplayList', 'settingsDataList']) {
-      const box = $(group); if (box) box.replaceChildren();
-    }
-    for (const item of menuConfig) {
-      const box = $(item.group); if (!box) continue;
-      const btn = document.createElement('button');
-      btn.className = 'settings-item' + ((item.key === 'dark' && state.darkModeEnabled) || (item.key === 'read' && state.readModeEnabled) ? ' active' : '');
-      btn.dataset.settingAction = item.key;
-      const iconWrap = document.createElement('span'); iconWrap.appendChild(createIcon(item.icon));
-      const name = document.createElement('span'); name.className = 'settings-item-name'; name.textContent = item.label;
-      const status = document.createElement('span'); status.className = 'settings-item-status';
-      if (item.kind === 'switch') { const sw = document.createElement('span'); sw.className = 'switch'; status.appendChild(sw); }
-      else status.textContent = typeof item.status === 'function' ? item.status() : (item.status || '');
-      btn.append(iconWrap, name, status);
-      btn.addEventListener('click', async (e) => { e.stopPropagation(); await item.run(); });
-      box.appendChild(btn);
-    }
-  }
-  function position() {
-    const pop = $('settingsPopover'); const btn = $('settingsBtn');
-    if (!pop || !btn) return;
-    const r = btn.getBoundingClientRect();
-    const margin = 10;
-    const width = Math.min(226, window.innerWidth - margin * 2);
-    pop.style.width = width + 'px';
-    const left = Math.min(window.innerWidth - width - margin, Math.max(margin, r.right - width));
-    let top = r.bottom + 8;
-    const maxTop = Math.max(margin, window.innerHeight - margin - Math.min(pop.scrollHeight || 360, window.innerHeight - 58));
-    top = Math.max(margin, Math.min(top, maxTop));
-    pop.style.left = `${left}px`;
-    pop.style.top = `${top}px`;
-  }
-  function bindOutside() {
-    cleanupOutside();
-    const onPointer = (e) => {
-      const pop = $('settingsPopover'); const btn = $('settingsBtn');
-      if (!pop || !state.settingsPopoverOpen) return;
-      if (pop.contains(e.target) || btn?.contains(e.target)) return;
-      close();
-    };
-    const onKey = (e) => { if (e.key === 'Escape' && state.settingsPopoverOpen) { e.preventDefault(); close(); } };
-    setTimeout(() => document.addEventListener('pointerdown', onPointer, true), 0);
-    document.addEventListener('keydown', onKey, true);
-    outsideCleanup = () => { document.removeEventListener('pointerdown', onPointer, true); document.removeEventListener('keydown', onKey, true); };
-  }
-  function cleanupOutside() { if (outsideCleanup) { outsideCleanup(); outsideCleanup = null; } }
-  async function open() {
-    const pop = $('settingsPopover'); if (!pop) return;
-    await loadSettings(); render(); position();
-    pop.classList.remove('closing'); pop.classList.add('visible'); pop.setAttribute('aria-hidden', 'false');
-    $('settingsBtn')?.setAttribute('aria-expanded', 'true');
-    state.settingsPopoverOpen = true; bindOutside();
-  }
-  function close() {
-    const pop = $('settingsPopover'); if (!pop || !state.settingsPopoverOpen) return;
-    cleanupOutside(); state.settingsPopoverOpen = false; $('settingsBtn')?.setAttribute('aria-expanded', 'false');
-    pop.classList.add('closing');
-    const finalize = () => { pop.classList.remove('visible', 'closing'); pop.setAttribute('aria-hidden', 'true'); };
-    pop.addEventListener('animationend', finalize, { once: true });
-    setTimeout(finalize, 180);
-  }
-  function toggle() { state.settingsPopoverOpen ? close() : open(); }
-  function isOpen() { return state.settingsPopoverOpen; }
-  return { init, render, open, close, toggle, position, isOpen, menuConfig };
-})();
+// ==================== Settings Popover (V48: deprecated from renderer.js)
+// Global reference removed — use HermesModules.settingsPopover
+// ====================
+
+// ============================================================
 
 // ============================================================
 // V16 FINAL — 4 features
@@ -1965,23 +1886,6 @@ function hideSheet(id) {
   el.classList.add('closing');
   el.addEventListener('animationend', () => { el.classList.remove('visible', 'closing'); }, { once: true });
 }
-function toggleLeftPanel() {
-  const app = $('app'); const panel = $('leftPanel');
-  panel.classList.toggle('collapsed'); app.classList.toggle('left-collapsed');
-  // Notify main process (best-effort, may not be registered in some contexts)
-  try {
-    if (window.hermes && window.hermes.browser && window.hermes.browser.toggleLeftPanel) {
-      window.hermes.browser.toggleLeftPanel();
-    }
-  } catch (e) {
-    // CSS toggle already applied — silent fallback
-  }
-}
-function toggleRightPanel() {
-  const app = $('app'); const panel = $('rightPanel');
-  panel.classList.toggle('collapsed'); app.classList.toggle('right-collapsed');
-  window.hermes.browser.toggleRightPanel();
-}
 function toggleFindBar() {
   const bar = $('findBar'); bar.classList.remove('closing');
   if (bar.classList.contains('visible')) {
@@ -2178,7 +2082,7 @@ async function toggleInlineAI() {
   } catch (e) { log('inline-ai', e.message, 'error'); }
 }
 async function openDownloads() {
-  SettingsPopover.close();
+  window.HermesModules?.settingsPopover?.close?.();
   showSheet('downloadsModal');
   const downloads = await window.hermes.browser.getDownloads(); const box = $('downloadsList'); box.replaceChildren();
   if (!downloads.length) { const e = document.createElement('div'); e.className = 'small-muted'; e.textContent = '다운로드 없음'; box.appendChild(e); return; }
@@ -2192,7 +2096,7 @@ async function openDownloads() {
   });
 }
 async function openHistory() {
-  SettingsPopover.close();
+  window.HermesModules?.settingsPopover?.close?.();
   showSheet('historyModal');
   const history = await window.hermes.browser.getHistory(); const box = $('historyList'); box.replaceChildren();
   if (!history.length) { const e = document.createElement('div'); e.className = 'small-muted'; e.textContent = '방문 기록 없음'; box.appendChild(e); return; }
