@@ -5229,61 +5229,71 @@ body.v18-sidebar-open .browser-frame {
   left: 240px !important;
   right: 300px !important;
   bottom: 0 !important;
-  height: 24px !important;
-  display: none !important;
+  height: 26px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 14px !important;
+  background: rgba(245, 245, 247, 0.92) !important;
+  border-top: 1px solid var(--border, #e5e5ea) !important;
   box-shadow: none !important;
-  background: rgba(245, 245, 247, 0.95) !important;
-  border-top: 1px solid #e5e5ea !important;
   border-radius: 0 !important;
   backdrop-filter: none !important;
   font-size: 11px !important;
   color: #4a4a5a !important;
+  z-index: 50 !important;
+  overflow: hidden !important;
 }
-body[data-mode="dev"] .status-bar { display: flex !important; }
 \n.v18ToggleSidebar { display: none !important; }\n.virtualCursor { display: none !important; }\n/* V30: v18ToggleSidebar hidden (moved to input toolbar) */
 #v18ToggleSidebar { display: none !important; }
 .v18ToggleSidebar { display: none !important; }
-\n/* V30: Tabs section shrink-to-fit when empty */
-.sidebar-tabs-section { flex: 0 0 auto !important; min-height: 0 !important; }
-.sidebar-tabs-section .tab-list:empty + * { display: none !important; }
-
-/* === V30: Force sidebar sections to flow naturally === */
-#leftPanel > .sidebar-section {
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  flex-shrink: 0 !important;
+\n/* === V31: Clean Sidebar Layout === */
+.sidebar-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  flex-shrink: 0;
 }
-#leftPanel > .sidebar-header {
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  flex-shrink: 0 !important;
+.sidebar-section .section-head {
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  height: auto;
+}
+#leftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#leftPanel > .sidebar-section {
+  flex-shrink: 0;
 }
 #leftPanel > .sidebar-footer {
-  position: relative !important;
-  flex-shrink: 0 !important;
-  margin-top: auto !important;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 #leftPanel > .workspace-tags {
-  position: relative !important;
-  flex-shrink: 0 !important;
+  flex-shrink: 0;
 }
 
-/* === V30: Final sidebar force-flow === */
-#leftPanel .sidebar-section {
-  position: static !important;
-  display: flex !important;
-  flex-direction: column !important;
-  margin: 0 !important;
-  padding: 4px 0 !important;
+/* === V31: AI Panel Layout === */
+#rightPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-#leftPanel .sidebar-section .section-head {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  height: auto !important;
-}
+#rightPanel .ai-header { flex-shrink: 0; }
+#rightPanel .goal-section { flex-shrink: 0; }
+#rightPanel .plan-section { flex-shrink: 0; }
+#rightPanel .ai-chat { flex: 1; min-height: 0; overflow-y: auto; }
+#rightPanel .ai-input-area { flex-shrink: 0; }
+#rightPanel .ai-input-wrap { min-height: 64px; max-height: 160px; overflow-y: auto; }
+
+/* === V31: Status Bar (visible 26px) === */
+.status-bar { display: flex !important; }
 </style>
 
 
@@ -5294,7 +5304,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
 </head>
 <body>
 <!-- V23.5: Spaces Switcher (V30: moved to sidebar dropdown) -->
-<div id="v23SpaceSwitcher" style="display:none !important;" aria-label="Spaces/Profiles Switcher">
+<div id="v23SpaceSwitcher" aria-label="Spaces/Profiles Switcher">
   <button class="v23-space-pill active" data-space="work" data-tooltip="회사 업무 / 회로 일">
     <span class="icon">💼</span><span class="label">업무</span>
   </button>
@@ -6035,7 +6045,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
 </div>
 
 <!-- V23.3: USP Badge (fixed from missing) -->
-<div class="v22-usp-badge" id="v22UspBadge" style="display:none !important;" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP" hidden>Hermes V23.2</div>
+<div class="v22-usp-badge" id="v22UspBadge" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
 
 <!-- V23.5: Browser Memories Panel -->
 <div id="v23MemoryList" class="v23-memories-panel" aria-label="Browser Memories">
