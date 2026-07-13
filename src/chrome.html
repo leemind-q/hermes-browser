@@ -1520,6 +1520,15 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       color: var(--danger);
     }
 
+    /* Standalone status dot (for section heads, inline use) */
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
     /* Compact status rows (Tasks, Session) */
     .status-row {
       display: flex;
@@ -5196,14 +5205,8 @@ body.v18-sidebar-open .browser-frame {
 
 /* Toggle sidebar button */
 #v18ToggleSidebar {
-  position: fixed;
-  bottom: 100px;
-  right: 20px;
-  z-index: 250;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  display: none !important;  /* V30: hidden (moved to input toolbar) */
+}
   color: white;
   border: none;
   cursor: pointer;
@@ -5218,8 +5221,7 @@ body.v18-sidebar-open .browser-frame {
   transform: scale(1.1);
 }
 
-/* === V30: Force-hide floating buttons (moved to input toolbar) === */
-.ai-fab { display: none !important; }
+/* === V30: Force-hide deprecated elements === */
 .v25-voice-indicator { display: none !important; }
 /* V30: Status bar thin 24px webview-attached (dev mode only) */
 .status-bar {
@@ -5238,6 +5240,9 @@ body.v18-sidebar-open .browser-frame {
   color: #4a4a5a !important;
 }
 body[data-mode="dev"] .status-bar { display: flex !important; }
+\n.v18ToggleSidebar { display: none !important; }\n.virtualCursor { display: none !important; }\n/* V30: v18ToggleSidebar hidden (moved to input toolbar) */
+#v18ToggleSidebar { display: none !important; }
+.v18ToggleSidebar { display: none !important; }
 </style>
 
 
@@ -5356,7 +5361,16 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
         <div class="tabs" id="tabList"></div>
       </div>
 
-      <!-- Favorites section (scrolls with tabs) -->
+      <!-- Recent tabs section -->
+      <div class="sidebar-section" style="padding-top:2px">
+        <div class="section-head collapsible" id="recentSectionHead">
+          <span>Recent</span>
+          <button class="mini-btn" id="recentToggle" title="접기/펼치기">▾</button>
+        </div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+
+      <!-- Favorites section -->
       <div class="sidebar-section" style="padding-top:2px">
         <div class="section-head collapsible" id="favSectionHead">
           <span>Favorites</span>
@@ -5365,15 +5379,44 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
         <div class="fav-list expanded" id="favoriteList"></div>
       </div>
 
-      <!-- Sidebar footer (fixed bottom): Memory + Workspace switcher -->
-      <div class="sidebar-footer">
+      <!-- Memory section (compact status) -->
+      <div class="sidebar-section" style="padding-top:2px">
+        <div class="section-head">
+          <span>Memory</span>
+          <button class="mini-btn" id="memoryBtn" title="편집">✎</button>
+        </div>
         <div class="memory-mini">
-          <div class="section-head"><span>Memory</span><button class="mini-btn" id="memoryBtn" title="편집">✎</button></div>
           <div class="memory-row" data-type="profile"><span>Profile</span><span class="mem-state-dot"></span></div>
           <div class="memory-row" data-type="preferences"><span>Preferences</span><span class="mem-state-dot"></span></div>
-          <div class="memory-row" data-type="tasks"><span>Tasks</span><span class="mem-state-dot"></span></div>
-          <div class="memory-row" data-type="session"><span>Session</span><span class="mem-state-dot"></span></div>
         </div>
+      </div>
+
+      <!-- Tasks section -->
+      <div class="sidebar-section">
+        <div class="section-head">
+          <span>Tasks</span>
+          <span class="status-dot" style="background:var(--border-strong)"></span>
+        </div>
+        <div class="status-row idle" data-type="tasks">
+          <span>Task 상태</span>
+          <span class="status-dot"></span>
+        </div>
+      </div>
+
+      <!-- Session section -->
+      <div class="sidebar-section">
+        <div class="section-head">
+          <span>Session</span>
+          <span class="status-dot" style="background:var(--success)"></span>
+        </div>
+        <div class="status-row active" data-type="session">
+          <span>활성 세션</span>
+          <span class="status-dot"></span>
+        </div>
+      </div>
+
+      <!-- Sidebar footer (fixed bottom): Profile + Workspace switcher -->
+      <div class="sidebar-footer">
         <div class="workspace-switcher" id="workspaceSwitcher" title="Workspace 전환">
           <div class="ws-avatar">T</div>
           <div class="ws-info">
@@ -5479,21 +5522,19 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       <!-- === Input Area === -->
       <div class="ai-input-area">
         <div class="ai-quick">
-          <button data-action="summary" data-prompt="현재 페이지를 요약해줘">요약</button>
-          <button data-action="research" data-prompt="현재 주제에 대해 공식 자료 중심으로 조사해줘">조사</button>
-          <select id="searchModeSelect" class="ai-qsel" title="검색 깊이">
-            <option value="quick">빠른</option>
-            <option value="normal" selected>일반</option>
-            <option value="deep">심층</option>
-          </select>
+          <button class="ai-seg-btn active" data-action="summary" data-prompt="현재 페이지를 요약해줘">요약</button>
+          <button class="ai-seg-btn" data-action="research" data-prompt="현재 주제에 대해 공식 자료 중심으로 조사해줘">조사</button>
+          <button class="ai-seg-btn" data-action="general" data-prompt="">일반</button>
         </div>
         <div class="ai-mention-bar" id="mentionBar"></div>
         <div class="ai-input-wrap">
+          <div class="ai-input-toolbar">
+            <button class="ai-input-tool" id="fileBtn" title="파일 첨부">📎</button>
+            <button class="ai-input-tool" id="voiceBtn" title="음성 입력">🎤</button>
+            <button class="ai-input-tool" id="inlineAIToggle" title="컨텍스트">⊞</button>
+          </div>
           <textarea id="promptInput" placeholder="목표 입력 · @으로 컨텍스트 연결" rows="1"></textarea>
           <input type="file" id="fileInput" style="display:none" />
-          <button class="ai-input-btn" id="fileBtn" title="파일 첨부">📎</button>
-          <button class="ai-input-btn" id="voiceBtn" title="음성 입력">🎤</button>
-          <button class="ai-input-btn" id="inlineAIToggle" title="인라인 AI">Aa</button>
           <button class="ai-stop-btn" id="stopBtn">■</button>
           <button class="ai-send-btn" id="sendBtn">➜</button>
         </div>

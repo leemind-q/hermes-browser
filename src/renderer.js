@@ -114,10 +114,15 @@ function bindEvents() {
   $('fileBtn')?.addEventListener('click', () => $('fileInput')?.click());
   $('fileInput')?.addEventListener('change', handleFileAttach);
   $('inlineAIToggle')?.addEventListener('click', toggleInlineAI);
-  // Search mode select
-  $('searchModeSelect')?.addEventListener('change', (e) => {
-    state.searchMode = e.target.value;
-    log('search-mode', state.searchMode);
+  // Segment mode buttons (요약/조사/일반)
+  document.querySelectorAll('.ai-seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ai-seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const action = btn.dataset.action || 'general';
+      state.searchMode = action === 'summary' ? 'quick' : action === 'research' ? 'deep' : 'normal';
+      log('segment-mode', action);
+    });
   });
   $('promptInput').addEventListener('input', () => { autoResizePrompt(); renderMentionBar(); });
   $('promptInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPrompt(); } });
@@ -1363,12 +1368,7 @@ function updateAIAutoExpand() {
   }
 }
 
-// AI FAB click — toggle right panel
-$('aiFab')?.addEventListener('click', () => {
-  const right = $('rightPanel');
-  if (right) right.click();
-  $('rightToggle')?.click();
-});
+// (removed — AI FAB button deleted in V30 polish)
 
 // 2. Workspace tag pills (color-coded)
 // Add sample workspace tags dynamically
@@ -1472,7 +1472,6 @@ function injectFontScaleSlider() {
 // Cmd+K palette: add "단축키 도움말"
 const V16_FINAL_CMDS = [
   { id: 'shortcuts', label: '키 단축키 도움말', icon: 'help', shortcut: '?', action: () => openShortcutModal() },
-  { id: 'ai_fab', label: 'AI 패널 (FAB 버튼)', icon: 'sparkle', shortcut: '', action: () => $('aiFab')?.click() },
   { id: 'tags_all', label: '워크스페이스: 전체', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="all"]')?.click() },
   { id: 'tags_work', label: '워크스페이스: 업무', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="work"]')?.click() },
   { id: 'tags_research', label: '워크스페이스: 리서치', icon: 'tag', shortcut: '', action: () => document.querySelector('[data-tag="research"]')?.click() },
