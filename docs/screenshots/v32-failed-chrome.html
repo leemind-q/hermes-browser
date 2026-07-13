@@ -729,98 +729,53 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
 
             /* === Default = light tokens === */
     :root {
-      /* === Layout — high-density compact panels === */
-      --left: 240px; --right: 300px; --top: 40px;
-      --gutter: 6px; --gap: 6px; --bottom: 30px;
-      --sb-pad: 10px 8px; --sb-gap: 8px; --sb-sec-gap: 0;
-      --sb-row-h: 34px; --sb-card-pad: 8px 10px;
-      --sb-title: 11px; --sb-body: 13px; --sb-muted: 12px;
-      --sb-icon: 16px; --sb-control-h: 28px; --sb-radius: 8px;
-      --rail-w: 44px;
-
-      /* === Typography: Space Grotesk + DM Sans === */
-      --font-display: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
-      --font-body: "DM Sans", "Inter", system-ui, -apple-system, sans-serif;
-      font-family: var(--font-body);
-      font-size: 13px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-
-      /* === Color tokens — LIGHT theme (default) === */
-      --bg: #f5f5f7;
-      --bg-elevated: #ffffff;
-      --bg-subtle: #fafafa;
-      --bg-panel: rgba(255, 255, 255, 0.72);
-      --ink: #1a1a2e;
-      --ink-strong: #0f0f1e;
-      --muted: rgba(26, 26, 46, 0.82);
-      --faint: rgba(26, 26, 46, 0.58);
-      --border: rgba(26, 26, 46, 0.08);
-      --border-strong: rgba(26, 26, 46, 0.14);
-
-      /* Gold accent (premium tone, both themes) */
-      --gold: #fbbf24;
-      --gold-soft: rgba(251, 191, 36, 0.12);
-      --gold-hover: rgba(251, 191, 36, 0.22);
-      --gold-glow: 0 0 24px rgba(251, 191, 36, 0.35);
-
-      /* Old accent (kept for compat) */
-      --accent: #5b6cff;
-      --accent-soft: rgba(91, 108, 255, 0.08);
-      --accent-hover: rgba(91, 108, 255, 0.14);
-
-      /* Semantic */
-      --danger: #ef4444;
-      --warn: #f59e0b;
-      --success: #22c55e;
-
-      /* === Glass Material — LIGHT === */
-      --glass-bg: rgba(255, 255, 255, 0.72);
-      --glass-bg-strong: rgba(255, 255, 255, 0.88);
-      --glass-bg-edge: rgba(255, 255, 255, 0.95);
-      --glass-blur: blur(24px) saturate(180%) brightness(1.04);
-      --glass-edge-light: rgba(255, 255, 255, 0.95);
-      --glass-edge-dark: rgba(26, 26, 46, 0.08);
-      --glass-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 1), inset 1px 0 0 rgba(255, 255, 255, 0.6);
-      --glass-inner-shadow: inset 0 -1px 0 rgba(26, 26, 46, 0.04);
-      --glass-shadow: 0 8px 32px rgba(20, 30, 50, 0.08), 0 2px 6px rgba(20, 30, 50, 0.04), var(--glass-inner-highlight), var(--glass-inner-shadow);
-      --glass-refraction-cyan: rgba(91, 200, 255, 0.06);
-      --glass-refraction-violet: rgba(151, 128, 255, 0.05);
-      --glass-refraction-gold: rgba(251, 191, 36, 0.05);
-
-      --glass-pop-bg: rgba(255, 255, 255, 0.92);
-      --glass-pop-blur: blur(28px) saturate(180%) brightness(1.05);
-      --glass-pop-shadow: 0 24px 64px rgba(20, 30, 50, 0.18), 0 8px 24px rgba(20, 30, 50, 0.08);
-
-      /* === Motion: spring/쫀득 === */
-      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
-      --ease-spring-soft: cubic-bezier(.22, 1.3, .36, 1);
-      --ease-out: cubic-bezier(.2, .9, .2, 1);
-      --ease-in-out: cubic-bezier(.4, 0, .2, 1);
-      --anim-fast: .14s var(--ease-spring);
-      --anim: .22s var(--ease-spring-soft);
-      --anim-slow: .42s var(--ease-out);
-      --anim-spring: .55s var(--ease-spring);
-
-      /* Radius */
-      --radius-webview: 16px;
-      --radius-sidebar: 18px;
-      --radius-card: 14px;
-      --radius-control: 8px;
-      --radius-pill: 999px;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 18px;
-      --radius-browser-bezel: 14px;
-
-      /* Size scale */
-      --fs-xs: 11px; --fs-sm: 12px; --fs-base: 13px; --fs-md: 14px; --fs-lg: 15px; --fs-xl: 17px;
-      --sp-xs: 4px; --sp-sm: 6px; --sp-md: 8px; --sp-lg: 12px; --sp-xl: 16px;
-      --btn-size: 32px; --icon-size: 16px;
-      --btn-gap: 6px; --group-gap: 10px;
-
+      /* === V32: Independent Design System === */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 20px;
+      --app-padding: 8px;
+      --panel-gap: 8px;
+      --panel-padding: 12px;
+      --panel-radius: 10px;
+      --control-radius: 8px;
+      --input-radius: 8px;
+      --pill-radius: 999px;
+      --app-frame-height: 34px;
+      --toolbar-height: 46px;
+      --status-height: 26px;
+      --left-panel-w: 232px;
+      --right-panel-w: 316px;
+      --fs-xs: 11px;
+      --fs-sm: 12px;
+      --fs-base: 13px;
+      --fs-md: 14px;
+      --fs-lg: 15px;
+      --fs-xl: 17px;
+      --accent: #c7a45a;
+      --accent-soft: #e6d4a8;
+      --accent-strong: #a07e3a;
+      --accent-bg: rgba(199, 164, 90, 0.08);
+      --surface-app: #f7f7f8;
+      --surface-panel: #ffffff;
+      --surface-canvas: #fbfbfc;
+      --surface-elevated: #ffffff;
+      --border: #e6e6ea;
+      --border-strong: #d4d4d8;
+      --border-subtle: rgba(0, 0, 0, 0.06);
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a5a;
+      --text-muted: #6b6b7a;
+      --text-faint: #9a9aa6;
+      --btn-size: 32px;
+      --icon-size: 16px;
+      --left: var(--left-panel-w);
+      --right: var(--right-panel-w);
+      --top: var(--toolbar-height);
+      --bottom: var(--status-height);
+      --gutter: var(--app-padding);
+      --gap: 6px;
       color-scheme: light;
     }
 
@@ -5295,21 +5250,70 @@ body.v18-sidebar-open .browser-frame {
 /* === V31: Status Bar (visible 26px) === */
 .status-bar { display: flex !important; }
 
-
-
-/* === V33: Status-bar alignment fix ONLY === */
-.status-bar {
-  left: 252px !important;
-  right: 312px !important;
-  width: auto !important;
-  bottom: 0 !important;
-  height: 26px !important;
+/* === V32: App Frame === */
+.app-frame {
+  display: flex;
+  align-items: center;
+  height: var(--app-frame-height);
+  padding: 0 var(--space-md);
+  gap: var(--space-sm);
+  background: linear-gradient(180deg, var(--surface-elevated), var(--surface-canvas));
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
 }
-/* === V33: Prevent serif on headings === */
-h1, h2, h3, h4, h5, h6, .section-title {
-  font-family: Inter, "Segoe UI Variable", "Segoe UI", Pretendard, Arial, sans-serif !important;
-  font-weight: 600 !important;
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--accent-strong);
+  -webkit-app-region: no-drag;
 }
+.brand-name {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: var(--fs-base);
+  letter-spacing: -0.01em;
+}
+.app-frame-title {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  padding-left: var(--space-sm);
+  -webkit-app-region: no-drag;
+}
+.app-frame-drag {
+  flex: 1;
+  height: 100%;
+}
+
+/* === V32: Window Controls (Windows-style) === */
+.window-controls {
+  display: flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+.wc-btn {
+  width: 32px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-quick, 100ms) ease;
+}
+.wc-btn:hover { background: var(--border-subtle); }
+.wc-btn.wc-close:hover { background: var(--status-error, #c0392b); color: white; }
+.wc-icon { width: 12px; height: 12px; stroke: currentColor; stroke-width: 1.4; fill: none; }
+
+/* === V32: Remove macOS traffic light styling === */
+.traffic, .traffic-light { display: none !important; }
 </style>
 
 
@@ -5352,11 +5356,22 @@ h1, h2, h3, h4, h5, h6, .section-title {
       <symbol id="i-pin" viewBox="0 0 24 24"><path d="M14 3l7 7-4 1-4 7-2-2 7-4 1-4-5-5z"/><path d="M5 19l5-5"/></symbol>
     </svg>
     <div class="virtual-cursor" id="virtualCursor"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 7-6 2-2 6-6-15z" fill="rgba(91,108,255,.2)" stroke="#5b6cff" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="#5b6cff" stroke-width="1.5"/></svg></div>
+    <header class="app-frame" role="banner">
+      <div class="brand-mark" aria-label="Hermes Browser">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M4 4 L20 4 L20 20 L4 20 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8 8 L16 8 M8 12 L16 12 M8 16 L13 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-name">Hermes</span>
+      </div>
+      <div class="app-frame-title" id="appFrameTitle">업무 워크스페이스</div>
+      <div class="app-frame-drag" aria-hidden="true"></div>
+    </header>
     <div class="topbar">
-      <div class="traffic">
-        <button class="dot red" id="winClose" title="닫기"></button>
-        <button class="dot yellow" id="winMin" title="최소화"></button>
-        <button class="dot green" id="winMax" title="최대화"></button>
+      <div class="window-controls" role="toolbar" aria-label="창 제어">
+        <button class="wc-btn" id="winMin" title="최소화" aria-label="최소화"><svg class="wc-icon" viewBox="0 0 12 12" aria-hidden="true"><line x1="2" y1="6" x2="10" y2="6"/></svg></button>
+        <button class="wc-btn" id="winMax" title="최대화" aria-label="최대화"><svg class="wc-icon" viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7" rx="1" fill="none"/></svg></button>
+        <button class="wc-btn wc-close" id="winClose" title="닫기" aria-label="닫기"><svg class="wc-icon" viewBox="0 0 12 12" aria-hidden="true"><line x1="2.5" y1="2.5" x2="9.5" y2="9.5"/><line x1="9.5" y1="2.5" x2="2.5" y2="9.5"/></svg></button>
       </div>
       <div class="nav-group">
         <button class="icon-btn" id="backBtn" title="뒤로"><svg class="ui-icon"><use href="#i-back"></use></svg></button>
