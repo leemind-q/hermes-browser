@@ -27,7 +27,7 @@
   padding: 8px 10px;
   margin: 2px 0;
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-spring);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-spring);
   border: 1px solid transparent;
 }
 .tabItem:hover, .tab:hover {
@@ -3817,7 +3817,7 @@ mark {
   padding: 10px 12px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .cmdk-item:hover, .cmdk-item.active {
@@ -4156,7 +4156,7 @@ mark {
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
 }
 .v23-pill:hover { border-color: var(--gold-line); color: var(--text-primary); }
 .v23-pill.active {
@@ -4187,7 +4187,7 @@ mark {
   background: var(--bg-elevated);
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  transition: all var(--dur-fast) var(--ease-spring);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--dur-fast) var(--ease-spring);
 }
 .v23-llm-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-glass); }
 .v23-llm-card.active {
@@ -4422,7 +4422,7 @@ mark {
   padding: 6px 8px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .v23-memory-item:hover {
@@ -6473,12 +6473,13 @@ body, button, input, textarea, select,
 button:focus:not(:focus-visible) { outline: none !important; }
 /* PlanShowMore - subtle */
 #planShowMore, .plan-toggle {
-  border: 1px solid var(--border-soft, rgba(0,0,0,0.06)) !important;
+  border: 1px solid var(--border-subtle, rgba(26,26,46,0.06)) !important;
   background: transparent !important;
-  font-size: 11.5px !important;
-  color: var(--text-secondary, #6E6E78) !important;
+  font-size: 11px !important;
+  color: var(--text-secondary, #4a4a68) !important;
   padding: 4px 10px !important;
   border-radius: 6px !important;
+  transition: background-color var(--motion-fast, 100ms) var(--ease-out, ease-out);
 }
 #planShowMore:hover, .plan-toggle:hover {
   background: rgba(0,0,0,0.04) !important;
@@ -6557,7 +6558,7 @@ button:focus:not(:focus-visible) { outline: none !important; }
 .ai-empty-icon { font-size: 28px; line-height: 1; color: var(--accent, #FF6B00); opacity: 0.85; }
 .ai-empty-title { font-size: 13px; font-weight: 600; color: var(--text-strong, #34343C); }
 .ai-empty-title-sm { font-size: 12px; font-weight: 500; color: var(--text-secondary, #6E6E78); }
-.ai-empty-desc { font-size: 11.5px; color: var(--text-secondary, #6E6E78); line-height: 1.45; max-width: 220px; }
+.ai-empty-desc { font-size: 11px; color: var(--text-secondary, #6E6E78); line-height: 1.45; max-width: 220px; }
 
 /* V39: ew-icon size + ew-title medium */
 .ew-icon {
@@ -6578,9 +6579,64 @@ button:focus:not(:focus-visible) { outline: none !important; }
   align-items: center !important;
   gap: 4px !important;
   margin-top: 12px !important;
-  font-size: 11.5px !important;
+  font-size: 11px !important;
   color: var(--text-muted, #6E6E78) !important;
 }
+
+      /* === V40: Unified design tokens (Windows desktop polish) === */
+      /* Spacing scale: 4, 8, 12, 16, 20, 24 */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      /* Radius scale: 4, 6, 8, 12 */
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-pill: 999px;
+      /* Type scale: 11, 12, 13, 14, 16 */
+      --fs-xs: 11px;
+      --fs-sm: 12px;
+      --fs-base: 13px;
+      --fs-md: 14px;
+      --fs-lg: 16px;
+      /* Motion: 100ms hover, 160ms transitions, ease-out */
+      --motion-fast: 100ms;
+      --motion-base: 160ms;
+      --motion-slow: 240ms;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      /* Neutral text hierarchy (no purple/blue tint) */
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a68;
+      --text-tertiary: #80809a;
+      --text-disabled: #a8a8b8;
+      /* Surfaces */
+      --surface-base: #f5f5f7;
+      --surface-1: #ebebef;
+      --surface-2: #e2e2e7;
+      --surface-webview: #ffffff;
+      --border-subtle: rgba(26, 26, 46, 0.06);
+      --border-default: rgba(26, 26, 46, 0.12);
+      --border-strong: rgba(26, 26, 46, 0.20);
+
+/* === V40: Harmonize outliers (Windows desktop polish) === */
+/* Standardize planShowMore font to 11px (rounded from 11.5) */
+#planShowMore, .plan-toggle { font-size: 11px !important; padding: 4px 10px !important; border-radius: 6px !important; }
+/* Standardize rightPanel transition to 160ms */
+#rightPanel { transition: transform var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out) !important; }
+/* Standardize leftPanel transition */
+#leftPanel { transition: width var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out) !important; }
+/* Standardize browser-frame margin transition */
+.browser-frame { transition: margin-right var(--motion-base) var(--ease-out) !important; }
+/* ai-header & ai-empty-state get subtle border-radius for consistency */
+.ai-header { border-radius: var(--radius-md) !important; }
+.ai-empty-state { border-radius: var(--radius-md) !important; }
+/* Standardize category chip + ai-seg-btn to same scale */
+.workspace-tag { font-size: 11px !important; padding: 0 6px !important; border-radius: var(--radius-sm) !important; height: 24px !important; }
+.ai-seg-btn, button.ai-seg-btn { font-size: 11px !important; padding: 0 10px !important; border-radius: var(--radius-sm) !important; height: 28px !important; }
 </style>
 
 
