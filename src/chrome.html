@@ -27,7 +27,7 @@
   padding: 8px 10px;
   margin: 2px 0;
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-spring);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-spring);
   border: 1px solid transparent;
 }
 .tabItem:hover, .tab:hover {
@@ -3817,7 +3817,7 @@ mark {
   padding: 10px 12px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .cmdk-item:hover, .cmdk-item.active {
@@ -4156,7 +4156,7 @@ mark {
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
 }
 .v23-pill:hover { border-color: var(--gold-line); color: var(--text-primary); }
 .v23-pill.active {
@@ -4187,7 +4187,7 @@ mark {
   background: var(--bg-elevated);
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  transition: all var(--dur-fast) var(--ease-spring);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--dur-fast) var(--ease-spring);
 }
 .v23-llm-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-glass); }
 .v23-llm-card.active {
@@ -4422,7 +4422,7 @@ mark {
   padding: 6px 8px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-smooth);
+  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .v23-memory-item:hover {

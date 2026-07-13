@@ -2303,7 +2303,6 @@ async function clearHistory() {
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
-function escapeHtml(s) { return String(s ?? '').replace(/[&<>\"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;' }[c])); }
 function autoResizePrompt() { const t = $('promptInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 92) + 'px'; }
 function safeStorageJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } }
 function domainOf(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } }
