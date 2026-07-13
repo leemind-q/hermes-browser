@@ -5420,6 +5420,254 @@ h1, h2, h3, h4, h5, h6, .section-title {
 
 /* === V34: macOS traffic light removed === */
 .traffic { display: none !important; }
+
+/* === V35: App Shell Grid (3 rows) === */
+body, html, #app, .app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+body, #app, .app {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+#app, .app {
+  display: grid !important;
+  grid-template-rows: 34px 44px minmax(0, 1fr) 26px !important;
+  grid-template-columns: 176px minmax(0, 1fr) 252px !important;
+  grid-template-areas:
+    "frame frame frame"
+    "tool  tool  tool"
+    "left  main  right"
+    "left  stat  right" !important;
+  gap: 6px !important;
+  padding: 6px !important;
+  background: var(--bg, #f5f5f7) !important;
+}
+.app-frame { grid-area: frame !important; height: 34px !important; }
+.topbar    { grid-area: tool  !important; height: 44px !important; }
+
+/* === V35: Row 3 — Panels === */
+.left, #leftPanel, aside.left {
+  grid-area: left !important;
+  position: relative !important;
+  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.right, #rightPanel, aside.right {
+  grid-area: right !important;
+  position: relative !important;
+  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+main.browser-frame {
+  grid-area: main !important;
+  position: relative !important;
+  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.status-bar, #statusBar {
+  grid-area: stat !important;
+  position: relative !important;
+  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: 100% !important;
+  height: 26px !important;
+  margin: 0 !important;
+}
+
+/* === V35: App Frame Row 1 (34px) === */
+.app-frame {
+  display: flex !important;
+  align-items: center !important;
+  height: 34px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  background: var(--bg-elevated, #ffffff) !important;
+  border: 1px solid var(--border, rgba(26,26,46,0.08)) !important;
+  border-radius: 8px !important;
+  -webkit-app-region: drag !important;
+  user-select: none !important;
+  z-index: 100;
+  flex-shrink: 0;
+}
+.app-frame-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 100%;
+  border-right: 1px solid var(--border, rgba(26,26,46,0.08));
+  -webkit-app-region: no-drag;
+}
+.brand-icon { color: var(--gold, #fbbf24); }
+.brand-name { font-weight: 600; font-size: 12px; letter-spacing: -0.01em; }
+.app-frame-workspace {
+  padding: 0 12px;
+  -webkit-app-region: no-drag;
+  font-size: 12px;
+  color: var(--muted, #4a4a5a);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border, rgba(26,26,46,0.08));
+}
+.app-frame-drag {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+/* === V35: Topbar Row 2 (44px, no shadow, no overlap) === */
+.topbar {
+  display: flex !important;
+  align-items: center !important;
+  height: 44px !important;
+  padding: 0 12px !important;
+  gap: 8px !important;
+  background: var(--bg-elevated, #ffffff) !important;
+  border: 1px solid var(--border, rgba(26,26,46,0.08)) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  z-index: 99 !important;
+  flex-shrink: 0;
+}
+
+/* === V35: Status Bar Row 4 (26px) — under browser column only === */
+.status-bar {
+  height: 26px !important;
+  border: 1px solid var(--border, rgba(26,26,46,0.08)) !important;
+  border-radius: 6px !important;
+  background: var(--bg-elevated, #ffffff) !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  left: auto !important; right: auto !important; bottom: auto !important; top: auto !important;
+  grid-area: stat !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* === V35: Compact sidebar typography === */
+.sidebar-section .section-head,
+.section-head {
+  height: 28px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+.sidebar-section .section-head span,
+.section-head span {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  text-transform: none !important;
+}
+#leftPanel, .left {
+  font-size: 12px !important;
+}
+#leftPanel .tab, #leftPanel .recent-item, #leftPanel .fav-list .fav-item, #leftPanel .memory-row, #leftPanel .status-row {
+  height: 28px !important;
+  padding: 0 8px !important;
+  font-size: 12px !important;
+  gap: 6px !important;
+}
+#leftPanel .workspace-name, #leftPanel .ws-name {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.sidebar-header {
+  height: 42px !important;
+  padding: 0 8px !important;
+}
+
+/* === V35: Right AI Panel compact === */
+#rightPanel, .right {
+  font-size: 12px !important;
+  padding: 10px !important;
+}
+.ai-header {
+  height: 42px !important;
+  padding: 0 8px !important;
+  font-size: 12px !important;
+}
+.ai-mode-selector {
+  height: 30px !important;
+  font-size: 11px !important;
+}
+.ai-input-area {
+  font-size: 12px !important;
+}
+.ai-chat {
+  font-size: 12px !important;
+}
+
+/* === V35: Resize handles (subtle, hover only) === */
+.resize-handle-left {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 100ms ease;
+  z-index: 50;
+}
+.resize-handle-left:hover { background: var(--gold-line, rgba(245, 158, 11, 0.18)); }
+.resize-handle-right {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 100ms ease;
+  z-index: 50;
+}
+.resize-handle-right:hover { background: var(--gold-line, rgba(245, 158, 11, 0.18)); }
+
+/* === V35: Responsive panel widths === */
+@media (min-width: 1440px) {
+  body { grid-template-columns: 176px minmax(0, 1fr) 252px !important; }
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  body { grid-template-columns: 164px minmax(0, 1fr) 236px !important; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body { grid-template-columns: 48px minmax(0, 1fr) 228px !important; }
+}
+@media (max-width: 1023px) {
+  body { grid-template-columns: 48px minmax(0, 1fr) 0 !important; }
+  /* Right panel becomes overlay on small screens - keep visible for now */
+}
 </style>
 
 
@@ -5642,6 +5890,16 @@ h1, h2, h3, h4, h5, h6, .section-title {
 </aside>
 
     <main class="browser-frame" aria-label="Rounded browser frame"></main>
+  <div class="status-bar" id="statusBar">
+    <span class="sb-pill" id="statusProvider" title="LLM provider"><span class="sb-dot"></span><span id="sbProviderName">mock</span></span>
+    <span class="sb-pill" id="statusCowork" title="Cowork status"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg><span>Ready</span></span>
+    <span class="sb-pill" id="statusTabs" title="Open tabs"><span id="sbTabsCount">0</span> tabs</span>
+    <span class="sb-pill" id="statusBridge" title="MCP bridge"><span class="sb-dot" id="sbBridgeDot"></span><span id="sbBridgePort">:8780</span></span>
+    <span class="sb-spacer"></span>
+    <button class="sb-btn" id="themeToggle" title="라이트/다크 토글">라이트</button>
+    <button class="sb-btn" id="quickFind" title="빠른 검색 (Ctrl+K)">⌘K</button>
+    <button class="sb-btn" id="statusSettings" title="설정 열기">⚙</button>
+  </div>
 
     <aside class="right floating-panel" id="rightPanel">
       <!-- === Header === -->
@@ -5816,16 +6074,7 @@ h1, h2, h3, h4, h5, h6, .section-title {
     <!-- ============================================================
        V12 Status Bar (Cowork status + Provider + Theme + Search)
        ============================================================ -->
-  <div class="status-bar" id="statusBar">
-    <span class="sb-pill" id="statusProvider" title="LLM provider"><span class="sb-dot"></span><span id="sbProviderName">mock</span></span>
-    <span class="sb-pill" id="statusCowork" title="Cowork status"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg><span>Ready</span></span>
-    <span class="sb-pill" id="statusTabs" title="Open tabs"><span id="sbTabsCount">0</span> tabs</span>
-    <span class="sb-pill" id="statusBridge" title="MCP bridge"><span class="sb-dot" id="sbBridgeDot"></span><span id="sbBridgePort">:8780</span></span>
-    <span class="sb-spacer"></span>
-    <button class="sb-btn" id="themeToggle" title="라이트/다크 토글">라이트</button>
-    <button class="sb-btn" id="quickFind" title="빠른 검색 (Ctrl+K)">⌘K</button>
-    <button class="sb-btn" id="statusSettings" title="설정 열기">⚙</button>
-  </div>
+  
 
   <!-- ============================================================
        V12 Bento Empty State (shown when no active tabs)
