@@ -166,36 +166,6 @@ if (document.readyState === 'loading') {
   });
 })();
 
-// V38: ESC closes AI overlay; click outside backdrop closes too
-(function setupOverlayClose() {
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      // Close overlay if open
-      if (window.innerWidth <= 1099) {
-        const isClosed = document.body.getAttribute('data-ai-closed') === 'true';
-        if (!isClosed) {
-          document.body.setAttribute('data-ai-closed', 'true');
-          e.preventDefault();
-        }
-      }
-    }
-  });
-  const closeBtn = $('aiOverlayClose');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      document.body.setAttribute('data-ai-closed', 'true');
-    });
-  }
-  // Backdrop click - find backdrop element created dynamically
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth > 1099) return;
-    if (document.body.getAttribute('data-ai-closed') === 'true') return;
-    const backdrop = document.getElementById('aiOverlayBackdrop');
-    if (backdrop && e.target === backdrop) {
-      document.body.setAttribute('data-ai-closed', 'true');
-    }
-  });
-})();
 
   $('railExpand')?.addEventListener('click', toggleLeftPanel);
   $('rightToggle').addEventListener('click', toggleRightPanel);
@@ -5636,12 +5606,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // renderer.js only wires modules together — no DOM manipulation, no key maps.
 (function initV44Modules() {
   const initAll = () => {
+    window.HermesModules?.aiOverlay?.init?.();
     window.HermesModules?.workspacePopover?.init?.();
     window.HermesModules?.textareaAutosize?.init?.({ maxHeight: 92 });
     window.HermesModules?.planToggle?.init?.();
     window.HermesModules?.keyboardShortcuts?.init?.();
 
-    console.log('[V44] Bootstrap complete:', {
+    console.log('[V45] Bootstrap complete:', {
+      aiOverlay: window.HermesModules?.aiOverlay?.getState?.(),
       workspacePopover: window.HermesModules?.workspacePopover?.getState?.(),
       textareaAutosize: window.HermesModules?.textareaAutosize?.getState?.(),
       planToggle: window.HermesModules?.planToggle?.getState?.(),
@@ -5651,6 +5623,17 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAll, { once: true });
   } else {
-    initAll();
+    // Module inline script may load after renderer.js (CSP race).
+    // Retry initAll up to 50 times with 50ms interval to catch late modules.
+    let retries = 0;
+    const tryInit = () => {
+      if (window.HermesModules?.aiOverlay && window.HermesModules?.workspacePopover) {
+        initAll();
+        return;
+      }
+      if (++retries < 50) setTimeout(tryInit, 50);
+      else initAll(); // fallback even if modules not loaded
+    };
+    tryInit();
   }
 })();
