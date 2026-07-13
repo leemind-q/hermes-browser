@@ -1,0 +1,19 @@
+{
+  "renderer_js_bytes": 213967,
+  "renderer_js_lines": 5639,
+  "renderer_functions": 110,
+  "renderer_addEventListener": 135,
+  "renderer_data_ai_closed": 0,
+  "renderer_aiOverlayClose": 0,
+  "renderer_aiOverlayBackdrop": 0,
+  "renderer_setupOverlayClose": 0,
+  "modules": {
+    "plan-toggle": 3680,
+    "index": 481,
+    "textarea-autosize": 2011,
+    "ai-overlay": 6863,
+    "workspace-popover": 4688,
+    "keyboard-shortcuts": 5885
+  },
+  "chrome_html_bytes": 283615
+}

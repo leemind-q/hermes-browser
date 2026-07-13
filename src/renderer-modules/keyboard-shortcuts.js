@@ -55,10 +55,10 @@ window.HermesModules.keyboardShortcuts = (() => {
   // ===== Default handlers =====
 
   function defaultEscapeHandler(e) {
-    // Check AI overlay first
-    const aiOverlay = document.getElementById('aiOverlay');
-    if (aiOverlay && aiOverlay.classList.contains('visible')) {
-      aiOverlay.classList.remove('visible');
+    // AI overlay (delegated to module)
+    const aiOverlayModule = window.HermesModules?.aiOverlay;
+    if (aiOverlayModule && aiOverlayModule.isOpen && aiOverlayModule.isOpen()) {
+      aiOverlayModule.close({ restoreFocus: true });
       return true;
     }
     // Check workspace popover

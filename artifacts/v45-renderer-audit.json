@@ -1,0 +1,23 @@
+{
+  "total_bytes": 208872,
+  "total_lines": 5657,
+  "function_declarations": 110,
+  "const_arrow_iife": 1,
+  "class_declarations": 25,
+  "addEventListener": 138,
+  "MutationObserver": 2,
+  "ResizeObserver": 3,
+  "IntersectionObserver": 0,
+  "setInterval": 8,
+  "setTimeout": 28,
+  "requestAnimationFrame": 1,
+  "direct_style_mutations": 37,
+  "direct_class_mutations": 78,
+  "dataset_mutations": 29,
+  "innerHTML_writes": 18,
+  "textContent_writes": 74,
+  "IPC_calls": 92,
+  "top_level_executable_blocks": 5,
+  "DOMContentLoaded_handlers": 7,
+  "module_init_calls": 4
+}

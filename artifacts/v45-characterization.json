@@ -1,0 +1,158 @@
+{
+  "popover_initial_hidden": {
+    "pass": true,
+    "value": {
+      "display": "none",
+      "aria": "true"
+    }
+  },
+  "popover_open_via_click": {
+    "pass": true,
+    "value": {
+      "popoverDisplay": "block",
+      "triggerAria": "true",
+      "layoutNoShift": 798
+    }
+  },
+  "popover_close_same_click": {
+    "pass": true,
+    "value": {
+      "display": "none"
+    }
+  },
+  "popover_close_esc": {
+    "pass": true,
+    "value": {
+      "display": "none",
+      "focusedId": "workspaceCardTrigger"
+    }
+  },
+  "textarea_empty": {
+    "pass": true,
+    "value": {
+      "h": 40
+    }
+  },
+  "textarea_1line": {
+    "pass": true,
+    "value": {
+      "h": 40
+    }
+  },
+  "textarea_5lines": {
+    "pass": true,
+    "value": {
+      "h": 102
+    }
+  },
+  "textarea_clear_shrinks": {
+    "pass": true,
+    "value": {
+      "h": 40
+    }
+  },
+  "plan_collapsed_default": {
+    "pass": true,
+    "value": {
+      "text": "3\ub2e8\uacc4 \ub354 \ubcf4\uae30",
+      "aria": "false"
+    }
+  },
+  "plan_expand": {
+    "pass": true,
+    "value": {
+      "text": "\uc811\uae30",
+      "aria": "true"
+    }
+  },
+  "plan_collapse_back": {
+    "pass": true,
+    "value": {
+      "text": "3\ub2e8\uacc4 \ub354 \ubcf4\uae30",
+      "aria": "false"
+    }
+  },
+  "left_panel_collapse": {
+    "pass": true,
+    "value": {
+      "appClass": "app left-collapsed",
+      "lpClass": "left floating-panel collapsed"
+    }
+  },
+  "left_panel_restore": {
+    "pass": true,
+    "value": {
+      "appClass": "app",
+      "lpClass": "left floating-panel"
+    }
+  },
+  "statusbar_browser_aligned": {
+    "pass": true,
+    "value": {
+      "statusBarX": 180,
+      "statusBarW": 1000,
+      "browserX": 180,
+      "browserW": 1000,
+      "deltaX": 0
+    }
+  },
+  "overlay_1024_viewport_fit": {
+    "pass": true,
+    "value": {
+      "viewportH": 768,
+      "sendBtnBottom": 734,
+      "fits": true
+    }
+  },
+  "default_visible_count": {
+    "pass": true,
+    "value": 1
+  },
+  "console_errors": {
+    "pass": true,
+    "errors": []
+  },
+  "app_grid_integrity": {
+    "pass": true,
+    "value": {
+      "appChildCount": 12,
+      "parents": [
+        {
+          "id": "leftPanel",
+          "parent": "app"
+        },
+        {
+          "id": "rightPanel",
+          "parent": "app"
+        },
+        {
+          "id": "statusBar",
+          "parent": "app"
+        },
+        {
+          "id": "browser-frame",
+          "parent": "app"
+        },
+        {
+          "id": "rightRail",
+          "parent": "app"
+        }
+      ]
+    }
+  },
+  "ai_overlay_initialized": {
+    "pass": true,
+    "value": true
+  },
+  "ai_overlay_docked_at_1440": {
+    "pass": true,
+    "value": "docked"
+  },
+  "ai_overlay_module_only_owner": {
+    "pass": true,
+    "value": {
+      "hasAttr": false,
+      "moduleOpen": false
+    }
+  }
+}
