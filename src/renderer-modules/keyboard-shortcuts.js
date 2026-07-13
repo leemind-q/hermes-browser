@@ -55,30 +55,10 @@ window.HermesModules.keyboardShortcuts = (() => {
   // ===== Default handlers =====
 
   function defaultEscapeHandler(e) {
-    // AI overlay (delegated to module)
-    const aiOverlayModule = window.HermesModules?.aiOverlay;
-    if (aiOverlayModule && aiOverlayModule.isOpen && aiOverlayModule.isOpen()) {
-      aiOverlayModule.close({ restoreFocus: true });
-      return true;
-    }
-    // Check workspace popover
-    const wsPopover = document.getElementById('workspaceSwitcherPopover');
-    if (wsPopover && wsPopover.style.display === 'block') {
-      wsPopover.style.display = 'none';
-      wsPopover.setAttribute('aria-hidden', 'true');
-      const trigger = document.getElementById('workspaceCardTrigger');
-      if (trigger) {
-        trigger.setAttribute('aria-expanded', 'false');
-        trigger.focus();
-      }
-      return true;
-    }
-    // Check settings popover
-    if (typeof SettingsPopover !== 'undefined' && SettingsPopover.isOpen && SettingsPopover.isOpen()) {
-      SettingsPopover.close();
-      return true;
-    }
-    // Find bar (preserved V41 behavior)
+    // V46: delegate to escapeCoordinator + temporaryUIRegistry (single source)
+    const closed = window.HermesModules?.temporaryUIRegistry?.closeTopmost?.('escape');
+    if (closed) return true;
+    // Fallback: hide find bar (preserved V41 behavior)
     if (typeof hideFindBar === 'function') {
       hideFindBar();
       return true;

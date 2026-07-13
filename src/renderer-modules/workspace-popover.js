@@ -99,14 +99,8 @@ window.HermesModules.workspacePopover = (() => {
       wsName.addEventListener('click', wsNameClick);
     }
 
-    // ESC closes
-    escHandler = (e) => {
-      if (e.key === 'Escape' && popover.style.display === 'block') {
-        hide();
-        if (trigger) trigger.focus();
-      }
-    };
-    document.addEventListener('keydown', escHandler);
+    // V46: ESC delegated to escapeCoordinator (no own listener)
+    escHandler = null;
 
     // Outside click closes
     outsideClickHandler = (e) => {
@@ -121,6 +115,14 @@ window.HermesModules.workspacePopover = (() => {
     // Reposition on resize
     resizeHandler = () => positionPopover();
     window.addEventListener('resize', resizeHandler);
+
+    // V46: register with temporaryUIRegistry for ESC coordination
+    window.HermesModules?.temporaryUIRegistry?.register?.({
+      id: 'workspacePopover',
+      priority: 40,
+      isOpen,
+      close: (opts) => hide(opts),
+    });
   }
 
   function destroy() {
@@ -130,9 +132,7 @@ window.HermesModules.workspacePopover = (() => {
     if (wsName && wsNameClick) {
       wsName.removeEventListener('click', wsNameClick);
     }
-    if (escHandler) {
-      document.removeEventListener('keydown', escHandler);
-    }
+    // escHandler null in V46 (delegated to coordinator)
     if (outsideClickHandler) {
       document.removeEventListener('click', outsideClickHandler);
     }
@@ -147,16 +147,22 @@ window.HermesModules.workspacePopover = (() => {
     escHandler = null;
     outsideClickHandler = null;
     resizeHandler = null;
+    window.HermesModules?.temporaryUIRegistry?.unregister?.('workspacePopover');
     initialized = false;
+  }
+
+  function getPriority() {
+    return 40; // Workspace popover — below AI overlay (60), above settings (30)
   }
 
   function getState() {
     return {
       initialized,
       isOpen: isOpen(),
+      priority: 40,
       hasFocus: document.activeElement === trigger,
     };
   }
 
-  return { init, show, hide, toggle, isOpen, destroy, getState };
+  return { init, show, hide, toggle, isOpen, getPriority, destroy, getState };
 })();

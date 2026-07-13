@@ -1,0 +1,20 @@
+{
+  "renderer_js_bytes": 214460,
+  "renderer_js_lines": 5646,
+  "renderer_functions": 110,
+  "renderer_addEventListener": 135,
+  "renderer_keydown_count": 19,
+  "renderer_SettingsPopover_count": 9,
+  "renderer_console_warn_lines": [],
+  "modules": {
+    "plan-toggle": 3680,
+    "index": 481,
+    "textarea-autosize": 2011,
+    "escape-coordinator": 4000,
+    "ai-overlay": 7528,
+    "workspace-popover": 4974,
+    "settings-popover": 7424,
+    "keyboard-shortcuts": 5182
+  },
+  "chrome_html_bytes": 295289
+}

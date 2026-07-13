@@ -1,51 +1,54 @@
 /**
- * V45 AI Overlay module — REAL OWNERSHIP
+ * V46 aiOverlay module — REAL OWNERSHIP (ESC coordinator integrated)
  *
- * Single source of truth for AI panel's overlay behavior:
- * - 1100px 이하에서 rightPanel이 오버레이로 변환될 때의 toggle 동작
- * - body[data-ai-closed] attribute 제어 (CSS transform trigger)
- * - ESC 키 close
- * - 닫기 버튼 close
- * - backdrop click close (dynamically created)
- * - resize 대응 (1100px 기준 docked/overlay 모드)
- * - 닫은 후 trigger focus 복귀
+ * Single source of truth for AI panel's overlay behavior.
+ * ESC handling delegated to escapeCoordinator (V46). This module only:
+ *   - registers with temporaryUIRegistry
+ *   - exposes isOpen/close/priority
+ *   - manages open/close/toggle UI state
  *
- * docked vs overlay 모드:
- * - docked: width > 1100 → rightPanel은 grid column (CSS only)
- * - overlay-closed: width ≤ 1100 → rightPanel transform: translateX(...)
- * - overlay-open: width ≤ 1100 → rightPanel 정상 위치
+ * docked vs overlay:
+ *   docked: width > 1100 → rightPanel is grid column (CSS only)
+ *   overlay-open: width ≤ 1100 → rightPanel visible
+ *   overlay-closed: width ≤ 1100 → rightPanel transform: translateX(...)
  *
  * Public API:
- *   init(options?)        - mount listeners + initial state
- *   open(options?)        - open overlay
- *   close(options?)       - close overlay + restore focus
- *   toggle(options?)      - toggle open/close
- *   isOpen()              - true if overlay currently visible
- *   getMode()             - 'docked' | 'overlay-open' | 'overlay-closed'
- *   getState()            - { initialized, open, mode, viewportWidth, top, bottom, height, triggerId, focusReturnTarget }
- *   destroy()             - remove all listeners
+ *   init(options?)        — mount listeners + register with registry
+ *   open(options?)        — open overlay (records trigger for focus return)
+ *   close(options?)       — close overlay + restore focus
+ *   toggle(options?)      — toggle open/closed
+ *   isOpen()              — true if overlay currently visible
+ *   getPriority()         — registry priority (60, AI overlay)
+ *   getState()            — full state including viewport fit
+ *   destroy()             — remove listeners + unregister
  *
  * Idempotent: multiple init() safe.
  *
- * Replaces renderer.js L170-198 setupOverlayClose IIFE.
+ * V46 changes:
+ *   - Removed escHandler (ESC delegated to escapeCoordinator)
+ *   - Fixed focusReturnTarget: open(options) records options.trigger or
+ *     document.activeElement that has data-ai-trigger attribute or specific
+ *     AI-trigger class. Falls back to rightRail AI button → body.
+ *   - Added getPriority() for registry coordination
+ *   - Registers itself with temporaryUIRegistry on init
  */
 window.HermesModules = window.HermesModules || {};
 
 window.HermesModules.aiOverlay = (() => {
   let initialized = false;
-  let escHandler = null;
   let closeBtnHandler = null;
   let backdropClickHandler = null;
   let resizeHandler = null;
   let lastTrigger = null;
-  let lastViewportWidth = 0;
 
-  // Configurable
+  const PRIORITY = 60; // AI overlay — higher than workspace/settings
+
   let overlayBreakpoint = 1100;
   let selectors = {
     panel: '#rightPanel',
     closeButton: '#aiOverlayClose',
     backdrop: '#aiOverlayBackdrop',
+    aiTriggerSelector: '[data-action="ai-overlay"], #aiOverlayToggle, #railNewChat, .ai-rail-trigger',
   };
 
   function getMode() {
@@ -59,31 +62,49 @@ window.HermesModules.aiOverlay = (() => {
     return getMode() === 'overlay-open';
   }
 
-  function setOverlayState(open, options = {}) {
-    if (getMode() === 'docked') return; // docked mode: no-op
-    if (!open) {
-      document.body.setAttribute('data-ai-closed', 'true');
-      // Restore focus if requested
-      if (options.restoreFocus && lastTrigger) {
-        lastTrigger.focus();
-      }
-    } else {
-      // Record trigger before opening
-      if (options.trigger) {
-        lastTrigger = options.trigger;
-      } else if (document.activeElement && document.activeElement.id) {
-        lastTrigger = document.activeElement;
-      }
-      document.body.removeAttribute('data-ai-closed');
-    }
+  function getPriority() {
+    return PRIORITY;
   }
 
-  function getTrigger() {
-    return (
-      document.querySelector('[data-action="ai-overlay"]') ||
-      document.getElementById('aiOverlayToggle') ||
-      document.getElementById('railNewChat')
-    );
+  function resolveTrigger(options) {
+    // 1. Explicit option
+    if (options && options.trigger && options.trigger.focus) return options.trigger;
+    // 2. data-ai-trigger attribute anywhere
+    const attrTrigger = document.querySelector('[data-ai-trigger]');
+    if (attrTrigger && attrTrigger.focus) return attrTrigger;
+    // 3. Configured AI trigger selector
+    const selTrigger = document.querySelector(selectors.aiTriggerSelector);
+    if (selTrigger && selTrigger.focus) return selTrigger;
+    // 4. Active element if it's interactive
+    const active = document.activeElement;
+    if (active && (active.tagName === 'BUTTON' || active.tagName === 'A' || active.tagName === 'INPUT')) {
+      return active;
+    }
+    // 5. First matching configured trigger
+    const first = document.querySelector(selectors.aiTriggerSelector);
+    if (first && first.focus) return first;
+    // 6. Body fallback
+    return document.body;
+  }
+
+  function setOverlayState(open, options = {}) {
+    if (getMode() === 'docked') return;
+    if (!open) {
+      document.body.setAttribute('data-ai-closed', 'true');
+      if (options.restoreFocus) {
+        const target = lastTrigger && lastTrigger.focus ? lastTrigger : null;
+        if (target && target !== document.body) {
+          target.focus();
+        } else {
+          // Fallback: try AI trigger selector
+          const fb = document.querySelector(selectors.aiTriggerSelector);
+          if (fb && fb.focus) fb.focus();
+        }
+      }
+    } else {
+      lastTrigger = resolveTrigger(options);
+      document.body.removeAttribute('data-ai-closed');
+    }
   }
 
   function open(options = {}) {
@@ -95,19 +116,8 @@ window.HermesModules.aiOverlay = (() => {
   }
 
   function toggle(options = {}) {
-    if (isOpen()) {
-      close(options);
-    } else {
-      open(options);
-    }
-  }
-
-  function onEsc(e) {
-    if (e.key !== 'Escape') return;
-    if (getMode() !== 'overlay-open') return;
-    // Caller (keyboardShortcuts) decides priority; we only close if we ARE open
-    e.preventDefault();
-    close({ restoreFocus: true });
+    if (isOpen()) close(options);
+    else open(options);
   }
 
   function onCloseBtnClick() {
@@ -124,10 +134,6 @@ window.HermesModules.aiOverlay = (() => {
   }
 
   function onResize() {
-    // Mode change is automatic via CSS media queries.
-    // We only update lastViewportWidth for state reporting.
-    lastViewportWidth = window.innerWidth;
-    // If mode changes from overlay-open → docked, clear data-ai-closed so it doesn't re-trigger
     if (window.innerWidth > overlayBreakpoint) {
       document.body.removeAttribute('data-ai-closed');
     }
@@ -149,27 +155,27 @@ window.HermesModules.aiOverlay = (() => {
     try {
       if (options.overlayBreakpoint) overlayBreakpoint = options.overlayBreakpoint;
       if (options.selectors) selectors = { ...selectors, ...options.selectors };
-      lastViewportWidth = window.innerWidth;
+      if (options.priority !== undefined) {/* read-only PRIORITY */}
 
-      // ESC handler — attached to document so it bubbles before keyboardShortcuts
-      // but we only act when overlay is open
-      escHandler = (e) => onEsc(e);
-      document.addEventListener('keydown', escHandler);
-
-      // Close button
       const closeBtn = document.querySelector(selectors.closeButton);
       if (closeBtn) {
         closeBtnHandler = () => onCloseBtnClick();
         closeBtn.addEventListener('click', closeBtnHandler);
       }
 
-      // Backdrop click
       backdropClickHandler = (e) => onBackdropClick(e);
       document.addEventListener('click', backdropClickHandler);
 
-      // Resize handler
       resizeHandler = () => onResize();
       window.addEventListener('resize', resizeHandler);
+
+      // Register with V46 coordinator registry (no own ESC listener)
+      window.HermesModules?.temporaryUIRegistry?.register?.({
+        id: 'aiOverlay',
+        priority: PRIORITY,
+        isOpen,
+        close: (opts) => close(opts),
+      });
 
       initialized = true;
     } catch (err) {
@@ -179,9 +185,6 @@ window.HermesModules.aiOverlay = (() => {
 
   function destroy() {
     try {
-      if (escHandler) {
-        document.removeEventListener('keydown', escHandler);
-      }
       if (closeBtnHandler) {
         const btn = document.querySelector(selectors.closeButton);
         if (btn) btn.removeEventListener('click', closeBtnHandler);
@@ -192,10 +195,10 @@ window.HermesModules.aiOverlay = (() => {
       if (resizeHandler) {
         window.removeEventListener('resize', resizeHandler);
       }
+      window.HermesModules?.temporaryUIRegistry?.unregister?.('aiOverlay');
     } catch (err) {
       console.error('[aiOverlay] destroy failed:', err);
     }
-    escHandler = null;
     closeBtnHandler = null;
     backdropClickHandler = null;
     resizeHandler = null;
@@ -213,10 +216,11 @@ window.HermesModules.aiOverlay = (() => {
       top: fit.top,
       bottom: fit.bottom,
       height: fit.height,
-      triggerId: lastTrigger?.id || null,
-      focusReturnTarget: lastTrigger?.id || null,
+      priority: PRIORITY,
+      triggerId: lastTrigger && lastTrigger.id ? lastTrigger.id : null,
+      focusReturnTarget: lastTrigger && lastTrigger.id ? lastTrigger.id : null,
     };
   }
 
-  return { init, open, close, toggle, isOpen, getMode, getState, destroy };
+  return { init, open, close, toggle, isOpen, getMode, getPriority, getState, destroy };
 })();
