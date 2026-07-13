@@ -1,0 +1,27 @@
+{
+  "v18Sidebar": {
+    "css_rules": 48,
+    "js_refs": 0,
+    "dom_present": true
+  },
+  "v22-welcome": {
+    "css_rules": 8,
+    "js_refs": 1,
+    "dom_present": true
+  },
+  "v22-quickbar": {
+    "css_rules": 5,
+    "js_refs": 2,
+    "dom_present": true
+  },
+  "v22-menu": {
+    "css_rules": 26,
+    "js_refs": 2,
+    "dom_present": true
+  },
+  "bentoEmpty": {
+    "css_rules": 2,
+    "js_refs": 4,
+    "dom_present": true
+  }
+}

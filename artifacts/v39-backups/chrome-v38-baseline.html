@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self' 'sha256-8McgF5NgFdB9FTmeEU7iJ/7Ji2LlTq4HHjmDLRNT5n4='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
   <title>Miraecle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,7 @@
   padding: 8px 10px;
   margin: 2px 0;
   cursor: pointer;
-  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-spring);
+  transition: all var(--dur-fast) var(--ease-spring);
   border: 1px solid transparent;
 }
 .tabItem:hover, .tab:hover {
@@ -3817,7 +3817,7 @@ mark {
   padding: 10px 12px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
+  transition: all var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .cmdk-item:hover, .cmdk-item.active {
@@ -4156,7 +4156,7 @@ mark {
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
+  transition: all var(--dur-fast) var(--ease-smooth);
 }
 .v23-pill:hover { border-color: var(--gold-line); color: var(--text-primary); }
 .v23-pill.active {
@@ -4187,7 +4187,7 @@ mark {
   background: var(--bg-elevated);
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), transform var(--motion-fast, 100ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--dur-fast) var(--ease-spring);
+  transition: all var(--dur-fast) var(--ease-spring);
 }
 .v23-llm-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-glass); }
 .v23-llm-card.active {
@@ -4422,7 +4422,7 @@ mark {
   padding: 6px 8px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: background-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out), border-color var(--motion-fast, 100ms) var(--ease-smooth, ease-out) var(--dur-fast) var(--ease-smooth);
+  transition: all var(--dur-fast) var(--ease-smooth);
   border: 1px solid transparent;
 }
 .v23-memory-item:hover {
@@ -6460,183 +6460,6 @@ body, button, input, textarea, select,
 #bentoEmpty {
   display: none !important;
 }
-
-/* V39: Focus ring - keyboard only */
-*:focus { outline: none; }
-*:focus-visible {
-  outline: 2px solid var(--accent, #FF6B00) !important;
-  outline-offset: 2px !important;
-}
-.ai-input-wrap:focus-within {
-  border-color: var(--accent, #FF6B00) !important;
-}
-button:focus:not(:focus-visible) { outline: none !important; }
-/* PlanShowMore - subtle */
-#planShowMore, .plan-toggle {
-  border: 1px solid var(--border-subtle, rgba(26,26,46,0.06)) !important;
-  background: transparent !important;
-  font-size: 11px !important;
-  color: var(--text-secondary, #4a4a68) !important;
-  padding: 4px 10px !important;
-  border-radius: 6px !important;
-  transition: background-color var(--motion-fast, 100ms) var(--ease-out, ease-out);
-}
-#planShowMore:hover, .plan-toggle:hover {
-  background: rgba(0,0,0,0.04) !important;
-}
-
-/* V39: Header buttons 32x32 */
-.ai-header-btn {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 6px !important;
-  font-size: 15px !important;
-  line-height: 1 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: var(--text-secondary, #6E6E78) !important;
-  cursor: pointer !important;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-.ai-header-btn:hover { background: rgba(0,0,0,0.05) !important; color: var(--text-strong, #34343C) !important; }
-.ai-header-btn:focus-visible {
-  outline: 2px solid var(--accent, #FF6B00) !important;
-  outline-offset: 1px !important;
-}
-.ai-overlay-close {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 6px !important;
-  font-size: 16px !important;
-  line-height: 1 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: var(--text-secondary, #6E6E78) !important;
-  cursor: pointer !important;
-}
-.ai-overlay-close:hover { background: rgba(239,68,68,0.10) !important; color: #DC2626 !important; }
-.ai-overlay-close:focus-visible {
-  outline: 2px solid var(--accent, #FF6B00) !important;
-  outline-offset: 1px !important;
-}
-.ai-header-actions {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-/* V39: ai-empty-state responsive - data-size lg/md/sm */
-.ai-empty-state {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-  text-align: center;
-  gap: 10px;
-  overflow: hidden;
-}
-.ai-empty-l1, .ai-empty-l2 { display: contents; }
-.ai-empty-state[data-size="md"] .ai-empty-l1 { display: none; }
-.ai-empty-state[data-size="md"] .ai-empty-l2 { display: contents; }
-.ai-empty-state[data-size="sm"] { display: none; }
-.ai-empty-icon { font-size: 28px; line-height: 1; color: var(--accent, #FF6B00); opacity: 0.85; }
-.ai-empty-title { font-size: 13px; font-weight: 600; color: var(--text-strong, #34343C); }
-.ai-empty-title-sm { font-size: 12px; font-weight: 500; color: var(--text-secondary, #6E6E78); }
-.ai-empty-desc { font-size: 11px; color: var(--text-secondary, #6E6E78); line-height: 1.45; max-width: 220px; }
-
-/* V39: ew-icon size + ew-title medium */
-.ew-icon {
-  width: 38px !important;
-  height: 38px !important;
-  color: var(--text-muted, #6E6E78) !important;
-  opacity: 0.6 !important;
-}
-.ew-title {
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: var(--text-strong, #34343C) !important;
-  margin-top: 14px !important;
-}
-.ew-shortcuts {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 4px !important;
-  margin-top: 12px !important;
-  font-size: 11px !important;
-  color: var(--text-muted, #6E6E78) !important;
-}
-
-      /* === V40: Unified design tokens (Windows desktop polish) === */
-      /* Spacing scale: 4, 8, 12, 16, 20, 24 */
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 20px;
-      --space-6: 24px;
-      /* Radius scale: 4, 6, 8, 12 */
-      --radius-xs: 4px;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --radius-pill: 999px;
-      /* Type scale: 11, 12, 13, 14, 16 */
-      --fs-xs: 11px;
-      --fs-sm: 12px;
-      --fs-base: 13px;
-      --fs-md: 14px;
-      --fs-lg: 16px;
-      /* Motion: 100ms hover, 160ms transitions, ease-out */
-      --motion-fast: 100ms;
-      --motion-base: 160ms;
-      --motion-slow: 240ms;
-      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-      /* Neutral text hierarchy (no purple/blue tint) */
-      --text-primary: #1a1a2e;
-      --text-secondary: #4a4a68;
-      --text-tertiary: #80809a;
-      --text-disabled: #a8a8b8;
-      /* Surfaces */
-      --surface-base: #f5f5f7;
-      --surface-1: #ebebef;
-      --surface-2: #e2e2e7;
-      --surface-webview: #ffffff;
-      --border-subtle: rgba(26, 26, 46, 0.06);
-      --border-default: rgba(26, 26, 46, 0.12);
-      --border-strong: rgba(26, 26, 46, 0.20);
-
-/* === V40: Harmonize outliers (Windows desktop polish) === */
-/* Standardize planShowMore font to 11px (rounded from 11.5) */
-#planShowMore, .plan-toggle { font-size: 11px !important; padding: 4px 10px !important; border-radius: 6px !important; }
-/* Standardize rightPanel transition to 160ms */
-#rightPanel { transition: transform var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out) !important; }
-/* Standardize leftPanel transition */
-#leftPanel { transition: width var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out) !important; }
-/* Standardize browser-frame margin transition */
-.browser-frame { transition: margin-right var(--motion-base) var(--ease-out) !important; }
-/* ai-header & ai-empty-state get subtle border-radius for consistency */
-.ai-header { border-radius: var(--radius-md) !important; }
-.ai-empty-state { border-radius: var(--radius-md) !important; }
-/* Standardize category chip + ai-seg-btn to same scale */
-.workspace-tag { font-size: 11px !important; padding: 0 6px !important; border-radius: var(--radius-sm) !important; height: 24px !important; }
-.ai-seg-btn, button.ai-seg-btn { font-size: 11px !important; padding: 0 10px !important; border-radius: var(--radius-sm) !important; height: 28px !important; }
 </style>
 
 
@@ -6779,7 +6602,7 @@ button:focus:not(:focus-visible) { outline: none !important; }
       <!-- Tabs section (fills middle, scrollable) -->
       <div class="sidebar-section sidebar-tabs-section" style="position:relative; left:0; top:auto; flex:0 0 auto;">
         <div class="section-head">
-          <span>탭</span>
+          <span>Tabs</span>
           <span>
             <button class="mini-btn" id="newGroupBtn" title="탭 그룹">⊞</button>
             <button class="mini-btn" id="newTabBtn" title="새 탭">＋</button>
@@ -6848,7 +6671,7 @@ button:focus:not(:focus-visible) { outline: none !important; }
 
       <!-- Sidebar footer (fixed bottom): Profile + Workspace switcher -->
       <div class="sidebar-footer" style="position:relative; left:0; top:auto;">
-        <div class="workspace-switcher" id="workspaceSwitcher" title="Workspace 전환" hidden style="display:none">
+        <div class="workspace-switcher" id="workspaceSwitcher" title="Workspace 전환">
           <div class="ws-avatar">T</div>
           <div class="ws-info">
             <div class="ws-name" id="wsCurrentName">Default</div>
@@ -6858,30 +6681,14 @@ button:focus:not(:focus-visible) { outline: none !important; }
         </div>
       </div>
 
-      <!-- V39: Workspace card trigger (hidden, click workspace-name to show popover) -->
-      <div class="workspace-card" id="workspaceCardTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-controls="workspaceSwitcherPopover">
+      <!-- Workspace tag pills -->
+      <div class="workspace-card">
         <span class="ws-icon">T</span>
         <div class="ws-info">
-          <div class="ws-name" id="workspaceCardName">Default</div>
-          <div class="ws-status"><span class="ws-dot"></span><span id="workspaceCardStatus">오프라인</span></div>
+          <div class="ws-name">Default</div>
+          <div class="ws-status"><span class="ws-dot"></span>오프라인</div>
         </div>
-        <span class="ws-expand">▾</span>
-      </div>
-      <!-- V39: Workspace switcher popover (shown when workspaceCardTrigger is clicked) -->
-      <div class="workspace-popover" id="workspaceSwitcherPopover" role="menu" aria-hidden="true" style="display:none" data-popover-host="leftPanel">
-        <div class="ws-popover-section">
-          <div class="ws-popover-label">현재 워크스페이스</div>
-          <div class="ws-popover-current" id="wsPopoverCurrent">📁 업무</div>
-        </div>
-        <div class="ws-popover-section">
-          <div class="ws-popover-label">다른 워크스페이스</div>
-          <button class="ws-popover-item" data-space="work" role="menuitem" tabindex="-1">💼 업무</button>
-          <button class="ws-popover-item" data-space="personal" role="menuitem" tabindex="-1">🌿 개인</button>
-        </div>
-        <div class="ws-popover-section">
-          <button class="ws-popover-item" data-action="new" role="menuitem" tabindex="-1">+ 새 워크스페이스</button>
-          <button class="ws-popover-item" data-action="manage" role="menuitem" tabindex="-1">⚙ 워크스페이스 관리</button>
-        </div>
+        <button class="ws-switch" id="workspaceSwitchBtn">전환</button>
       </div>
       <div class="workspace-tags" id="workspaceTagsContainer" style="position:relative; left:0; top:auto;"></div>
 </div>
@@ -6940,7 +6747,7 @@ button:focus:not(:focus-visible) { outline: none !important; }
 
       <!-- === Status Section === -->
       <div class="ai-status">
-        <div class="ai-status-label">현재 목표</div>
+        <div class="ai-status-label">Current Goal</div>
         <div class="ai-status-goal" id="currentGoal" title="클릭하여 편집">목표만 입력하세요. Miraecle이 계획하고 실행합니다.</div>
         <input id="goalEditInput" type="text" placeholder="목표를 입력하고 Enter..." />
         <div class="ai-steps" id="planList"></div>
@@ -6959,7 +6766,7 @@ button:focus:not(:focus-visible) { outline: none !important; }
       <!-- === Chat Area === -->
       <div class="ai-chat">
         <div class="ai-chat-header">
-          <span class="ai-chat-title">채팅</span>
+          <span class="ai-chat-title">Chat</span>
           <div class="ai-chat-actions">
             <button class="ai-chat-btn" id="planToggle" title="계획 펼치기">⌄</button>
             <button class="ai-chat-btn" id="clearChat" title="채팅 지우기">✕</button>
@@ -7061,8 +6868,8 @@ button:focus:not(:focus-visible) { outline: none !important; }
   </div>
 
   <div class="side-sheet" id="memoryModal"><div class="sheet-card">
-    <h2>메모리</h2>
-    <div class="field"><label>Type</label><select id="memoryType"><option value="profile">Profile</option><option value="preferences">Preferences</option><option value="tasks">작업</option><option value="workspace">Workspace</option></select></div>
+    <h2>Memory</h2>
+    <div class="field"><label>Type</label><select id="memoryType"><option value="profile">Profile</option><option value="preferences">Preferences</option><option value="tasks">Tasks</option><option value="workspace">Workspace</option></select></div>
     <div class="field"><label>Markdown</label><textarea id="memoryText" rows="12"></textarea></div>
     <div class="sheet-actions"><button class="secondary" id="memoryCancel">닫기</button><button class="primary" id="memorySave">저장</button></div>
   </div></div>
@@ -7125,352 +6932,6 @@ button:focus:not(:focus-visible) { outline: none !important; }
   <!-- V12 loading progress bar -->
   <div class="progress-bar" id="progressBar"></div>
 
-<script>
-/**
- * V42 Module loader
- *
- * Loads all V42 modules. Modules are exposed via window.HermesModules.* namespace.
- * This file is loaded BEFORE renderer.js so modules are available.
- *
- * Individual modules self-register; they do NOT auto-init.
- * Renderer.js is responsible for calling module.init() at appropriate time.
- */
-(function() {
-  'use strict';
-  if (window.HermesModules) {
-    // Already loaded — skip duplicate init
-    return;
-  }
-  window.HermesModules = {};
-})();
-
-/**
- * V43 textareaAutosize module — REAL OWNERSHIP
- *
- * Single source of truth for promptInput autosize.
- * renderer.js no longer mutates textarea.style.height directly.
- *
- * Public API:
- *   init(options)  - mount input listener + initial sizing
- *   resize()       - force remeasure (replaces old autoResizePrompt())
- *   destroy()      - remove listener, disconnect observer
- *   getState()     - { initialized, observerActive, currentHeight }
- *
- * Idempotent: multiple init() safe.
- */
-window.HermesModules = window.HermesModules || {};
-
-window.HermesModules.textareaAutosize = (() => {
-  let initialized = false;
-  let textarea = null;
-  let observer = null;
-  let currentHeight = 0;
-  const MAX_HEIGHT = 92;
-
-  function getTextarea() {
-    if (textarea && document.body.contains(textarea)) return textarea;
-    textarea = document.getElementById('promptInput');
-    return textarea;
-  }
-
-  function resize() {
-    const t = getTextarea();
-    if (!t) return;
-    t.style.height = 'auto';
-    const next = Math.min(t.scrollHeight, MAX_HEIGHT);
-    t.style.height = next + 'px';
-    currentHeight = next;
-  }
-
-  function init(options = {}) {
-    if (initialized) return;
-    const t = getTextarea();
-    if (!t) return;
-    initialized = true;
-
-    // Single input listener — replaces renderer.js's L294 addEventListener
-    t.addEventListener('input', resize);
-    // Initial measure
-    resize();
-  }
-
-  function destroy() {
-    const t = getTextarea();
-    if (t && initialized) {
-      // Best-effort remove — capture can't easily get original fn reference
-      // but the t.addEventListener('input', resize) with named fn allows removal
-      t.removeEventListener('input', resize);
-    }
-    if (textarea) textarea.style.height = '';
-    textarea = null;
-    currentHeight = 0;
-    initialized = false;
-  }
-
-  function getState() {
-    return {
-      initialized,
-      textareaAttached: !!getTextarea(),
-      currentHeight,
-    };
-  }
-
-  return { init, resize, destroy, getState };
-})();
-
-/**
- * V43 planToggle module — REAL OWNERSHIP
- *
- * Single source of truth for planList expand/collapse.
- * Replaces V41 setupPlanToggle IIFE in renderer.js.
- *
- * Public API:
- *   init()        - mount click handler on planShowMore
- *   toggle()      - programmatic toggle (used by tests/UI)
- *   expand()      - force expand
- *   collapse()    - force collapse
- *   destroy()     - remove handler
- *   getState()    - { initialized, isExpanded, itemCount }
- *
- * Idempotent: multiple init() safe.
- *
- * Replaces renderer.js L200-245 IIFE setupPlanToggle().
- */
-window.HermesModules = window.HermesModules || {};
-
-window.HermesModules.planToggle = (() => {
-  let initialized = false;
-  let btn = null;
-  let list = null;
-  let onClick = null;
-  let mutationObserver = null;
-  let isExpanded = false;
-
-  function applyPlanVisibility() {
-    if (!btn || !list) return;
-    const items = Array.from(list.querySelectorAll('.plan-item, .step, li, .ai-step'));
-    if (items.length === 0) {
-      btn.style.display = 'none';
-      return;
-    }
-    btn.style.display = '';
-    if (isExpanded) {
-      items.forEach(el => el.style.display = '');
-      return;
-    }
-    // Collapsed: show 3 items centered on current step
-    const currentIdx = items.findIndex(el =>
-      el.classList.contains('is-current') ||
-      el.classList.contains('active') ||
-      el.classList.contains('current')
-    );
-    let centerIdx = currentIdx === -1 ? 0 : currentIdx;
-    const start = Math.max(0, Math.min(items.length - 3, centerIdx - 1));
-    const end = Math.min(items.length, start + 3);
-    items.forEach((el, i) => {
-      el.style.display = (i >= start && i < end) ? '' : 'none';
-    });
-  }
-
-  function refreshAria() {
-    if (!btn) return;
-    btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-    btn.textContent = isExpanded ? '접기' : '3단계 더 보기';
-    btn.dataset.collapsed = isExpanded ? 'false' : 'true';
-  }
-
-  function toggle() {
-    if (!btn) return;
-    isExpanded = !isExpanded;
-    if (list) list.dataset.expanded = isExpanded ? 'true' : 'false';
-    refreshAria();
-    applyPlanVisibility();
-  }
-
-  function expand() {
-    if (!btn || isExpanded) return;
-    isExpanded = true;
-    if (list) list.dataset.expanded = 'true';
-    refreshAria();
-    applyPlanVisibility();
-  }
-
-  function collapse() {
-    if (!btn || !isExpanded) return;
-    isExpanded = false;
-    if (list) list.dataset.expanded = 'false';
-    refreshAria();
-    applyPlanVisibility();
-  }
-
-  function init() {
-    if (initialized) return;
-    btn = document.getElementById('planShowMore');
-    list = document.getElementById('planList');
-    if (!btn || !list) return;
-    initialized = true;
-
-    // Initial state from DOM
-    isExpanded = list.dataset.expanded === 'true';
-    refreshAria();
-    applyPlanVisibility();
-
-    // Click handler (single source of truth)
-    onClick = () => toggle();
-    btn.addEventListener('click', onClick);
-
-    // Mutation observer (items added/removed)
-    mutationObserver = new MutationObserver(applyPlanVisibility);
-    mutationObserver.observe(list, { childList: true });
-  }
-
-  function destroy() {
-    if (btn && onClick) {
-      btn.removeEventListener('click', onClick);
-    }
-    if (mutationObserver) {
-      mutationObserver.disconnect();
-      mutationObserver = null;
-    }
-    btn = null;
-    list = null;
-    onClick = null;
-    isExpanded = false;
-    initialized = false;
-  }
-
-  function getState() {
-    return {
-      initialized,
-      isExpanded,
-      itemCount: list ? list.querySelectorAll('.plan-item, .step, li, .ai-step').length : 0,
-    };
-  }
-
-  return { init, toggle, expand, collapse, destroy, getState };
-})();
-
-/**
- * V43 keyboardShortcuts module — REAL OWNERSHIP
- *
- * Single source of truth for global keyboard shortcuts.
- * Replaces renderer.js's handleGlobalShortcuts() function and
- * `document.addEventListener('keydown', handleGlobalShortcuts)` registration.
- *
- * Public API:
- *   init({ handlers })   - mount window keydown listener
- *   register(key, fn)    - add or replace a shortcut handler
- *   unregister(key)      - remove a shortcut handler
- *   destroy()             - remove all handlers + listener
- *   getState()             - { initialized, handlersCount }
- *
- * Idempotent: multiple init() safe.
- *
- * Replaces renderer.js L324 addEventListener + L391 function handleGlobalShortcuts.
- */
-window.HermesModules = window.HermesModules || {};
-
-window.HermesModules.keyboardShortcuts = (() => {
-  let initialized = false;
-  let handlers = {};
-  let onKeyDown = null;
-  let windowListener = null;
-  let documentListener = null;
-
-  function isMac() {
-    return navigator.platform.toLowerCase().includes('mac');
-  }
-
-  function buildCombo(e) {
-    if (e.ctrlKey || e.metaKey) {
-      return (isMac() && e.metaKey ? 'cmd+' : 'ctrl+') +
-        (e.shiftKey ? 'shift+' : '') +
-        (e.altKey ? 'alt+' : '') +
-        e.key.toLowerCase();
-    }
-    if (e.altKey && !e.ctrlKey && !e.metaKey) {
-      return 'alt+' + e.key.toLowerCase();
-    }
-    return e.key;
-  }
-
-  function dispatch(e) {
-    // Plain Escape (no modifier)
-    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      const fn = handlers['Escape'];
-      if (fn) {
-        const result = fn(e);
-        if (result !== false) e.preventDefault();
-        return;
-      }
-    }
-    // Cmd/Ctrl combos
-    if (e.ctrlKey || e.metaKey || e.altKey) {
-      const combo = buildCombo(e);
-      if (combo && handlers[combo]) {
-        const result = handlers[combo](e);
-        if (result !== false) e.preventDefault();
-        return;
-      }
-    }
-    // F12 alone
-    if (e.key === 'F12' && !e.ctrlKey && !e.metaKey) {
-      const fn = handlers['F12'];
-      if (fn) {
-        const result = fn(e);
-        if (result !== false) e.preventDefault();
-      }
-    }
-  }
-
-  function init(options = {}) {
-    if (initialized) return;
-    handlers = options.handlers || {};
-
-    // Window-level listener (F12, Ctrl-based)
-    onKeyDown = (e) => dispatch(e);
-    window.addEventListener('keydown', onKeyDown);
-    windowListener = onKeyDown;
-
-    initialized = true;
-  }
-
-  function register(key, fn) {
-    if (typeof fn !== 'function') return;
-    handlers[key] = fn;
-  }
-
-  function unregister(key) {
-    delete handlers[key];
-  }
-
-  function destroy() {
-    if (windowListener) {
-      window.removeEventListener('keydown', windowListener);
-    }
-    if (documentListener) {
-      document.removeEventListener('keydown', documentListener);
-    }
-    onKeyDown = null;
-    windowListener = null;
-    documentListener = null;
-    handlers = {};
-    initialized = false;
-  }
-
-  function getState() {
-    return {
-      initialized,
-      handlersCount: Object.keys(handlers).length,
-      keys: Object.keys(handlers),
-    };
-  }
-
-  return { init, register, unregister, destroy, getState };
-})();
-
-
-</script>
 <script src="renderer.js"></script>
 
   <!-- V13 Command palette (Cmd+K) -->

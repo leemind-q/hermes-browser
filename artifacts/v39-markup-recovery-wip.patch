@@ -1,0 +1,427 @@
+diff --git a/docs/screenshots/v38-FINAL-1024.png b/docs/screenshots/v38-FINAL-1024.png
+deleted file mode 100644
+index a7b7c3a..0000000
+Binary files a/docs/screenshots/v38-FINAL-1024.png and /dev/null differ
+diff --git a/docs/screenshots/v38-FINAL-1280.png b/docs/screenshots/v38-FINAL-1280.png
+deleted file mode 100644
+index 5ce3fbc..0000000
+Binary files a/docs/screenshots/v38-FINAL-1280.png and /dev/null differ
+diff --git a/docs/screenshots/v38-FINAL-1440.png b/docs/screenshots/v38-FINAL-1440.png
+deleted file mode 100644
+index f0d4f33..0000000
+Binary files a/docs/screenshots/v38-FINAL-1440.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1024-overlay-closed.png b/docs/screenshots/v38r-20260713_145701-1024-overlay-closed.png
+deleted file mode 100644
+index efed7b7..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1024-overlay-closed.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1024-overlay-open.png b/docs/screenshots/v38r-20260713_145701-1024-overlay-open.png
+deleted file mode 100644
+index 0e29514..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1024-overlay-open.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1100.png b/docs/screenshots/v38r-20260713_145701-1100.png
+deleted file mode 100644
+index 544753e..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1100.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1280.png b/docs/screenshots/v38r-20260713_145701-1280.png
+deleted file mode 100644
+index 9db449b..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1280.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1440-input5.png b/docs/screenshots/v38r-20260713_145701-1440-input5.png
+deleted file mode 100644
+index 7251bfa..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1440-input5.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1440-longgoal.png b/docs/screenshots/v38r-20260713_145701-1440-longgoal.png
+deleted file mode 100644
+index 0dcfc98..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1440-longgoal.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1440-tabs0.png b/docs/screenshots/v38r-20260713_145701-1440-tabs0.png
+deleted file mode 100644
+index 43b6ad3..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1440-tabs0.png and /dev/null differ
+diff --git a/docs/screenshots/v38r-20260713_145701-1440-tabs5.png b/docs/screenshots/v38r-20260713_145701-1440-tabs5.png
+deleted file mode 100644
+index 0dcfc98..0000000
+Binary files a/docs/screenshots/v38r-20260713_145701-1440-tabs5.png and /dev/null differ
+diff --git a/src/chrome.html b/src/chrome.html
+index 82766d4..4bcf8c9 100755
+--- a/src/chrome.html
++++ b/src/chrome.html
+@@ -6109,7 +6109,7 @@ div.browser-frame {
+   font-weight: 500 !important;
+ }
+ /* V38: Default workspace card compact (48px, 2-line max) */
+-#leftPanel .workspace-card {
++#leftPanel .workspace-card:not(#workspaceCardTrigger) {
+   height: 48px !important;
+   min-height: 48px !important;
+   max-height: 50px !important;
+@@ -6460,6 +6460,127 @@ body, button, input, textarea, select,
+ #bentoEmpty {
+   display: none !important;
+ }
++
++/* V39: Focus ring - keyboard only */
++*:focus { outline: none; }
++*:focus-visible {
++  outline: 2px solid var(--accent, #FF6B00) !important;
++  outline-offset: 2px !important;
++}
++.ai-input-wrap:focus-within {
++  border-color: var(--accent, #FF6B00) !important;
++}
++button:focus:not(:focus-visible) { outline: none !important; }
++/* PlanShowMore - subtle */
++#planShowMore, .plan-toggle {
++  border: 1px solid var(--border-soft, rgba(0,0,0,0.06)) !important;
++  background: transparent !important;
++  font-size: 11.5px !important;
++  color: var(--text-secondary, #6E6E78) !important;
++  padding: 4px 10px !important;
++  border-radius: 6px !important;
++}
++#planShowMore:hover, .plan-toggle:hover {
++  background: rgba(0,0,0,0.04) !important;
++}
++
++/* V39: Header buttons 32x32 */
++.ai-header-btn {
++  width: 32px !important;
++  height: 32px !important;
++  min-width: 32px !important;
++  min-height: 32px !important;
++  display: inline-flex !important;
++  align-items: center !important;
++  justify-content: center !important;
++  border-radius: 6px !important;
++  font-size: 15px !important;
++  line-height: 1 !important;
++  padding: 0 !important;
++  border: 0 !important;
++  background: transparent !important;
++  color: var(--text-secondary, #6E6E78) !important;
++  cursor: pointer !important;
++  transition: background 0.15s, color 0.15s;
++  flex-shrink: 0;
++}
++.ai-header-btn:hover { background: rgba(0,0,0,0.05) !important; color: var(--text-strong, #34343C) !important; }
++.ai-header-btn:focus-visible {
++  outline: 2px solid var(--accent, #FF6B00) !important;
++  outline-offset: 1px !important;
++}
++.ai-overlay-close {
++  width: 32px !important;
++  height: 32px !important;
++  min-width: 32px !important;
++  min-height: 32px !important;
++  display: inline-flex !important;
++  align-items: center !important;
++  justify-content: center !important;
++  border-radius: 6px !important;
++  font-size: 16px !important;
++  line-height: 1 !important;
++  padding: 0 !important;
++  border: 0 !important;
++  background: transparent !important;
++  color: var(--text-secondary, #6E6E78) !important;
++  cursor: pointer !important;
++}
++.ai-overlay-close:hover { background: rgba(239,68,68,0.10) !important; color: #DC2626 !important; }
++.ai-overlay-close:focus-visible {
++  outline: 2px solid var(--accent, #FF6B00) !important;
++  outline-offset: 1px !important;
++}
++.ai-header-actions {
++  display: flex !important;
++  align-items: center !important;
++  gap: 4px !important;
++}
++
++/* V39: ai-empty-state responsive - data-size lg/md/sm */
++.ai-empty-state {
++  flex: 1;
++  min-height: 0;
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  justify-content: center;
++  padding: 24px 16px;
++  text-align: center;
++  gap: 10px;
++  overflow: hidden;
++}
++.ai-empty-l1, .ai-empty-l2 { display: contents; }
++.ai-empty-state[data-size="md"] .ai-empty-l1 { display: none; }
++.ai-empty-state[data-size="md"] .ai-empty-l2 { display: contents; }
++.ai-empty-state[data-size="sm"] { display: none; }
++.ai-empty-icon { font-size: 28px; line-height: 1; color: var(--accent, #FF6B00); opacity: 0.85; }
++.ai-empty-title { font-size: 13px; font-weight: 600; color: var(--text-strong, #34343C); }
++.ai-empty-title-sm { font-size: 12px; font-weight: 500; color: var(--text-secondary, #6E6E78); }
++.ai-empty-desc { font-size: 11.5px; color: var(--text-secondary, #6E6E78); line-height: 1.45; max-width: 220px; }
++
++/* V39: ew-icon size + ew-title medium */
++.ew-icon {
++  width: 38px !important;
++  height: 38px !important;
++  color: var(--text-muted, #6E6E78) !important;
++  opacity: 0.6 !important;
++}
++.ew-title {
++  font-size: 14px !important;
++  font-weight: 500 !important;
++  color: var(--text-strong, #34343C) !important;
++  margin-top: 14px !important;
++}
++.ew-shortcuts {
++  display: flex !important;
++  flex-direction: column !important;
++  align-items: center !important;
++  gap: 4px !important;
++  margin-top: 12px !important;
++  font-size: 11.5px !important;
++  color: var(--text-muted, #6E6E78) !important;
++}
+ </style>
+ 
+ 
+@@ -6602,7 +6723,7 @@ body, button, input, textarea, select,
+       <!-- Tabs section (fills middle, scrollable) -->
+       <div class="sidebar-section sidebar-tabs-section" style="position:relative; left:0; top:auto; flex:0 0 auto;">
+         <div class="section-head">
+-          <span>Tabs</span>
++          <span>탭</span>
+           <span>
+             <button class="mini-btn" id="newGroupBtn" title="탭 그룹">⊞</button>
+             <button class="mini-btn" id="newTabBtn" title="새 탭">＋</button>
+@@ -6681,14 +6802,30 @@ body, button, input, textarea, select,
+         </div>
+       </div>
+ 
+-      <!-- Workspace tag pills -->
+-      <div class="workspace-card">
++      <!-- V39: Workspace card trigger (hidden, click workspace-name to show popover) -->
++      <div class="workspace-card" id="workspaceCardTrigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-controls="workspaceSwitcherPopover">
+         <span class="ws-icon">T</span>
+         <div class="ws-info">
+-          <div class="ws-name">Default</div>
+-          <div class="ws-status"><span class="ws-dot"></span>오프라인</div>
++          <div class="ws-name" id="workspaceCardName">Default</div>
++          <div class="ws-status"><span class="ws-dot"></span><span id="workspaceCardStatus">오프라인</span></div>
++        </div>
++        <span class="ws-expand">▾</span>
++      </div>
++      <!-- V39: Workspace switcher popover (shown when workspaceCardTrigger is clicked) -->
++      <div class="workspace-popover" id="workspaceSwitcherPopover" role="menu" aria-hidden="true" style="display:none" data-popover-host="leftPanel">
++        <div class="ws-popover-section">
++          <div class="ws-popover-label">현재 워크스페이스</div>
++          <div class="ws-popover-current" id="wsPopoverCurrent">📁 업무</div>
++        </div>
++        <div class="ws-popover-section">
++          <div class="ws-popover-label">다른 워크스페이스</div>
++          <button class="ws-popover-item" data-space="work" role="menuitem" tabindex="-1">💼 업무</button>
++          <button class="ws-popover-item" data-space="personal" role="menuitem" tabindex="-1">🌿 개인</button>
++        </div>
++        <div class="ws-popover-section">
++          <button class="ws-popover-item" data-action="new" role="menuitem" tabindex="-1">+ 새 워크스페이스</button>
++          <button class="ws-popover-item" data-action="manage" role="menuitem" tabindex="-1">⚙ 워크스페이스 관리</button>
+         </div>
+-        <button class="ws-switch" id="workspaceSwitchBtn">전환</button>
+       </div>
+       <div class="workspace-tags" id="workspaceTagsContainer" style="position:relative; left:0; top:auto;"></div>
+ </div>
+@@ -6747,7 +6884,7 @@ body, button, input, textarea, select,
+ 
+       <!-- === Status Section === -->
+       <div class="ai-status">
+-        <div class="ai-status-label">Current Goal</div>
++        <div class="ai-status-label">현재 목표</div>
+         <div class="ai-status-goal" id="currentGoal" title="클릭하여 편집">목표만 입력하세요. Miraecle이 계획하고 실행합니다.</div>
+         <input id="goalEditInput" type="text" placeholder="목표를 입력하고 Enter..." />
+         <div class="ai-steps" id="planList"></div>
+@@ -6766,7 +6903,7 @@ body, button, input, textarea, select,
+       <!-- === Chat Area === -->
+       <div class="ai-chat">
+         <div class="ai-chat-header">
+-          <span class="ai-chat-title">Chat</span>
++          <span class="ai-chat-title">채팅</span>
+           <div class="ai-chat-actions">
+             <button class="ai-chat-btn" id="planToggle" title="계획 펼치기">⌄</button>
+             <button class="ai-chat-btn" id="clearChat" title="채팅 지우기">✕</button>
+@@ -6868,8 +7005,8 @@ body, button, input, textarea, select,
+   </div>
+ 
+   <div class="side-sheet" id="memoryModal"><div class="sheet-card">
+-    <h2>Memory</h2>
+-    <div class="field"><label>Type</label><select id="memoryType"><option value="profile">Profile</option><option value="preferences">Preferences</option><option value="tasks">Tasks</option><option value="workspace">Workspace</option></select></div>
++    <h2>메모리</h2>
++    <div class="field"><label>Type</label><select id="memoryType"><option value="profile">Profile</option><option value="preferences">Preferences</option><option value="tasks">작업</option><option value="workspace">Workspace</option></select></div>
+     <div class="field"><label>Markdown</label><textarea id="memoryText" rows="12"></textarea></div>
+     <div class="sheet-actions"><button class="secondary" id="memoryCancel">닫기</button><button class="primary" id="memorySave">저장</button></div>
+   </div></div>
+diff --git a/src/renderer.js b/src/renderer.js
+index 46f37d5..dfd868b 100755
+--- a/src/renderer.js
++++ b/src/renderer.js
+@@ -5614,3 +5614,163 @@ function getCurrentLlmName() {
+     return (sel && sel.selectedOptions && sel.selectedOptions[0] && sel.selectedOptions[0].text) || 'unknown';
+   } catch (e) { return 'unknown'; }
+ }
++
++/* === V39: AI empty state responsive === */
++window.__updateAiEmptyState = function() {
++  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
++  const empty = document.querySelector('.ai-empty-state');
++  if (!chat || !empty) return;
++  
++  // Hide if any chat message exists
++  const messages = chat.querySelectorAll('.chat-msg, .ai-msg, .chat-message');
++  if (messages.length > 0) {
++    empty.style.display = 'none';
++    return;
++  } else {
++    empty.style.display = '';
++  }
++  
++  // Measure available height
++  const r = chat.getBoundingClientRect();
++  const h = r.height;
++  if (h < 120) {
++    empty.setAttribute('data-size', 'sm');
++  } else if (h < 220) {
++    empty.setAttribute('data-size', 'md');
++  } else {
++    empty.setAttribute('data-size', 'lg');
++  }
++};
++
++if (window.__aiEmptyObs) {
++  try { window.__aiEmptyObs.disconnect(); } catch(e) {}
++}
++window.__aiEmptyObs = new ResizeObserver(() => {
++  window.__updateAiEmptyState();
++});
++document.addEventListener('DOMContentLoaded', () => {
++  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
++  if (chat) window.__aiEmptyObs.observe(chat);
++  // Initial update
++  setTimeout(() => window.__updateAiEmptyState(), 100);
++  setTimeout(() => window.__updateAiEmptyState(), 500);
++});
++// Also call on window resize
++window.addEventListener('resize', () => window.__updateAiEmptyState());
++// Observe chat content for messages added
++const chatObs = new MutationObserver(() => window.__updateAiEmptyState());
++document.addEventListener('DOMContentLoaded', () => {
++  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
++  if (chat) chatObs.observe(chat, { childList: true, subtree: true });
++});
++
++
++
++
++/* === V39: Force-hide workspaceCardTrigger + setup popover === */
++document.addEventListener('DOMContentLoaded', () => {
++  const trigger = document.getElementById('workspaceCardTrigger');
++  if (trigger) {
++    trigger.style.setProperty('display', 'none', 'important');
++  }
++  
++  const wsToggle = document.getElementById('wsDropdownToggle');
++  const wsPopover = document.getElementById('workspacePopover');
++  if (!wsToggle || !wsPopover) return;
++  
++  wsToggle.addEventListener('click', (e) => {
++    e.stopPropagation();
++    const isOpen = wsPopover.style.display === 'block';
++    wsPopover.style.display = isOpen ? 'none' : 'block';
++  });
++  
++  document.addEventListener('click', (e) => {
++    if (!wsPopover.contains(e.target) && e.target !== wsToggle && !wsToggle.contains(e.target)) {
++      wsPopover.style.display = 'none';
++    }
++  });
++});
++
++// === V39: Workspace popover toggle ===
++document.addEventListener('DOMContentLoaded', () => {
++  const trigger = document.getElementById('workspaceCardTrigger');
++  const popover = document.getElementById('workspaceSwitcherPopover');
++  const wsName = document.getElementById('wsDropdownToggle');
++  if (!trigger || !popover) return;
++  
++  // Popover positioning helper
++  function positionPopover() {
++    if (popover.style.display === 'none' || popover.style.display === '') return;
++    const r = trigger.getBoundingClientRect();
++    const lp = document.getElementById('leftPanel');
++    const lpR = lp ? lp.getBoundingClientRect() : null;
++    popover.style.left = (r.right + 8) + 'px';
++    popover.style.top = r.top + 'px';
++    // If popover would overflow right edge, flip to left side
++    if (r.right + 8 + 200 > window.innerWidth) {
++      popover.style.left = (r.left - 200 - 8) + 'px';
++    }
++  }
++  
++  function showPopover() {
++    popover.style.display = 'block';
++    popover.setAttribute('aria-hidden', 'false');
++    trigger.setAttribute('aria-expanded', 'true');
++    positionPopover();
++  }
++  function hidePopover() {
++    popover.style.display = 'none';
++    popover.setAttribute('aria-hidden', 'true');
++    trigger.setAttribute('aria-expanded', 'false');
++  }
++  function togglePopover() {
++    if (popover.style.display === 'block') {
++      hidePopover();
++    } else {
++      showPopover();
++    }
++  }
++  
++  // Click on workspaceCardTrigger OR on the wsDropdownToggle (the existing workspace-name in sidebar header)
++  if (trigger) trigger.addEventListener('click', togglePopover);
++  if (wsName) wsName.addEventListener('click', (e) => {
++    e.stopPropagation();
++    togglePopover();
++  });
++  
++  // ESC closes
++  document.addEventListener('keydown', (e) => {
++    if (e.key === 'Escape' && popover.style.display === 'block') {
++      hidePopover();
++      if (trigger) trigger.focus();
++    }
++  });
++  
++  // Outside click closes
++  document.addEventListener('click', (e) => {
++    if (popover.style.display !== 'block') return;
++    if (popover.contains(e.target)) return;
++    if (trigger && trigger.contains(e.target)) return;
++    if (wsName && wsName.contains(e.target)) return;
++    hidePopover();
++  });
++  
++  // Reposition on resize
++  window.addEventListener('resize', positionPopover);
++});
++
++// === V39: ai-empty-state responsive (data-size attribute) ===
++document.addEventListener('DOMContentLoaded', () => {
++  const aiBody = document.querySelector('.ai-empty-state')?.parentElement;
++  if (!aiBody) return;
++  const empty = document.querySelector('.ai-empty-state');
++  if (!empty) return;
++  
++  const observer = new ResizeObserver(() => {
++    const h = aiBody.offsetHeight;
++    if (h >= 220) empty.setAttribute('data-size', 'lg');
++    else if (h >= 120) empty.setAttribute('data-size', 'md');
++    else empty.setAttribute('data-size', 'sm');
++  });
++  observer.observe(aiBody);
++});

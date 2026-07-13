@@ -1,0 +1,16 @@
+{
+  "commit": "f950205",
+  "chrome_html_bytes": 258968,
+  "renderer_js_bytes": 212659,
+  "renderer_js_lines": 5759,
+  "renderer_functions": 113,
+  "addEventListener_count": 145,
+  "ResizeObserver_count": 3,
+  "MutationObserver_count": 3,
+  "IntersectionObserver_count": 0,
+  "setInterval_count": 8,
+  "setTimeout_count": 28,
+  "transition_all_count": 24,
+  "main_js_bytes": 80999,
+  "preload_js_bytes": 7651
+}
