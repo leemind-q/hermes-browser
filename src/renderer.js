@@ -2061,7 +2061,14 @@ function hideSheet(id) {
 function toggleLeftPanel() {
   const app = $('app'); const panel = $('leftPanel');
   panel.classList.toggle('collapsed'); app.classList.toggle('left-collapsed');
-  window.hermes.browser.toggleLeftPanel();
+  // Notify main process (best-effort, may not be registered in some contexts)
+  try {
+    if (window.hermes && window.hermes.browser && window.hermes.browser.toggleLeftPanel) {
+      window.hermes.browser.toggleLeftPanel();
+    }
+  } catch (e) {
+    // CSS toggle already applied — silent fallback
+  }
 }
 function toggleRightPanel() {
   const app = $('app'); const panel = $('rightPanel');
@@ -5614,3 +5621,139 @@ function getCurrentLlmName() {
     return (sel && sel.selectedOptions && sel.selectedOptions[0] && sel.selectedOptions[0].text) || 'unknown';
   } catch (e) { return 'unknown'; }
 }
+
+/* === V39: AI empty state responsive === */
+window.__updateAiEmptyState = function() {
+  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
+  const empty = document.querySelector('.ai-empty-state');
+  if (!chat || !empty) return;
+  
+  // Hide if any chat message exists
+  const messages = chat.querySelectorAll('.chat-msg, .ai-msg, .chat-message');
+  if (messages.length > 0) {
+    empty.style.display = 'none';
+    return;
+  } else {
+    empty.style.display = '';
+  }
+  
+  // Measure available height
+  const r = chat.getBoundingClientRect();
+  const h = r.height;
+  if (h < 120) {
+    empty.setAttribute('data-size', 'sm');
+  } else if (h < 220) {
+    empty.setAttribute('data-size', 'md');
+  } else {
+    empty.setAttribute('data-size', 'lg');
+  }
+};
+
+if (window.__aiEmptyObs) {
+  try { window.__aiEmptyObs.disconnect(); } catch(e) {}
+}
+window.__aiEmptyObs = new ResizeObserver(() => {
+  window.__updateAiEmptyState();
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
+  if (chat) window.__aiEmptyObs.observe(chat);
+  // Initial update
+  setTimeout(() => window.__updateAiEmptyState(), 100);
+  setTimeout(() => window.__updateAiEmptyState(), 500);
+});
+// Also call on window resize
+window.addEventListener('resize', () => window.__updateAiEmptyState());
+// Observe chat content for messages added
+const chatObs = new MutationObserver(() => window.__updateAiEmptyState());
+document.addEventListener('DOMContentLoaded', () => {
+  const chat = document.getElementById('aiChat') || document.querySelector('.ai-chat');
+  if (chat) chatObs.observe(chat, { childList: true, subtree: true });
+});
+
+
+
+
+// === V39: Workspace popover toggle ===
+document.addEventListener('DOMContentLoaded', () => {
+  const trigger = document.getElementById('workspaceCardTrigger');
+  const popover = document.getElementById('workspaceSwitcherPopover');
+  const wsName = document.getElementById('wsDropdownToggle');
+  if (!trigger || !popover) return;
+  
+  // Popover positioning helper
+  function positionPopover() {
+    if (popover.style.display === 'none' || popover.style.display === '') return;
+    const r = trigger.getBoundingClientRect();
+    const lp = document.getElementById('leftPanel');
+    const lpR = lp ? lp.getBoundingClientRect() : null;
+    popover.style.left = (r.right + 8) + 'px';
+    popover.style.top = r.top + 'px';
+    // If popover would overflow right edge, flip to left side
+    if (r.right + 8 + 200 > window.innerWidth) {
+      popover.style.left = (r.left - 200 - 8) + 'px';
+    }
+  }
+  
+  function showPopover() {
+    popover.style.display = 'block';
+    popover.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+    positionPopover();
+  }
+  function hidePopover() {
+    popover.style.display = 'none';
+    popover.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+  function togglePopover() {
+    if (popover.style.display === 'block') {
+      hidePopover();
+    } else {
+      showPopover();
+    }
+  }
+  
+  // Click on workspaceCardTrigger OR on the wsDropdownToggle (the existing workspace-name in sidebar header)
+  if (trigger) trigger.addEventListener('click', togglePopover);
+  if (wsName) wsName.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePopover();
+  });
+  
+  // ESC closes
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.style.display === 'block') {
+      hidePopover();
+      if (trigger) trigger.focus();
+    }
+  });
+  
+  // Outside click closes
+  document.addEventListener('click', (e) => {
+    if (popover.style.display !== 'block') return;
+    if (popover.contains(e.target)) return;
+    if (trigger && trigger.contains(e.target)) return;
+    if (wsName && wsName.contains(e.target)) return;
+    hidePopover();
+  });
+  
+  // Reposition on resize
+  window.addEventListener('resize', positionPopover);
+});
+
+// === V39: ai-empty-state responsive (data-size attribute) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const aiBody = document.querySelector('.ai-empty-state')?.parentElement;
+  if (!aiBody) return;
+  const empty = document.querySelector('.ai-empty-state');
+  if (!empty) return;
+  
+  const observer = new ResizeObserver(() => {
+    const h = aiBody.offsetHeight;
+    if (h >= 220) empty.setAttribute('data-size', 'lg');
+    else if (h >= 120) empty.setAttribute('data-size', 'md');
+    else empty.setAttribute('data-size', 'sm');
+  });
+  observer.observe(aiBody);
+});

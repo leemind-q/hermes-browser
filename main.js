@@ -2,6 +2,12 @@
 // Clean Electron + WebContentsView browser shell with agent tool bridge.
 
 
+// [MAIN] entry: __filename diagnostic
+console.log('[MAIN] entry:', __filename);
+console.log('[MAIN] pid:', process.pid);
+console.log('[MAIN] dirname:', __dirname);
+
+
 process.on('uncaughtException', (e) => console.log('[uncaughtException]', e?.stack || e?.message || e));
 process.on('unhandledRejection', (e) => console.log('[unhandledRejection]', e?.stack || e?.message || e));
 process.on('exit', (code) => console.log('[process exit]', code));
@@ -1275,16 +1281,7 @@ ipcMain.handle('win:min', () => mainWindow.minimize());
 ipcMain.handle('win:max', () => mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize());
 
 // Broadcast maximize state to renderer for icon swap
-mainWindow.on('maximize', () => {
-  if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
-    mainWindow.webContents.send('window:maximized', true);
-  }
-});
-mainWindow.on('unmaximize', () => {
-  if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
-    mainWindow.webContents.send('window:maximized', false);
-  }
-});
+// maximize state broadcast moved into createWindow (was crashing main process at module load)
 
 // === Browser basics: find-in-page, downloads, history, print ===
 ipcMain.handle('browser:findInPage', (_e, query) => {

@@ -1,4 +1,5 @@
 // src/preload.js — Miraecle secure bridge
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 const on = (channel, cb) => {
