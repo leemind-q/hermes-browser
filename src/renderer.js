@@ -92,6 +92,157 @@ if (appFrame) {
   $('newGroupBtn').addEventListener('click', createTabGroup);
   $('planToggle').addEventListener('click', togglePlan);
   $('leftToggle').addEventListener('click', toggleLeftPanel);
+
+// V38: Textarea autosize for promptInput
+window.__autosizePrompt = () => {
+  const ta = $('promptInput');
+  if (!ta) return;
+  const MIN_H = 40;
+  const MAX_H = 132;
+  ta.style.setProperty('height', 'auto', 'important');
+  // Force layout flush before reading scrollHeight
+  void ta.offsetHeight;
+  const sh = ta.scrollHeight;
+  if (sh <= MAX_H) {
+    const h = Math.max(MIN_H, Math.min(sh, MAX_H));
+    ta.style.setProperty('height', h + 'px', 'important');
+    ta.style.setProperty('overflow-y', 'hidden', 'important');
+  } else {
+    ta.style.setProperty('height', MAX_H + 'px', 'important');
+    ta.style.setProperty('overflow-y', 'auto', 'important');
+  }
+};
+function setupPromptAutosize() {
+  const ta = $('promptInput');
+  if (!ta) return;
+  ta.addEventListener('input', window.__autosizePrompt);
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      $('sendBtn')?.click();
+    }
+  });
+  document.querySelectorAll('.ai-seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => requestAnimationFrame(window.__autosizePrompt));
+  });
+  if (window.ResizeObserver) {
+    new ResizeObserver(window.__autosizePrompt).observe(ta);
+  }
+  setTimeout(window.__autosizePrompt, 200);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupPromptAutosize);
+} else {
+  setupPromptAutosize();
+}
+
+// V38: Plan show-more / collapse toggle
+// V38: Empty webview recent tasks (dynamic, no fake data)
+(function setupEmptyRecent() {
+  const container = $('emptyRecent');
+  if (!container) return;
+  // Read recent tasks from localStorage if available
+  let recents = [];
+  try {
+    recents = JSON.parse(localStorage.getItem('hermes.recentTasks') || '[]');
+  } catch (e) {
+    recents = [];
+  }
+  if (!Array.isArray(recents) || recents.length === 0) {
+    // No real data: hide the slot entirely
+    container.style.display = 'none';
+    return;
+  }
+  const top3 = recents.slice(0, 3);
+  top3.forEach((task, idx) => {
+    const item = document.createElement('div');
+    item.className = 'ew-recent-item';
+    item.textContent = task.title || '작업 ' + (idx + 1);
+    item.title = task.url || task.title || '';
+    item.addEventListener('click', () => {
+      if (task.url) window.hermes.nav?.navigate?.(task.url);
+    });
+    container.appendChild(item);
+  });
+})();
+
+// V38: ESC closes AI overlay; click outside backdrop closes too
+(function setupOverlayClose() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      // Close overlay if open
+      if (window.innerWidth <= 1099) {
+        const isClosed = document.body.getAttribute('data-ai-closed') === 'true';
+        if (!isClosed) {
+          document.body.setAttribute('data-ai-closed', 'true');
+          e.preventDefault();
+        }
+      }
+    }
+  });
+  const closeBtn = $('aiOverlayClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      document.body.setAttribute('data-ai-closed', 'true');
+    });
+  }
+  // Backdrop click - find backdrop element created dynamically
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth > 1099) return;
+    if (document.body.getAttribute('data-ai-closed') === 'true') return;
+    const backdrop = document.getElementById('aiOverlayBackdrop');
+    if (backdrop && e.target === backdrop) {
+      document.body.setAttribute('data-ai-closed', 'true');
+    }
+  });
+})();
+
+(function setupPlanToggle() {
+  const btn = $('planShowMore');
+  const list = $('planList');
+  if (!btn || !list) return;
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'planList');
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    btn.textContent = expanded ? '3단계 더 보기' : '접기';
+    btn.dataset.collapsed = expanded ? 'true' : 'false';
+    list.dataset.expanded = expanded ? 'false' : 'true';
+    applyPlanVisibility();
+  });
+  // Observe planList children changes (agentic workflow adds/removes items)
+  const obs = new MutationObserver(applyPlanVisibility);
+  obs.observe(list, { childList: true });
+  applyPlanVisibility();
+
+  function applyPlanVisibility() {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    const items = Array.from(list.querySelectorAll('.plan-item, .step, li, .ai-step'));
+    if (items.length === 0) {
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = '';
+    if (expanded) {
+      items.forEach(el => el.style.display = '');
+      return;
+    }
+    // Collapsed: show 3 items centered on current step
+    const currentIdx = items.findIndex(el => el.classList.contains('is-current') || el.classList.contains('active') || el.classList.contains('current'));
+    let centerIdx;
+    if (currentIdx === -1) {
+      centerIdx = 0;
+    } else {
+      centerIdx = currentIdx;
+    }
+    const start = Math.max(0, Math.min(items.length - 3, centerIdx - 1));
+    const end = Math.min(items.length, start + 3);
+    items.forEach((el, i) => {
+      el.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+  }
+})();
   $('railExpand')?.addEventListener('click', toggleLeftPanel);
   $('rightToggle').addEventListener('click', toggleRightPanel);
   $('findBtn').addEventListener('click', toggleFindBar);

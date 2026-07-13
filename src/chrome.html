@@ -2145,16 +2145,18 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
     }
     #promptInput {
-      flex: 1;
-      min-height: 36px;
-      max-height: 80px;
-      resize: none;
+      flex: 0 1 auto;
+      flex-shrink: 1 !important;
+      min-height: 40px !important;
+      max-height: 132px !important;
+      height: auto !important;
+      resize: none !important;
       outline: 0;
       border: 0;
       background: transparent;
       color: var(--ink);
       font-size: var(--ai-font-body);
-      line-height: 1.4;
+      line-height: 1.5 !important;
       font-family: inherit;
       padding: 0;
     }
@@ -5290,7 +5292,7 @@ body.v18-sidebar-open .browser-frame {
 #rightPanel .plan-section { flex-shrink: 0; }
 #rightPanel .ai-chat { flex: 1; min-height: 0; overflow-y: auto; }
 #rightPanel .ai-input-area { flex-shrink: 0; }
-#rightPanel .ai-input-wrap { min-height: 64px; max-height: 160px; overflow-y: auto; }
+#rightPanel .ai-input-wrap { min-height: 56px !important; max-height: none !important; }
 
 /* === V31: Status Bar (visible 26px) === */
 .status-bar { display: flex !important; }
@@ -5456,11 +5458,11 @@ html, body {
 .topbar    { grid-area: tool  !important; height: 44px !important; }
 
 /* === V35: Row 3 — Panels === */
-.left, #leftPanel, aside.left {
-  grid-area: left !important;
+.left, #leftPanel, div.left {
+  grid-area: 3 / 1 / span 2 / span 1 !important;
   position: relative !important;
   top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-  width: 100% !important;
+  width: auto !important;
   height: 100% !important;
   margin: 0 !important;
   display: flex !important;
@@ -5468,11 +5470,13 @@ html, body {
   min-height: 0 !important;
   overflow: hidden !important;
 }
-.right, #rightPanel, aside.right {
-  grid-area: right !important;
+/* V38: rightPanel uses grid area + grid column 3 */
+.right, #rightPanel, div.right {
+  grid-area: 3 / 3 / span 2 / span 1 !important;
   position: relative !important;
   top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-  width: 100% !important;
+  width: auto !important;
+  max-width: none !important;
   height: 100% !important;
   margin: 0 !important;
   display: flex !important;
@@ -5480,21 +5484,21 @@ html, body {
   min-height: 0 !important;
   overflow: hidden !important;
 }
-main.browser-frame {
-  grid-area: main !important;
+div.browser-frame {
+  grid-area: 3 / 2 / span 1 / span 1 !important;
   position: relative !important;
   top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-  width: 100% !important;
+  width: auto !important;
   height: 100% !important;
   margin: 0 !important;
   min-width: 0 !important;
   min-height: 0 !important;
 }
 .status-bar, #statusBar {
-  grid-area: stat !important;
+  grid-area: 4 / 2 / span 1 / span 1 !important;
   position: relative !important;
   top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-  width: 100% !important;
+  width: auto !important;
   height: 26px !important;
   margin: 0 !important;
 }
@@ -5514,14 +5518,33 @@ main.browser-frame {
   z-index: 100;
   flex-shrink: 0;
 }
+/* V38: App-frame no card-like - flat separators only */
 .app-frame-brand {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 10px;
+  padding: 0 12px 0 12px;
   height: 100%;
-  border-right: 1px solid var(--border, rgba(26,26,46,0.08));
+  background: transparent !important;
+  border: none !important;
+  border-right: 1px solid var(--shell-border) !important;
   -webkit-app-region: no-drag;
+}
+.app-frame-brand:hover {
+  background: rgba(0, 0, 0, 0.025) !important;
+}
+.app-frame-workspace {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 12px;
+  background: transparent !important;
+  border: none !important;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+}
+.app-frame-workspace:hover {
+  background: rgba(0, 0, 0, 0.025) !important;
 }
 .brand-icon { color: var(--gold, #fbbf24); }
 .brand-name { font-weight: 600; font-size: 12px; letter-spacing: -0.01em; }
@@ -5699,24 +5722,46 @@ html body #app, html body .app {
   html body #app, html body .app {
     --grid-cols: 48px minmax(0, 1fr) 0;
   }
-  /* Right panel slide-over */
+  /* V38: Right panel slide-over with proper bounds */
   html body #rightPanel {
     position: fixed !important;
     grid-area: auto !important;
     grid-column: auto !important;
-    right: 0 !important;
     left: auto !important;
-    top: 88px !important;
-    bottom: 32px !important;
+    top: 96px !important;          /* below app-frame + topbar */
+    right: 6px !important;
+    bottom: 6px !important;        /* leaves room for status bar area */
+    height: auto !important;
+    max-height: calc(100vh - 96px - 6px) !important;
     width: 320px !important;
     max-width: 90vw !important;
     z-index: 80 !important;
-    box-shadow: -8px 0 24px rgba(0,0,0,0.12) !important;
-    display: block !important;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid var(--sidebar-border) !important;
+    background: var(--sidebar-bg) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
     transform: translateX(0);
+    transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   body[data-ai-closed] #rightPanel {
-    transform: translateX(110%);
+    transform: translateX(calc(100% + 20px));
+  }
+  /* Overlay inner layout */
+  html body #rightPanel .ai-header,
+  html body #rightPanel .ai-seg-bar,
+  html body #rightPanel .goal-section,
+  html body #rightPanel .plan-section,
+  html body #rightPanel .ai-composer,
+  html body #rightPanel .ai-input-area {
+    flex-shrink: 0 !important;
+  }
+  html body #rightPanel .ai-chat,
+  html body #rightPanel .ai-chat-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
   }
   /* Left rail mode */
   html body #leftPanel {
@@ -5764,15 +5809,16 @@ html body #app, html body .app {
   font-size: 11px !important;
   padding: 0 8px !important;
 }
+/* V38: ai-input-wrap no max-height so textarea can grow */
 .ai-input-wrap {
   min-height: 56px !important;
-  max-height: 160px !important;
+  max-height: none !important;
   border: 1px solid var(--border, rgba(26,26,46,0.08)) !important;
   border-radius: 8px !important;
   padding: 8px !important;
   display: flex !important;
   flex-direction: column !important;
-  overflow-y: auto !important;
+  overflow: visible !important;
 }
 .ai-input-wrap textarea,
 .ai-input-wrap input,
@@ -5814,10 +5860,10 @@ html body #app, html body .app {
 }
 
 /* === V36: Panel radius/shadow polish === */
-.app-frame, .topbar, #leftPanel, #rightPanel, main.browser-frame, .status-bar {
+.app-frame, .topbar, #leftPanel, #rightPanel, div.browser-frame, .status-bar {
   border-radius: 8px !important;
 }
-main.browser-frame {
+div.browser-frame {
   border-color: var(--border-subtle, rgba(0,0,0,0.06)) !important;
   border-width: 1px !important;
 }
@@ -5900,7 +5946,7 @@ html, html body, body {
 /* Sidebars - darker than canvas */
 #leftPanel, #rightPanel, .left, .right,
 .floating-panel.left, .floating-panel.right,
-aside.left.floating-panel, aside.right.floating-panel {
+div.left.floating-panel, div.right.floating-panel {
   background: var(--sidebar-bg) !important;
   border-color: var(--sidebar-border) !important;
   color: var(--text-default) !important;
@@ -5915,7 +5961,7 @@ aside.left.floating-panel, aside.right.floating-panel {
 }
 
 /* Main webview - brightest */
-main.browser-frame {
+div.browser-frame {
   background: var(--webview-bg) !important;
   border-color: var(--webview-border) !important;
 }
@@ -5946,7 +5992,7 @@ main.browser-frame {
   border-radius: 8px !important;
   padding: 8px 10px !important;
   min-height: 56px !important;
-  max-height: 132px !important;
+  max-height: none !important;
 }
 .ai-input-wrap textarea,
 .ai-input-wrap input {
@@ -6062,33 +6108,113 @@ main.browser-frame {
   color: var(--text-faint) !important;
   font-weight: 500 !important;
 }
+/* V38: Default workspace card compact (48px, 2-line max) */
 #leftPanel .workspace-card {
-  height: 50px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 50px !important;
   padding: 8px 10px !important;
+  margin: 0 8px !important;
   background: var(--sidebar-item-bg) !important;
   border-radius: 8px !important;
   font-size: var(--font-sidebar) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow: hidden !important;
 }
-#leftPanel .workspace-card .ws-desc {
-  font-size: var(--font-side-meta) !important;
+#leftPanel .workspace-card .ws-icon {
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0 !important;
+  border-radius: 6px !important;
+  background: var(--accent-soft, rgba(217, 119, 6, 0.10)) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--accent, #d97706) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+#leftPanel .workspace-card .ws-info {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  overflow: hidden !important;
+}
+#leftPanel .workspace-card .ws-name {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-strong) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+#leftPanel .workspace-card .ws-status {
+  font-size: 11px !important;
   color: var(--text-muted) !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+#leftPanel .workspace-card .ws-status .ws-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #9ca3af !important;
+  flex-shrink: 0 !important;
+}
+#leftPanel .workspace-card .ws-switch {
+  flex-shrink: 0 !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  background: var(--accent-soft, rgba(217, 119, 6, 0.10)) !important;
+  color: var(--accent, #d97706) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
 }
 #leftPanel .workspace-tags {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 4px !important;
 }
+/* V38: workspace-tag nowrap + tighter padding for 168px panel */
 #leftPanel .workspace-tag {
-  height: 26px !important;
-  padding: 0 8px !important;
-  font-size: var(--font-side-meta) !important;
+  height: 24px !important;
+  min-width: 0 !important;
+  padding: 0 6px !important;
+  font-size: 11px !important;
   border-radius: 6px !important;
   background: var(--sidebar-item-bg) !important;
   color: var(--text-default) !important;
   font-weight: 500 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+#leftPanel .workspace-tag.is-active {
+  background: var(--accent-soft, rgba(217, 119, 6, 0.10)) !important;
+  color: var(--accent, #d97706) !important;
+}
+#leftPanel .workspace-tags {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 4px !important;
+  padding: 0 8px !important;
 }
 #leftPanel .workspace-tag.is-active {
   background: var(--accent-soft) !important;
@@ -6147,6 +6273,7 @@ main.browser-frame {
   border-radius: 4px !important;
   color: var(--text-default) !important;
 }
+/* V38: Empty webview recent - shown only when real data exists */
 .empty-webview .ew-recent {
   display: flex !important;
   flex-direction: column !important;
@@ -6155,6 +6282,10 @@ main.browser-frame {
   width: min(420px, 80%) !important;
   pointer-events: auto !important;
 }
+.empty-webview .ew-recent:empty,
+.empty-webview .ew-recent[hidden] {
+  display: none !important;
+}
 .empty-webview .ew-recent-item {
   display: flex !important;
   align-items: center !important;
@@ -6162,10 +6293,13 @@ main.browser-frame {
   padding: 8px 12px !important;
   background: var(--sidebar-item-bg) !important;
   border-radius: 6px !important;
-  font-size: var(--font-sidebar) !important;
+  font-size: var(--font-sidebar, 12px) !important;
   color: var(--text-default) !important;
   cursor: pointer !important;
   transition: background 100ms;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 .empty-webview .ew-recent-item:hover {
   background: var(--sidebar-item-bg-hover) !important;
@@ -6187,6 +6321,144 @@ main.browser-frame {
 /* === V37: Force app canvas bg === */
 html, body, #app, .app {
   background: var(--app-bg, #e1e1e5) !important;
+}
+
+/* === V38: AI overlay close button === */
+#rightPanel .ai-overlay-close {
+  width: 24px !important;
+  height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  margin-left: auto !important;
+  -webkit-app-region: no-drag !important;
+}
+#rightPanel .ai-overlay-close:hover {
+  background: var(--sidebar-item-bg-hover) !important;
+  color: var(--text-strong) !important;
+}
+#rightPanel .ai-overlay-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+  z-index: 79 !important;
+  pointer-events: none !important;
+}
+
+/* === V38: Font consistency - all UI uses sans-serif === */
+body, button, input, textarea, select,
+.section-head, .ai-header, .currentGoal, #currentGoal,
+.ai-chat, .plan-section, .goal-section, .ai-seg-btn,
+.workspace-tag, .workspace-card, .tabs, .recent-list,
+.fav-list, .memory-row, .status-row, .empty-state,
+.ew-title, .empty-webview, .plan-toggle,
+.brand-name, .app-frame-workspace, .section-count {
+  font-family: "Segoe UI Variable", "Segoe UI", Pretendard, Inter, Arial, sans-serif !important;
+}
+/* Brand-name: keep slightly distinct but sans-serif */
+.brand-name {
+  font-family: "Segoe UI Variable", "Segoe UI", Pretendard, Inter, Arial, sans-serif !important;
+  letter-spacing: -0.01em;
+}
+
+/* === V38: Plan item states (current/done/pending) === */
+.plan-item, .step, .ai-step {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 8px !important;
+  font-size: var(--font-body, 12.5px) !important;
+  color: var(--text-default) !important;
+  border-radius: 6px !important;
+}
+.plan-item.is-done, .step.is-done, .ai-step.is-done {
+  color: var(--text-muted, #5c5c68) !important;
+}
+.plan-item.is-done::before, .step.is-done::before, .ai-step.is-done::before {
+  content: "✓" !important;
+  color: #16a34a !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+.plan-item.is-current, .step.is-current, .ai-step.is-current {
+  background: var(--accent-soft, rgba(217, 119, 6, 0.10)) !important;
+  color: var(--accent, #d97706) !important;
+  font-weight: 600 !important;
+}
+.plan-item.is-current::before, .step.is-current::before, .ai-step.is-current::before {
+  content: "●" !important;
+  color: var(--accent, #d97706) !important;
+  font-size: 10px !important;
+}
+.plan-item.is-pending, .step.is-pending, .ai-step.is-pending {
+  color: var(--text-faint, #8a8a96) !important;
+}
+.plan-item.is-pending::before, .step.is-pending::before, .ai-step.is-pending::before {
+  content: "○" !important;
+  color: var(--text-faint, #8a8a96) !important;
+  font-size: 10px !important;
+}
+#planShowMore {
+  width: 100% !important;
+  padding: 6px 8px !important;
+  font-size: var(--font-side-meta, 11px) !important;
+  color: var(--text-muted, #5c5c68) !important;
+  background: transparent !important;
+  border: 1px solid var(--sidebar-border, #e6e6ea) !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  margin-top: 4px !important;
+  font-family: inherit !important;
+}
+#planShowMore:hover {
+  background: var(--sidebar-item-bg-hover, #e3e3e7) !important;
+}
+
+/* === V38: Textarea autosize === */
+#promptInput {
+  min-height: 0 !important;
+  max-height: 132px !important;
+  height: auto !important;
+  resize: none !important;
+  overflow-y: hidden !important;
+  transition: none !important;
+  box-sizing: border-box !important;
+  line-height: 1.5 !important;
+  width: 100% !important;
+  padding: 4px 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-family: inherit !important;
+  font-size: 12.5px !important;
+  color: var(--text-strong, #181820) !important;
+  flex-shrink: 1 !important;
+}
+.ai-input-wrap {
+  background: var(--webview-bg, #ffffff) !important;
+  border: 1px solid var(--sidebar-border, #e6e6ea) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  min-height: 56px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* V38: Force hide non-overlay siblings of #app that take layout space */
+#v23MemoryList,
+#v22Menu,
+#v22QuickBar,
+#v22Welcome,
+#v22UspBadge,
+#v23TabGroups,
+#bentoEmpty {
+  display: none !important;
 }
 </style>
 
@@ -6231,7 +6503,7 @@ html, body, #app, .app {
     </svg>
     <div class="virtual-cursor" id="virtualCursor"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 7-6 2-2 6-6-15z" fill="rgba(91,108,255,.2)" stroke="#5b6cff" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="#5b6cff" stroke-width="1.5"/></svg></div>
     <!-- V34 Row 1: App Frame (brand + drag + Windows window controls) -->
-    <header class="app-frame" role="banner">
+    <div class="app-frame" role="banner">
       <div class="app-frame-brand" aria-label="Hermes Browser">
         <svg class="brand-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
           <path d="M4 4 L20 4 L20 20 L4 20 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -6265,7 +6537,7 @@ html, body, #app, .app {
           </svg>
         </button>
       </div>
-    </header>
+    </div>
 
     <!-- V34 Row 2: Browser toolbar (navigation + address + actions) -->
     <div class="topbar">
@@ -6301,7 +6573,7 @@ html, body, #app, .app {
       <button class="rail-icon" title="즐겨찾기" id="railFav"><svg class="ui-icon" style="width:16px;height:16px"><use href="#i-star"></use></svg></button>
       <button class="rail-icon" title="설정" id="railSettings"><svg class="ui-icon" style="width:16px;height:16px"><use href="#i-gear"></use></svg></button>
     </div>
-    <aside class="left floating-panel" id="leftPanel">
+    <div class="left floating-panel" data-role="aside-left" id="leftPanel">
       <!-- Resize handle for drag-to-resize -->
       <div class="sidebar-resize-handle" id="sidebarResizeHandle"></div>
 
@@ -6410,10 +6682,18 @@ html, body, #app, .app {
       </div>
 
       <!-- Workspace tag pills -->
+      <div class="workspace-card">
+        <span class="ws-icon">T</span>
+        <div class="ws-info">
+          <div class="ws-name">Default</div>
+          <div class="ws-status"><span class="ws-dot"></span>오프라인</div>
+        </div>
+        <button class="ws-switch" id="workspaceSwitchBtn">전환</button>
+      </div>
       <div class="workspace-tags" id="workspaceTagsContainer" style="position:relative; left:0; top:auto;"></div>
-</aside>
+</div>
 
-    <main class="browser-frame" aria-label="Rounded browser frame">
+    <div class="browser-frame" data-role="main" aria-label="Rounded browser frame">
       <div class="empty-webview" id="emptyWebview">
         <svg class="ew-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <div class="ew-title">웹 검색 또는 AI 작업을 시작하세요</div>
@@ -6422,8 +6702,8 @@ html, body, #app, .app {
           <div class="ew-key"><kbd>Ctrl</kbd>+<kbd>T</kbd> 새 탭</div>
           <div class="ew-key"><kbd>Ctrl</kbd>+<kbd>K</kbd> 명령 팔레트</div>
         </div>
-        <div class="ew-recent" id="emptyRecent"></div>
-      </div></main>
+        <div class="ew-recent" id="emptyRecent" hidden></div>
+      </div></div>
   <div class="status-bar" id="statusBar">
     <span class="sb-pill" id="statusProvider" title="LLM provider"><span class="sb-dot"></span><span id="sbProviderName">mock</span></span>
     <span class="sb-pill" id="statusCowork" title="Cowork status"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg><span>Ready</span></span>
@@ -6435,7 +6715,7 @@ html, body, #app, .app {
     <button class="sb-btn" id="statusSettings" title="설정 열기">⚙</button>
   </div>
 
-    <aside class="right floating-panel" id="rightPanel">
+    <div class="right floating-panel" data-role="aside-right" id="rightPanel">
       <!-- === Header === -->
       <div class="ai-header">
         <div class="ai-header-info">
@@ -6445,7 +6725,7 @@ html, body, #app, .app {
               <span class="ai-state-dot"></span>
               <span>대기</span>
             </span>
-          </div>
+          <button class="ai-overlay-close" id="aiOverlayClose" title="닫기 (ESC)">✕</button></div>
           <div class="ai-model" id="connText">Mock · deepseek</div>
         </div>
         <div class="ai-header-actions">
@@ -6536,13 +6816,13 @@ html, body, #app, .app {
             <button class="ai-input-tool" id="voiceBtn" title="음성 입력">🎤</button>
             <button class="ai-input-tool" id="inlineAIToggle" title="컨텍스트">⊞</button>
           </div>
-          <textarea id="promptInput" placeholder="목표 입력 · @으로 컨텍스트 연결" rows="1"></textarea>
+          <textarea id="promptInput" placeholder="목표나 메시지를 입력하세요…" rows="1" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
           <input type="file" id="fileInput" style="display:none" />
           <button class="ai-stop-btn" id="stopBtn">■</button>
           <button class="ai-send-btn" id="sendBtn">➜</button>
         </div>
       </div>
-    </aside>
+    </div>
 
     <!-- Right collapsed rail (44px icon rail) -->
     <div class="right-rail" id="rightRail">
@@ -7049,7 +7329,7 @@ html, body, #app, .app {
 <!-- DAY18: Right Sidebar with 11 Tabs -->
 <button id="v18ToggleSidebar" aria-label="Toggle Sidebar (Cmd+9)">▦</button>
 
-<aside id="v18Sidebar" role="complementary" aria-label="Hermes Inspector">
+<div id="v18Sidebar" role="complementary" aria-label="Hermes Inspector" data-role="aside"
   <div id="v18SidebarTabs">
     <button class="v18-sidebar-tab active" data-tab="spaces" data-tooltip="Spaces">💼</button>
     <button class="v18-sidebar-tab" data-tab="skills" data-tooltip="Skills">⚡</button>
@@ -7071,7 +7351,7 @@ html, body, #app, .app {
   <div class="v18-sidebar-content" id="v18SidebarContent">
     <!-- Dynamically rendered -->
   </div>
-</aside>
+</div>
 <script src="sidebar.js"></script>
 <script>
 // Sidebar resize handle — drag to adjust sidebar width
