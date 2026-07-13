@@ -754,8 +754,8 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       --bg-panel: rgba(255, 255, 255, 0.72);
       --ink: #1a1a2e;
       --ink-strong: #0f0f1e;
-      --muted: rgba(26, 26, 46, 0.7);
-      --faint: rgba(26, 26, 46, 0.5);
+      --muted: rgba(26, 26, 46, 0.82);
+      --faint: rgba(26, 26, 46, 0.58);
       --border: rgba(26, 26, 46, 0.08);
       --border-strong: rgba(26, 26, 46, 0.14);
 
@@ -833,8 +833,8 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
         --bg-panel: rgba(20, 20, 35, 0.78);
         --ink: #f5f5f7;
         --ink-strong: #ffffff;
-        --muted: rgba(245, 245, 247, 0.7);
-        --faint: rgba(245, 245, 247, 0.45);
+        --muted: rgba(245, 245, 247, 0.78);
+        --faint: rgba(245, 245, 247, 0.55);
         --border: rgba(245, 245, 247, 0.08);
         --border-strong: rgba(245, 245, 247, 0.14);
 
@@ -872,8 +872,8 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       --bg-panel: rgba(20, 20, 35, 0.78);
       --ink: #f5f5f7;
       --ink-strong: #ffffff;
-      --muted: rgba(245, 245, 247, 0.7);
-      --faint: rgba(245, 245, 247, 0.45);
+      --muted: rgba(245, 245, 247, 0.78);
+      --faint: rgba(245, 245, 247, 0.55);
       --border: rgba(245, 245, 247, 0.08);
       --border-strong: rgba(245, 245, 247, 0.14);
 
@@ -1141,6 +1141,63 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       flex-shrink: 0;
     }
 
+    /* Workspace dropdown in sidebar header */
+    .workspace-selector {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+    .workspace-selector .workspace-name {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ws-arrow {
+      font-size: 8px;
+      color: var(--faint);
+      transition: transform 0.2s;
+    }
+    .workspace-selector.open .ws-arrow {
+      transform: rotate(180deg);
+    }
+    .ws-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: var(--bg-overlay);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--r-sm);
+      box-shadow: var(--shadow-deep);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      min-width: 140px;
+      padding: 4px;
+    }
+    .ws-dropdown .ws-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      padding: 6px 10px;
+      border: none;
+      background: transparent;
+      color: var(--ink-strong);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .ws-dropdown .ws-option:hover {
+      background: rgba(245,158,11,0.1);
+    }
+    .ws-dropdown .ws-option.active {
+      background: rgba(245,158,11,0.15);
+      color: var(--gold);
+      font-weight: 600;
+    }
+
     /* Sidebar section — generic section wrapper */
     .sidebar-section {
       display: flex;
@@ -1400,7 +1457,97 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       color: var(--danger);
     }
 
-    /* Sidebar footer — fixed bottom area */
+    /* Recent tabs list */
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s var(--ease);
+    }
+    .recent-list.expanded {
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .recent-list::-webkit-scrollbar {
+      width: 3px;
+    }
+    .recent-list::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 3px;
+    }
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 6px;
+      min-height: 26px;
+      border-radius: var(--sb-radius);
+      background: transparent;
+      transition: background .15s;
+    }
+    .recent-item:hover {
+      background: rgba(255,255,255,.5);
+    }
+    .recent-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: var(--sb-muted);
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .recent-remove {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--faint);
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity .15s, background .15s, color .15s;
+      display: grid;
+      place-items: center;
+    }
+    .recent-item:hover .recent-remove {
+      opacity: 1;
+    }
+    .recent-remove:hover {
+      background: rgba(239,68,68,.12);
+      color: var(--danger);
+    }
+
+    /* Compact status rows (Tasks, Session) */
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+      cursor: pointer;
+      transition: color .15s;
+      font-size: var(--sb-muted);
+      color: var(--muted);
+    }
+    .status-row:hover {
+      color: var(--ink);
+    }
+    .status-row .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-row.active .status-dot {
+      background: var(--success);
+    }
+    .status-row.idle .status-dot {
+      background: var(--border-strong);
+    }
+
+    /* Sidebar section — fixed, non-scrolling */
     .sidebar-footer {
       flex-shrink: 0;
       margin-top: auto;
@@ -1927,24 +2074,57 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       flex-direction: column;
       gap: 6px;
     }
+    /* Segment control (28-32px) */
+    .ai-quick {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      background: rgba(0,0,0,.03);
+      border-radius: 8px;
+      padding: 2px;
+    }
+    .ai-seg-btn {
+      flex: 1;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: var(--ai-font-secondary);
+      font-weight: 500;
+      transition: all .15s ease;
+      white-space: nowrap;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .ai-seg-btn:hover { color: var(--text-primary); }
+    .ai-seg-btn.active {
+      background: rgba(255,255,255,.8);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-weight: 600;
+    }
+    /* Left toolbar icons (16px font, 32px click area) */
     .ai-input-toolbar {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 2px;
     }
-    .ai-qsel {
-      height: 24px;
+    .ai-input-tool {
+      width: 32px; height: 32px;
       border-radius: 6px;
-      background: rgba(0,0,0,.04);
-      color: var(--muted);
-      font-size: var(--ai-font-secondary);
-      font-weight: 600;
+      background: transparent;
+      color: var(--faint);
+      font-size: 16px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      transition: background .15s, color .15s;
       border: 0;
-      outline: 0;
       cursor: pointer;
-      padding: 0 6px;
-      font-family: inherit;
     }
+    .ai-input-tool:hover { background: var(--accent-soft); color: var(--accent); }
     .ai-input-wrap {
       display: flex;
       gap: 4px;
@@ -1969,22 +2149,9 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       font-family: inherit;
       padding: 0;
     }
-    .ai-input-btn {
-      width: 22px; height: 22px;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--faint);
-      font-size: 12px;
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      transition: background .15s, color .15s;
-      border: 0;
-      cursor: pointer;
-    }
-    .ai-input-btn:hover { background: var(--accent-soft); color: var(--accent); }
-    .ai-send-btn, .ai-stop-btn {
-      width: 24px; height: 24px;
+    /* Send button (36-40px) */
+    .ai-send-btn {
+      width: 36px; height: 36px;
       border-radius: 999px;
       font-weight: 700;
       transition: transform .18s ease, opacity .18s;
@@ -1992,42 +2159,29 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       place-items: center;
       border: 0;
       cursor: pointer;
-    }
-    .ai-send-btn {
       color: white;
       background: var(--accent);
       box-shadow: 0 1px 4px rgba(91,108,255,.2), inset 0 1px 0 rgba(255,255,255,.25);
+      font-size: 16px;
+      flex: 0 0 auto;
     }
     .ai-send-btn:hover { transform: scale(1.06); }
     .ai-send-btn:active { transform: scale(.94); }
     .ai-send-btn:disabled { opacity: .3; transform: none; }
     .ai-stop-btn {
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform .18s ease, opacity .18s;
       display: none;
-      color: var(--danger);
-      background: rgba(239,68,68,.1);
-    }
-    .ai-stop-btn:hover { transform: scale(1.04); }
-    
-    /* Quick actions bar (before input) */
-    .ai-quick {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-    .ai-quick button {
-      height: 24px;
-      padding: 0 8px;
-      border-radius: 6px;
-      background: rgba(0,0,0,.04);
-      color: var(--muted);
-      font-size: var(--ai-font-secondary);
-      font-weight: 500;
-      transition: background .15s, color .15s;
-      white-space: nowrap;
+      place-items: center;
       border: 0;
       cursor: pointer;
+      color: var(--danger);
+      background: rgba(239,68,68,.1);
+      flex: 0 0 auto;
     }
-    .ai-quick button:hover { background: var(--accent-soft); color: var(--accent); }
+    .ai-stop-btn:hover { transform: scale(1.04); }
     
     /* Mention bar */
     .ai-mention-bar {
@@ -2347,31 +2501,32 @@ button:focus-visible, .tab:focus-visible {
    ============================================================ */
 
 /* Status bar — bottom pill */
+/* V30: status bar - thin 24px, no shadow, webview-attached */
 .status-bar {
-  position: fixed;
-  left: 180px;
-  right: 220px;
-  bottom: 12px;
-  height: 28px;
-  display: flex;
+  position: absolute;
+  left: 240px;
+  right: 300px;
+  bottom: 0;
+  height: 24px;
+  display: none;  /* hidden by default - only show when body[data-mode="dev"] */
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   padding: 0 16px;
-  background: var(--glass-bg-strong);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-edge-dark);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 4px 12px rgba(20, 30, 50, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: rgba(245, 245, 247, 0.95);
+  border-top: 1px solid var(--border, #e5e5ea);
+  box-shadow: none;
   font-size: 11px;
   color: var(--muted);
   z-index: 90;
   pointer-events: auto;
-  animation: sb-fade-up .42s var(--ease-spring-soft) both;
-  max-width: calc(100vw - 180px - 220px - 24px);
-  margin: 0 auto;
+  transition: opacity 150ms ease;
+  margin: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
+body[data-mode="dev"] .status-bar { display: flex; }
 @keyframes sb-fade-up { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
 
 .status-bar .sb-pill {
@@ -3371,48 +3526,6 @@ h1, .modal-title, .settings-panel-header .modal-title { font-size: calc(1em * va
   margin-top: 4px;
 }
 
-/* === AI sidebar floating action === */
-.ai-fab {
-  position: fixed;
-  bottom: 16px;
-  left: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.32), 0 2px 6px rgba(217, 119, 6, 0.18);
-  z-index: 100;
-  transition: var(--anim-spring);
-  border: none;
-}
-.ai-fab:hover {
-  transform: scale(1.08) translateY(-2px);
-  box-shadow: 0 12px 32px rgba(217, 119, 6, 0.40), 0 4px 8px rgba(217, 119, 6, 0.22);
-}
-.ai-fab:active {
-  transform: scale(0.96);
-}
-.ai-fab .fab-icon {
-  font-size: 22px;
-}
-.ai-fab .fab-pulse {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--gold);
-  animation: fab-pulse 2s ease-out infinite;
-  pointer-events: none;
-}
-@keyframes fab-pulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
 /* === Search highlight === */
 mark {
   background: var(--gold-soft);
@@ -3548,8 +3661,9 @@ mark {
   }
   .v22-qb-action:hover { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.4); }
 
-  /* === V22: USP badge on left panel (always visible) === */
+  /* === V22: USP badge on left panel (always visible) — HIDDEN in V30 === */
   .v22-usp-badge {
+    display: none !important;
     position: fixed;
     top: 64px;
     right: 268px;
@@ -4217,7 +4331,7 @@ mark {
 
 /* ============ V23.5: Spaces/Profiles Switcher ============ */
 #v23SpaceSwitcher {
-  display: inline-flex;
+  display: none !important;
   gap: 4px;
   padding: 6px 8px;
   background: var(--bg-overlay);
@@ -5103,6 +5217,27 @@ body.v18-sidebar-open .browser-frame {
 #v18ToggleSidebar:hover {
   transform: scale(1.1);
 }
+
+/* === V30: Force-hide floating buttons (moved to input toolbar) === */
+.ai-fab { display: none !important; }
+.v25-voice-indicator { display: none !important; }
+/* V30: Status bar thin 24px webview-attached (dev mode only) */
+.status-bar {
+  position: absolute !important;
+  left: 240px !important;
+  right: 300px !important;
+  bottom: 0 !important;
+  height: 24px !important;
+  display: none !important;
+  box-shadow: none !important;
+  background: rgba(245, 245, 247, 0.95) !important;
+  border-top: 1px solid #e5e5ea !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  font-size: 11px !important;
+  color: #4a4a5a !important;
+}
+body[data-mode="dev"] .status-bar { display: flex !important; }
 </style>
 
 
@@ -5112,8 +5247,8 @@ body.v18-sidebar-open .browser-frame {
 <!-- V29: subagent CSS temporarily disabled -->
 </head>
 <body>
-<!-- V23.5: Spaces Switcher -->
-<div id="v23SpaceSwitcher" aria-label="Spaces/Profiles Switcher">
+<!-- V23.5: Spaces Switcher (V30: moved to sidebar dropdown) -->
+<div id="v23SpaceSwitcher" style="display:none !important;" aria-label="Spaces/Profiles Switcher">
   <button class="v23-space-pill active" data-space="work" data-tooltip="회사 업무 / 회로 일">
     <span class="icon">💼</span><span class="label">업무</span>
   </button>
@@ -5187,10 +5322,20 @@ body.v18-sidebar-open .browser-frame {
       <!-- Resize handle for drag-to-resize -->
       <div class="sidebar-resize-handle" id="sidebarResizeHandle"></div>
 
-      <!-- Header: Workspace name (fixed top) -->
+      <!-- Header: Workspace name (fixed top) with dropdown -->
       <div class="sidebar-header">
         <div class="workspace-info">
-          <div class="workspace-name">Workspace</div>
+          <div class="workspace-selector" id="workspaceSelector">
+            <div class="workspace-name" id="wsDropdownToggle">
+              <span id="wsCurrentLabel">📁 업무</span>
+              <span class="ws-arrow">▾</span>
+            </div>
+            <div class="ws-dropdown" id="wsDropdown" style="display:none">
+              <button class="ws-option active" data-space="work">💼 업무</button>
+              <button class="ws-option" data-space="personal">🌿 개인</button>
+              <button class="ws-option" data-space="development">⚡ 개발</button>
+            </div>
+          </div>
           <div class="workspace-meta" id="workspaceMeta" title="">페이지 추적 중</div>
         </div>
         <div class="workspace-actions">
@@ -5562,12 +5707,6 @@ body.v18-sidebar-open .browser-frame {
     </div>
   </div>
 
-  <!-- V16: AI FAB (floating action button) -->
-  <button class="ai-fab" id="aiFab" title="AI 패널 토글 (Ctrl+`)">
-    <div class="fab-pulse"></div>
-    <span class="fab-icon">✦</span>
-  </button>
-
   <!-- V16: Keystroke help modal (custom) -->
   <div class="modal" id="shortcutModal">
     <div class="modal-card" style="width: 600px;">
@@ -5814,7 +5953,7 @@ body.v18-sidebar-open .browser-frame {
 </div>
 
 <!-- V23.3: USP Badge (fixed from missing) -->
-<div class="v22-usp-badge" id="v22UspBadge" style="position:fixed !important; top:64px !important; left:50% !important; transform:translateX(-50%) !important; z-index:1000 !important; width:auto !important; height:auto !important; right:auto !important; bottom:auto !important;" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP">Hermes V23.2</div>
+<div class="v22-usp-badge" id="v22UspBadge" style="display:none !important;" data-tooltip="75 MCP · 12 LLM · $0 local" aria-label="Hermes Browser USP" hidden>Hermes V23.2</div>
 
 <!-- V23.5: Browser Memories Panel -->
 <div id="v23MemoryList" class="v23-memories-panel" aria-label="Browser Memories">
