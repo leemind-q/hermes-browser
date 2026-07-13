@@ -1274,6 +1274,18 @@ ipcMain.handle('win:close', () => mainWindow.close());
 ipcMain.handle('win:min', () => mainWindow.minimize());
 ipcMain.handle('win:max', () => mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize());
 
+// Broadcast maximize state to renderer for icon swap
+mainWindow.on('maximize', () => {
+  if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+    mainWindow.webContents.send('window:maximized', true);
+  }
+});
+mainWindow.on('unmaximize', () => {
+  if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+    mainWindow.webContents.send('window:maximized', false);
+  }
+});
+
 // === Browser basics: find-in-page, downloads, history, print ===
 ipcMain.handle('browser:findInPage', (_e, query) => {
   const view = getActiveView();

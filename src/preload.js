@@ -8,7 +8,14 @@ const on = (channel, cb) => {
 };
 
 contextBridge.exposeInMainWorld('hermes', {
-  window: { close: () => ipcRenderer.invoke('win:close'), min: () => ipcRenderer.invoke('win:min'), max: () => ipcRenderer.invoke('win:max') },
+  window: {
+    close: () => ipcRenderer.invoke('win:close'),
+    min: () => ipcRenderer.invoke('win:min'),
+    max: () => ipcRenderer.invoke('win:max'),
+    onMaximizedChange: (cb) => {
+      ipcRenderer.on('window:maximized', (_e, isMax) => cb(isMax));
+    }
+  },
   browser: {
     newTab: (url) => ipcRenderer.invoke('browser:newTab', url),
     switchTab: (id) => ipcRenderer.invoke('browser:switchTab', id),

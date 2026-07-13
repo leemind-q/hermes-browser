@@ -62,6 +62,22 @@ function bindEvents() {
   $('winClose').addEventListener('click', () => window.hermes.window.close());
   $('winMin').addEventListener('click', () => window.hermes.window.min());
   $('winMax').addEventListener('click', () => window.hermes.window.max());
+// V34: Update icon when maximize state changes (via main process broadcast)
+if (window.hermes.window && window.hermes.window.onMaximizedChange) {
+  window.hermes.window.onMaximizedChange((isMax) => {
+    const maxIcon = document.querySelector('#winMax .wc-icon-max');
+    const restoreIcon = document.querySelector('#winMax .wc-icon-restore');
+    if (maxIcon && restoreIcon) {
+      maxIcon.style.display = isMax ? 'none' : '';
+      restoreIcon.style.display = isMax ? '' : 'none';
+    }
+  });
+}
+// V34: Double-click app-frame drag area to toggle maximize
+const appFrame = document.querySelector('.app-frame-drag');
+if (appFrame) {
+  appFrame.addEventListener('dblclick', () => window.hermes.window.max());
+}
   $('newTabBtn').addEventListener('click', () => window.hermes.browser.newTab('https://www.google.com'));
   $('newTabTopBtn').addEventListener('click', () => window.hermes.browser.newTab('https://www.google.com'));
   $('backBtn').addEventListener('click', () => action('goBack'));
