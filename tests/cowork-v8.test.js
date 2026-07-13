@@ -8,8 +8,8 @@ const fs = require('fs');
   const cw = new CoworkService({ workspaceRoot: '/home/taewoo/projects/hermes-browser' });
   const REPO = '/home/taewoo/projects/hermes-browser';
 
-  // 1. gitDiffStat
-  const stat = await cw.gitDiffStat({ dir: REPO });
+  // 1. gitDiffStat — compare against ancestor commit so test is deterministic
+  const stat = await cw.gitDiffStat({ dir: REPO, fromRef: "HEAD~2", toRef: "HEAD" });
   const okStat = stat.ok && stat.count > 0 && Array.isArray(stat.files);
   console.log((okStat ? '✅ PASS' : '❌ FAIL') + '  gitDiffStat returns per-file stats (count=' + stat.count + ')');
   if (okStat) pass++; else fail++;
