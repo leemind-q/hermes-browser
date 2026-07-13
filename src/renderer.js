@@ -5606,15 +5606,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // renderer.js only wires modules together — no DOM manipulation, no key maps.
 (function initV44Modules() {
   const initAll = () => {
+    // V46: bootstrap order — registry+coordinator FIRST, then modules that register
+    window.HermesModules?.temporaryUIRegistry?.clear?.();
+    window.HermesModules?.escapeCoordinator?.init?.();
     window.HermesModules?.aiOverlay?.init?.();
     window.HermesModules?.workspacePopover?.init?.();
+    window.HermesModules?.settingsPopover?.init?.();
     window.HermesModules?.textareaAutosize?.init?.({ maxHeight: 92 });
     window.HermesModules?.planToggle?.init?.();
     window.HermesModules?.keyboardShortcuts?.init?.();
 
-    console.log('[V45] Bootstrap complete:', {
+    console.log('[V46] Bootstrap complete:', {
+      escapeCoordinator: window.HermesModules?.escapeCoordinator?.getState?.(),
+      temporaryUIRegistry: window.HermesModules?.temporaryUIRegistry?.getState?.(),
       aiOverlay: window.HermesModules?.aiOverlay?.getState?.(),
       workspacePopover: window.HermesModules?.workspacePopover?.getState?.(),
+      settingsPopover: window.HermesModules?.settingsPopover?.getState?.(),
       textareaAutosize: window.HermesModules?.textareaAutosize?.getState?.(),
       planToggle: window.HermesModules?.planToggle?.getState?.(),
       keyboardShortcuts: window.HermesModules?.keyboardShortcuts?.getState?.(),
