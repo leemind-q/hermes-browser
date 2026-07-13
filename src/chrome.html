@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; script-src 'self' 'sha256-RNG8hBAZ19WjZqVbQVsXtqPkGwKXfy4MR7gNAaulDZo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*;" />
   <title>Miraecle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -7125,6 +7125,930 @@ button:focus:not(:focus-visible) { outline: none !important; }
   <!-- V12 loading progress bar -->
   <div class="progress-bar" id="progressBar"></div>
 
+<script>
+/**
+ * V42 Module loader
+ *
+ * Loads all V42 modules. Modules are exposed via window.HermesModules.* namespace.
+ * This file is loaded BEFORE renderer.js so modules are available.
+ *
+ * Individual modules self-register; they do NOT auto-init.
+ * Renderer.js is responsible for calling module.init() at appropriate time.
+ */
+(function() {
+  'use strict';
+  if (window.HermesModules) {
+    // Already loaded — skip duplicate init
+    return;
+  }
+  window.HermesModules = {};
+})();
+
+/**
+ * V42 textareaAutosize module
+ *
+ * Self-contained. No global state. No IPC.
+ * Reads promptInput element. Uses ResizeObserver (single instance).
+ *
+ * Public API:
+ *   init()       - mount observer + force initial sizing
+ *   destroy()    - disconnect observer, remove listeners
+ *   getState()   - { initialized, observerActive, currentHeight }
+ *
+ * Single instance pattern: multiple init() calls are safe (no-op after first).
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.textareaAutosize = (() => {
+  let initialized = false;
+  let observer = null;
+  let textarea = null;
+  let currentHeight = 0;
+  let maxHeight = 92;
+
+  function measureHeight() {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const next = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = next + 'px';
+    currentHeight = next;
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    textarea = document.getElementById('promptInput');
+    if (!textarea) return;
+    initialized = true;
+    if (options.maxHeight) maxHeight = options.maxHeight;
+
+    // Use single ResizeObserver instance (not duplicated)
+    observer = new ResizeObserver(() => measureHeight());
+    observer.observe(textarea);
+
+    // Initial sizing
+    measureHeight();
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    if (textarea) {
+      textarea.style.height = '';
+    }
+    textarea = null;
+    currentHeight = 0;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, observerActive: observer !== null, currentHeight };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 planToggle module
+ *
+ * Reads state.plan (read-only). Toggles planCard.expanded class.
+ * Updates aria-expanded on planToggle button.
+ *
+ * Public API:
+ *   init({ getState })   - mount click handler
+ *   destroy()             - remove click handler
+ *   getState()             - { initialized, isExpanded }
+ *
+ * Single instance: multiple init() safe.
+ * Note: state mutation is performed by the existing applyPlanVisibility()
+ *       function in renderer.js — this module only triggers it.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.planToggle = (() => {
+  let initialized = false;
+  let btn = null;
+  let card = null;
+  let onClick = null;
+  let getStateFn = null;
+
+  function updateAria() {
+    if (!btn) return;
+    const expanded = card && card.classList.contains('expanded');
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    btn.textContent = expanded ? '접기' : '3단계 더 보기';
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    btn = document.getElementById('planShowMore');
+    card = document.getElementById('planCard');
+    if (!btn || !card) return;
+    getStateFn = options.getState || (() => null);
+
+    onClick = () => {
+      card.classList.toggle('expanded');
+      updateAria();
+    };
+    btn.addEventListener('click', onClick);
+    initialized = true;
+    updateAria();
+  }
+
+  function destroy() {
+    if (btn && onClick) {
+      btn.removeEventListener('click', onClick);
+    }
+    onClick = null;
+    btn = null;
+    card = null;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, isExpanded: card ? card.classList.contains('expanded') : false };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 keyboardShortcuts module
+ *
+ * Single window keydown handler. Maps Escape + Cmd/Ctrl shortcuts.
+ *
+ * Public API:
+ *   init({ handlers })   - register handlers map { 'Escape': fn, 'Cmd+L': fn, ... }
+ *   destroy()             - remove keydown listener
+ *   getState()             - { initialized, handlersCount }
+ *
+ * Single instance: multiple init() safe.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.keyboardShortcuts = (() => {
+  let initialized = false;
+  let handlers = {};
+  let onKeyDown = null;
+
+  function isMac() {
+    return navigator.platform.toLowerCase().includes('mac');
+  }
+
+  function matchesCombo(e, combo) {
+    const mac = isMac();
+    const parts = combo.toLowerCase().split('+');
+    let needsMod = false, needsShift = false, needsAlt = false, key = '';
+    for (const p of parts) {
+      if (p === 'cmd' || p === 'ctrl') { needsMod = true; continue; }
+      if (p === 'shift') { needsShift = true; continue; }
+      if (p === 'alt' || p === 'option') { needsAlt = true; continue; }
+      key = p;
+    }
+    if (mac) {
+      if (needsMod && !e.metaKey) return false;
+    } else {
+      if (needsMod && !e.ctrlKey) return false;
+    }
+    if (needsShift && !e.shiftKey) return false;
+    if (needsAlt && !e.altKey) return false;
+    if (!needsMod && (e.ctrlKey || e.metaKey)) return false;
+    return e.key.toLowerCase() === key || e.code.toLowerCase() === 'key' + key;
+  }
+
+  function onKeyDownHandler(e) {
+    // Plain Escape (no modifier)
+    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (handlers['Escape']) {
+        const result = handlers['Escape'](e);
+        if (result !== false) e.preventDefault();
+        return;
+      }
+    }
+    // Cmd/Ctrl combos
+    const combo = (isMac() && e.metaKey ? 'Cmd+' : (e.ctrlKey ? 'Ctrl+' : '')) +
+      (e.shiftKey ? 'Shift+' : '') +
+      (e.altKey ? 'Alt+' : '') +
+      e.key.toLowerCase();
+    if (combo && handlers[combo]) {
+      const result = handlers[combo](e);
+      if (result !== false) e.preventDefault();
+    }
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    handlers = options.handlers || {};
+    onKeyDown = onKeyDownHandler;
+    window.addEventListener('keydown', onKeyDown);
+    initialized = true;
+  }
+
+  function destroy() {
+    if (onKeyDown) {
+      window.removeEventListener('keydown', onKeyDown);
+    }
+    onKeyDown = null;
+    handlers = {};
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, handlersCount: Object.keys(handlers).length };
+  }
+
+  return { init, destroy, getState };
+})();
+
+
+</script>
+<script>
+/**
+ * V42 Module loader
+ *
+ * Loads all V42 modules. Modules are exposed via window.HermesModules.* namespace.
+ * This file is loaded BEFORE renderer.js so modules are available.
+ *
+ * Individual modules self-register; they do NOT auto-init.
+ * Renderer.js is responsible for calling module.init() at appropriate time.
+ */
+(function() {
+  'use strict';
+  if (window.HermesModules) {
+    // Already loaded — skip duplicate init
+    return;
+  }
+  window.HermesModules = {};
+})();
+
+/**
+ * V42 textareaAutosize module
+ *
+ * Self-contained. No global state. No IPC.
+ * Reads promptInput element. Uses ResizeObserver (single instance).
+ *
+ * Public API:
+ *   init()       - mount observer + force initial sizing
+ *   destroy()    - disconnect observer, remove listeners
+ *   getState()   - { initialized, observerActive, currentHeight }
+ *
+ * Single instance pattern: multiple init() calls are safe (no-op after first).
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.textareaAutosize = (() => {
+  let initialized = false;
+  let observer = null;
+  let textarea = null;
+  let currentHeight = 0;
+  let maxHeight = 92;
+
+  function measureHeight() {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const next = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = next + 'px';
+    currentHeight = next;
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    textarea = document.getElementById('promptInput');
+    if (!textarea) return;
+    initialized = true;
+    if (options.maxHeight) maxHeight = options.maxHeight;
+
+    // Use single ResizeObserver instance (not duplicated)
+    observer = new ResizeObserver(() => measureHeight());
+    observer.observe(textarea);
+
+    // Initial sizing
+    measureHeight();
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    if (textarea) {
+      textarea.style.height = '';
+    }
+    textarea = null;
+    currentHeight = 0;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, observerActive: observer !== null, currentHeight };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 planToggle module
+ *
+ * Reads state.plan (read-only). Toggles planCard.expanded class.
+ * Updates aria-expanded on planToggle button.
+ *
+ * Public API:
+ *   init({ getState })   - mount click handler
+ *   destroy()             - remove click handler
+ *   getState()             - { initialized, isExpanded }
+ *
+ * Single instance: multiple init() safe.
+ * Note: state mutation is performed by the existing applyPlanVisibility()
+ *       function in renderer.js — this module only triggers it.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.planToggle = (() => {
+  let initialized = false;
+  let btn = null;
+  let card = null;
+  let onClick = null;
+  let getStateFn = null;
+
+  function updateAria() {
+    if (!btn) return;
+    const expanded = card && card.classList.contains('expanded');
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    btn.textContent = expanded ? '접기' : '3단계 더 보기';
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    btn = document.getElementById('planShowMore');
+    card = document.getElementById('planList');
+    if (!btn || !card) return;
+    getStateFn = options.getState || (() => null);
+
+    onClick = () => {
+      card.classList.toggle('expanded');
+      updateAria();
+    };
+    btn.addEventListener('click', onClick);
+    initialized = true;
+    updateAria();
+  }
+
+  function destroy() {
+    if (btn && onClick) {
+      btn.removeEventListener('click', onClick);
+    }
+    onClick = null;
+    btn = null;
+    card = null;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, isExpanded: card ? card.classList.contains('expanded') : false };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 keyboardShortcuts module
+ *
+ * Single window keydown handler. Maps Escape + Cmd/Ctrl shortcuts.
+ *
+ * Public API:
+ *   init({ handlers })   - register handlers map { 'Escape': fn, 'Cmd+L': fn, ... }
+ *   destroy()             - remove keydown listener
+ *   getState()             - { initialized, handlersCount }
+ *
+ * Single instance: multiple init() safe.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.keyboardShortcuts = (() => {
+  let initialized = false;
+  let handlers = {};
+  let onKeyDown = null;
+
+  function isMac() {
+    return navigator.platform.toLowerCase().includes('mac');
+  }
+
+  function matchesCombo(e, combo) {
+    const mac = isMac();
+    const parts = combo.toLowerCase().split('+');
+    let needsMod = false, needsShift = false, needsAlt = false, key = '';
+    for (const p of parts) {
+      if (p === 'cmd' || p === 'ctrl') { needsMod = true; continue; }
+      if (p === 'shift') { needsShift = true; continue; }
+      if (p === 'alt' || p === 'option') { needsAlt = true; continue; }
+      key = p;
+    }
+    if (mac) {
+      if (needsMod && !e.metaKey) return false;
+    } else {
+      if (needsMod && !e.ctrlKey) return false;
+    }
+    if (needsShift && !e.shiftKey) return false;
+    if (needsAlt && !e.altKey) return false;
+    if (!needsMod && (e.ctrlKey || e.metaKey)) return false;
+    return e.key.toLowerCase() === key || e.code.toLowerCase() === 'key' + key;
+  }
+
+  function onKeyDownHandler(e) {
+    // Plain Escape (no modifier)
+    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (handlers['Escape']) {
+        const result = handlers['Escape'](e);
+        if (result !== false) e.preventDefault();
+        return;
+      }
+    }
+    // Cmd/Ctrl combos
+    const combo = (isMac() && e.metaKey ? 'Cmd+' : (e.ctrlKey ? 'Ctrl+' : '')) +
+      (e.shiftKey ? 'Shift+' : '') +
+      (e.altKey ? 'Alt+' : '') +
+      e.key.toLowerCase();
+    if (combo && handlers[combo]) {
+      const result = handlers[combo](e);
+      if (result !== false) e.preventDefault();
+    }
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    handlers = options.handlers || {};
+    onKeyDown = onKeyDownHandler;
+    window.addEventListener('keydown', onKeyDown);
+    initialized = true;
+  }
+
+  function destroy() {
+    if (onKeyDown) {
+      window.removeEventListener('keydown', onKeyDown);
+    }
+    onKeyDown = null;
+    handlers = {};
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, handlersCount: Object.keys(handlers).length };
+  }
+
+  return { init, destroy, getState };
+})();
+
+
+</script>
+<script>
+/**
+ * V42 Module loader
+ *
+ * Loads all V42 modules. Modules are exposed via window.HermesModules.* namespace.
+ * This file is loaded BEFORE renderer.js so modules are available.
+ *
+ * Individual modules self-register; they do NOT auto-init.
+ * Renderer.js is responsible for calling module.init() at appropriate time.
+ */
+(function() {
+  'use strict';
+  if (window.HermesModules) {
+    // Already loaded — skip duplicate init
+    return;
+  }
+  window.HermesModules = {};
+})();
+
+/**
+ * V42 textareaAutosize module
+ *
+ * Self-contained. No global state. No IPC.
+ * Reads promptInput element. Uses ResizeObserver (single instance).
+ *
+ * Public API:
+ *   init()       - mount observer + force initial sizing
+ *   destroy()    - disconnect observer, remove listeners
+ *   getState()   - { initialized, observerActive, currentHeight }
+ *
+ * Single instance pattern: multiple init() calls are safe (no-op after first).
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.textareaAutosize = (() => {
+  let initialized = false;
+  let observer = null;
+  let textarea = null;
+  let currentHeight = 0;
+  let maxHeight = 92;
+
+  function measureHeight() {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const next = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = next + 'px';
+    currentHeight = next;
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    textarea = document.getElementById('promptInput');
+    if (!textarea) return;
+    initialized = true;
+    if (options.maxHeight) maxHeight = options.maxHeight;
+
+    // Use single ResizeObserver instance (not duplicated)
+    observer = new ResizeObserver(() => measureHeight());
+    observer.observe(textarea);
+
+    // Initial sizing
+    measureHeight();
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    if (textarea) {
+      textarea.style.height = '';
+    }
+    textarea = null;
+    currentHeight = 0;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, observerActive: observer !== null, currentHeight };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 planToggle module (OBSERVATION ONLY)
+ *
+ * V41 already has setupPlanToggle() in renderer.js that handles the click.
+ * This module observes state via MutationObserver and exposes getState().
+ *
+ * Public API:
+ *   init()       - mount observer
+ *   destroy()    - disconnect observer
+ *   getState()   - { initialized, isExpanded }
+ *
+ * No click handler — V41's setupPlanToggle remains the single source of truth.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.planToggle = (() => {
+  let initialized = false;
+  let observer = null;
+  let list = null;
+  let lastState = false;
+
+  function readState() {
+    if (!list) return false;
+    return list.dataset.expanded === 'true';
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    list = document.getElementById('planList');
+    if (!list) return;
+    initialized = true;
+    lastState = readState();
+    observer = new MutationObserver(() => {
+      const cur = readState();
+      if (cur !== lastState) {
+        lastState = cur;
+      }
+    });
+    observer.observe(list, { attributes: true, attributeFilter: ['data-expanded'] });
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    list = null;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, isExpanded: readState() };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 keyboardShortcuts module
+ *
+ * Single window keydown handler. Maps Escape + Cmd/Ctrl shortcuts.
+ *
+ * Public API:
+ *   init({ handlers })   - register handlers map { 'Escape': fn, 'Cmd+L': fn, ... }
+ *   destroy()             - remove keydown listener
+ *   getState()             - { initialized, handlersCount }
+ *
+ * Single instance: multiple init() safe.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.keyboardShortcuts = (() => {
+  let initialized = false;
+  let handlers = {};
+  let onKeyDown = null;
+
+  function isMac() {
+    return navigator.platform.toLowerCase().includes('mac');
+  }
+
+  function matchesCombo(e, combo) {
+    const mac = isMac();
+    const parts = combo.toLowerCase().split('+');
+    let needsMod = false, needsShift = false, needsAlt = false, key = '';
+    for (const p of parts) {
+      if (p === 'cmd' || p === 'ctrl') { needsMod = true; continue; }
+      if (p === 'shift') { needsShift = true; continue; }
+      if (p === 'alt' || p === 'option') { needsAlt = true; continue; }
+      key = p;
+    }
+    if (mac) {
+      if (needsMod && !e.metaKey) return false;
+    } else {
+      if (needsMod && !e.ctrlKey) return false;
+    }
+    if (needsShift && !e.shiftKey) return false;
+    if (needsAlt && !e.altKey) return false;
+    if (!needsMod && (e.ctrlKey || e.metaKey)) return false;
+    return e.key.toLowerCase() === key || e.code.toLowerCase() === 'key' + key;
+  }
+
+  function onKeyDownHandler(e) {
+    // Plain Escape (no modifier)
+    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (handlers['Escape']) {
+        const result = handlers['Escape'](e);
+        if (result !== false) e.preventDefault();
+        return;
+      }
+    }
+    // Cmd/Ctrl combos
+    const combo = (isMac() && e.metaKey ? 'Cmd+' : (e.ctrlKey ? 'Ctrl+' : '')) +
+      (e.shiftKey ? 'Shift+' : '') +
+      (e.altKey ? 'Alt+' : '') +
+      e.key.toLowerCase();
+    if (combo && handlers[combo]) {
+      const result = handlers[combo](e);
+      if (result !== false) e.preventDefault();
+    }
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    handlers = options.handlers || {};
+    onKeyDown = onKeyDownHandler;
+    window.addEventListener('keydown', onKeyDown);
+    initialized = true;
+  }
+
+  function destroy() {
+    if (onKeyDown) {
+      window.removeEventListener('keydown', onKeyDown);
+    }
+    onKeyDown = null;
+    handlers = {};
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, handlersCount: Object.keys(handlers).length };
+  }
+
+  return { init, destroy, getState };
+})();
+
+
+</script>
+<script>
+/**
+ * V42 Module loader
+ *
+ * Loads all V42 modules. Modules are exposed via window.HermesModules.* namespace.
+ * This file is loaded BEFORE renderer.js so modules are available.
+ *
+ * Individual modules self-register; they do NOT auto-init.
+ * Renderer.js is responsible for calling module.init() at appropriate time.
+ */
+(function() {
+  'use strict';
+  if (window.HermesModules) {
+    // Already loaded — skip duplicate init
+    return;
+  }
+  window.HermesModules = {};
+})();
+
+/**
+ * V42 textareaAutosize module (OBSERVATION ONLY)
+ *
+ * V41 has autoResizePrompt() in renderer.js that handles the actual sizing.
+ * This module wraps the existing behavior with a state observer.
+ *
+ * Public API:
+ *   init()       - wrap the existing handler, force initial measure
+ *   destroy()    - unwrap
+ *   getState()   - { initialized, observerActive, currentHeight }
+ *
+ * Pure observation — does NOT mutate textarea.height.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.textareaAutosize = (() => {
+  let initialized = false;
+  let observer = null;
+  let textarea = null;
+  let currentHeight = 0;
+
+  function init(options = {}) {
+    if (initialized) return;
+    textarea = document.getElementById('promptInput');
+    if (!textarea) return;
+    initialized = true;
+    currentHeight = textarea.offsetHeight;
+
+    observer = new ResizeObserver(() => {
+      currentHeight = textarea.offsetHeight;
+    });
+    observer.observe(textarea);
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    textarea = null;
+    currentHeight = 0;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, observerActive: observer !== null, currentHeight };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 planToggle module (OBSERVATION ONLY)
+ *
+ * V41 already has setupPlanToggle() in renderer.js that handles the click.
+ * This module observes state via MutationObserver and exposes getState().
+ *
+ * Public API:
+ *   init()       - mount observer
+ *   destroy()    - disconnect observer
+ *   getState()   - { initialized, isExpanded }
+ *
+ * No click handler — V41's setupPlanToggle remains the single source of truth.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.planToggle = (() => {
+  let initialized = false;
+  let observer = null;
+  let list = null;
+  let lastState = false;
+
+  function readState() {
+    if (!list) return false;
+    return list.dataset.expanded === 'true';
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    list = document.getElementById('planList');
+    if (!list) return;
+    initialized = true;
+    lastState = readState();
+    observer = new MutationObserver(() => {
+      const cur = readState();
+      if (cur !== lastState) {
+        lastState = cur;
+      }
+    });
+    observer.observe(list, { attributes: true, attributeFilter: ['data-expanded'] });
+  }
+
+  function destroy() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    list = null;
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, isExpanded: readState() };
+  }
+
+  return { init, destroy, getState };
+})();
+
+/**
+ * V42 keyboardShortcuts module
+ *
+ * Single window keydown handler. Maps Escape + Cmd/Ctrl shortcuts.
+ *
+ * Public API:
+ *   init({ handlers })   - register handlers map { 'Escape': fn, 'Cmd+L': fn, ... }
+ *   destroy()             - remove keydown listener
+ *   getState()             - { initialized, handlersCount }
+ *
+ * Single instance: multiple init() safe.
+ */
+window.HermesModules = window.HermesModules || {};
+
+window.HermesModules.keyboardShortcuts = (() => {
+  let initialized = false;
+  let handlers = {};
+  let onKeyDown = null;
+
+  function isMac() {
+    return navigator.platform.toLowerCase().includes('mac');
+  }
+
+  function matchesCombo(e, combo) {
+    const mac = isMac();
+    const parts = combo.toLowerCase().split('+');
+    let needsMod = false, needsShift = false, needsAlt = false, key = '';
+    for (const p of parts) {
+      if (p === 'cmd' || p === 'ctrl') { needsMod = true; continue; }
+      if (p === 'shift') { needsShift = true; continue; }
+      if (p === 'alt' || p === 'option') { needsAlt = true; continue; }
+      key = p;
+    }
+    if (mac) {
+      if (needsMod && !e.metaKey) return false;
+    } else {
+      if (needsMod && !e.ctrlKey) return false;
+    }
+    if (needsShift && !e.shiftKey) return false;
+    if (needsAlt && !e.altKey) return false;
+    if (!needsMod && (e.ctrlKey || e.metaKey)) return false;
+    return e.key.toLowerCase() === key || e.code.toLowerCase() === 'key' + key;
+  }
+
+  function onKeyDownHandler(e) {
+    // Plain Escape (no modifier)
+    if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (handlers['Escape']) {
+        const result = handlers['Escape'](e);
+        if (result !== false) e.preventDefault();
+        return;
+      }
+    }
+    // Cmd/Ctrl combos
+    const combo = (isMac() && e.metaKey ? 'Cmd+' : (e.ctrlKey ? 'Ctrl+' : '')) +
+      (e.shiftKey ? 'Shift+' : '') +
+      (e.altKey ? 'Alt+' : '') +
+      e.key.toLowerCase();
+    if (combo && handlers[combo]) {
+      const result = handlers[combo](e);
+      if (result !== false) e.preventDefault();
+    }
+  }
+
+  function init(options = {}) {
+    if (initialized) return;
+    handlers = options.handlers || {};
+    onKeyDown = onKeyDownHandler;
+    window.addEventListener('keydown', onKeyDown);
+    initialized = true;
+  }
+
+  function destroy() {
+    if (onKeyDown) {
+      window.removeEventListener('keydown', onKeyDown);
+    }
+    onKeyDown = null;
+    handlers = {};
+    initialized = false;
+  }
+
+  function getState() {
+    return { initialized, handlersCount: Object.keys(handlers).length };
+  }
+
+  return { init, destroy, getState };
+})();
+
+
+</script>
 <script src="renderer.js"></script>
 
   <!-- V13 Command palette (Cmd+K) -->

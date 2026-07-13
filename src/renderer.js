@@ -5756,3 +5756,53 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   observer.observe(aiBody);
 });
+
+
+// === V42: Safe module extraction init ===
+// Pure-additive: original behavior preserved, modules add side-by-side
+// Modules self-check 'initialized' flag to prevent duplicate listeners
+(function initV42Modules() {
+  // Wait for DOMContentLoaded if not already
+  const initAll = () => {
+    if (window.HermesModules?.textareaAutosize) {
+      window.HermesModules.textareaAutosize.init({ maxHeight: 92 });
+    }
+    if (window.HermesModules?.planToggle) {
+      window.HermesModules.planToggle.init();
+    }
+    if (window.HermesModules?.keyboardShortcuts) {
+      // Escape: close AI overlay (preserved from V41)
+      window.HermesModules.keyboardShortcuts.init({
+        handlers: {
+          'Escape': () => {
+            const aiOverlay = document.getElementById('aiOverlay');
+            const wsPopover = document.getElementById('workspaceSwitcherPopover');
+            if (aiOverlay && aiOverlay.classList.contains('visible')) {
+              aiOverlay.classList.remove('visible');
+              return true;
+            }
+            if (wsPopover && wsPopover.style.display === 'block') {
+              wsPopover.style.display = 'none';
+              wsPopover.setAttribute('aria-hidden', 'true');
+              const trigger = document.getElementById('workspaceCardTrigger');
+              if (trigger) trigger.setAttribute('aria-expanded', 'false');
+              if (trigger) trigger.focus();
+              return true;
+            }
+            return false;
+          }
+        }
+      });
+    }
+    console.log('[V42] Modules initialized:', {
+      textareaAutosize: window.HermesModules?.textareaAutosize?.getState(),
+      planToggle: window.HermesModules?.planToggle?.getState(),
+      keyboardShortcuts: window.HermesModules?.keyboardShortcuts?.getState(),
+    });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll, { once: true });
+  } else {
+    initAll();
+  }
+})();
