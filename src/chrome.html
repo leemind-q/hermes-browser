@@ -1036,7 +1036,7 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
       left: var(--gutter); top: var(--top); bottom: var(--bottom); width: var(--left);
       padding: var(--sb-pad);
       display: flex; flex-direction: column; gap: 0;
-      overflow: hidden;
+      overflow-y: auto;
       transition: width var(--anim), opacity var(--anim);
     }
     .left.collapsed { width: 0; opacity: 0; pointer-events: none; overflow: hidden; }
@@ -1208,16 +1208,16 @@ h3 { font-size: var(--fs-h3); font-weight: 600; }
 
     /* Tabs section — fills middle, scrollable */
     .sidebar-tabs-section {
-      flex: 1;
+      flex: 0 0 auto;
       min-height: 0;
-      overflow: hidden;
+      overflow: visible;
       display: flex;
       flex-direction: column;
       gap: 4px;
       padding-top: 4px;
     }
     .sidebar-tabs-section .tabs {
-      flex: 1;
+      max-height: 200px;
       min-height: 0;
       overflow-y: auto;
       display: flex;
@@ -5243,6 +5243,47 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
 \n.v18ToggleSidebar { display: none !important; }\n.virtualCursor { display: none !important; }\n/* V30: v18ToggleSidebar hidden (moved to input toolbar) */
 #v18ToggleSidebar { display: none !important; }
 .v18ToggleSidebar { display: none !important; }
+\n/* V30: Tabs section shrink-to-fit when empty */
+.sidebar-tabs-section { flex: 0 0 auto !important; min-height: 0 !important; }
+.sidebar-tabs-section .tab-list:empty + * { display: none !important; }
+
+/* === V30: Force sidebar sections to flow naturally === */
+#leftPanel > .sidebar-section {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+}
+#leftPanel > .sidebar-header {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+}
+#leftPanel > .sidebar-footer {
+  position: relative !important;
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+}
+#leftPanel > .workspace-tags {
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+
+/* === V30: Final sidebar force-flow === */
+#leftPanel .sidebar-section {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+  padding: 4px 0 !important;
+}
+#leftPanel .sidebar-section .section-head {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+}
 </style>
 
 
@@ -5350,7 +5391,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Tabs section (fills middle, scrollable) -->
-      <div class="sidebar-section sidebar-tabs-section">
+      <div class="sidebar-section sidebar-tabs-section" style="position:relative; left:0; top:auto; flex:0 0 auto;">
         <div class="section-head">
           <span>Tabs</span>
           <span>
@@ -5362,7 +5403,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Recent tabs section -->
-      <div class="sidebar-section" style="padding-top:2px">
+      <div class="sidebar-section" style="position:relative; left:0; top:auto; padding-top:2px; transform:none;">
         <div class="section-head collapsible" id="recentSectionHead">
           <span>Recent</span>
           <button class="mini-btn" id="recentToggle" title="접기/펼치기">▾</button>
@@ -5371,7 +5412,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Favorites section -->
-      <div class="sidebar-section" style="padding-top:2px">
+      <div class="sidebar-section" style="position:relative; left:0; top:auto; padding-top:2px; transform:none;">
         <div class="section-head collapsible" id="favSectionHead">
           <span>Favorites</span>
           <button class="mini-btn" id="favToggle" title="접기/펼치기">▾</button>
@@ -5380,7 +5421,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Memory section (compact status) -->
-      <div class="sidebar-section" style="padding-top:2px">
+      <div class="sidebar-section" style="position:relative; left:0; top:auto; padding-top:2px; transform:none;">
         <div class="section-head">
           <span>Memory</span>
           <button class="mini-btn" id="memoryBtn" title="편집">✎</button>
@@ -5392,7 +5433,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Tasks section -->
-      <div class="sidebar-section">
+      <div class="sidebar-section" style="position:relative; left:0; top:auto; transform:none;">
         <div class="section-head">
           <span>Tasks</span>
           <span class="status-dot" style="background:var(--border-strong)"></span>
@@ -5404,7 +5445,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Session section -->
-      <div class="sidebar-section">
+      <div class="sidebar-section" style="position:relative; left:0; top:auto; transform:none;">
         <div class="section-head">
           <span>Session</span>
           <span class="status-dot" style="background:var(--success)"></span>
@@ -5416,7 +5457,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Sidebar footer (fixed bottom): Profile + Workspace switcher -->
-      <div class="sidebar-footer">
+      <div class="sidebar-footer" style="position:relative; left:0; top:auto;">
         <div class="workspace-switcher" id="workspaceSwitcher" title="Workspace 전환">
           <div class="ws-avatar">T</div>
           <div class="ws-info">
@@ -5428,7 +5469,7 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       </div>
 
       <!-- Workspace tag pills -->
-      <div class="workspace-tags" id="workspaceTagsContainer"></div>
+      <div class="workspace-tags" id="workspaceTagsContainer" style="position:relative; left:0; top:auto;"></div>
 </aside>
 
     <main class="browser-frame" aria-label="Rounded browser frame"></main>
@@ -6127,6 +6168,30 @@ body[data-mode="dev"] .status-bar { display: flex !important; }
       app.classList.toggle('left-collapsed');
       leftPanel.classList.toggle('collapsed');
     });
+  }
+})();
+</script>
+
+<script>
+// V30: Fix sidebar sections moved to body
+(function() {
+  const left = document.getElementById('leftPanel');
+  if (!left) return;
+  const labels = ['Recent', 'Favorites', 'Memory', 'Tasks', 'Session'];
+  for (const label of labels) {
+    const section = Array.from(document.querySelectorAll('.sidebar-section')).find(s => {
+      const span = s.querySelector('.section-head span');
+      return span && span.textContent.trim() === label;
+    });
+    if (section && section.parentElement === document.body) {
+      // Insert before sidebar-footer
+      const footer = left.querySelector('.sidebar-footer');
+      if (footer) {
+        left.insertBefore(section, footer);
+      } else {
+        left.appendChild(section);
+      }
+    }
   }
 })();
 </script>
