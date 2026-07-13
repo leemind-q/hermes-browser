@@ -1,14 +1,20 @@
 /**
- * V42 keyboardShortcuts module
+ * V43 keyboardShortcuts module — REAL OWNERSHIP
  *
- * Single window keydown handler. Maps Escape + Cmd/Ctrl shortcuts.
+ * Single source of truth for global keyboard shortcuts.
+ * Replaces renderer.js's handleGlobalShortcuts() function and
+ * `document.addEventListener('keydown', handleGlobalShortcuts)` registration.
  *
  * Public API:
- *   init({ handlers })   - register handlers map { 'Escape': fn, 'Cmd+L': fn, ... }
- *   destroy()             - remove keydown listener
+ *   init({ handlers })   - mount window keydown listener
+ *   register(key, fn)    - add or replace a shortcut handler
+ *   unregister(key)      - remove a shortcut handler
+ *   destroy()             - remove all handlers + listener
  *   getState()             - { initialized, handlersCount }
  *
- * Single instance: multiple init() safe.
+ * Idempotent: multiple init() safe.
+ *
+ * Replaces renderer.js L324 addEventListener + L391 function handleGlobalShortcuts.
  */
 window.HermesModules = window.HermesModules || {};
 
@@ -16,72 +22,97 @@ window.HermesModules.keyboardShortcuts = (() => {
   let initialized = false;
   let handlers = {};
   let onKeyDown = null;
+  let windowListener = null;
+  let documentListener = null;
 
   function isMac() {
     return navigator.platform.toLowerCase().includes('mac');
   }
 
-  function matchesCombo(e, combo) {
-    const mac = isMac();
-    const parts = combo.toLowerCase().split('+');
-    let needsMod = false, needsShift = false, needsAlt = false, key = '';
-    for (const p of parts) {
-      if (p === 'cmd' || p === 'ctrl') { needsMod = true; continue; }
-      if (p === 'shift') { needsShift = true; continue; }
-      if (p === 'alt' || p === 'option') { needsAlt = true; continue; }
-      key = p;
+  function buildCombo(e) {
+    if (e.ctrlKey || e.metaKey) {
+      return (isMac() && e.metaKey ? 'cmd+' : 'ctrl+') +
+        (e.shiftKey ? 'shift+' : '') +
+        (e.altKey ? 'alt+' : '') +
+        e.key.toLowerCase();
     }
-    if (mac) {
-      if (needsMod && !e.metaKey) return false;
-    } else {
-      if (needsMod && !e.ctrlKey) return false;
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      return 'alt+' + e.key.toLowerCase();
     }
-    if (needsShift && !e.shiftKey) return false;
-    if (needsAlt && !e.altKey) return false;
-    if (!needsMod && (e.ctrlKey || e.metaKey)) return false;
-    return e.key.toLowerCase() === key || e.code.toLowerCase() === 'key' + key;
+    return e.key;
   }
 
-  function onKeyDownHandler(e) {
+  function dispatch(e) {
     // Plain Escape (no modifier)
     if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (handlers['Escape']) {
-        const result = handlers['Escape'](e);
+      const fn = handlers['Escape'];
+      if (fn) {
+        const result = fn(e);
         if (result !== false) e.preventDefault();
         return;
       }
     }
     // Cmd/Ctrl combos
-    const combo = (isMac() && e.metaKey ? 'Cmd+' : (e.ctrlKey ? 'Ctrl+' : '')) +
-      (e.shiftKey ? 'Shift+' : '') +
-      (e.altKey ? 'Alt+' : '') +
-      e.key.toLowerCase();
-    if (combo && handlers[combo]) {
-      const result = handlers[combo](e);
-      if (result !== false) e.preventDefault();
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      const combo = buildCombo(e);
+      if (combo && handlers[combo]) {
+        const result = handlers[combo](e);
+        if (result !== false) e.preventDefault();
+        return;
+      }
+    }
+    // F12 alone
+    if (e.key === 'F12' && !e.ctrlKey && !e.metaKey) {
+      const fn = handlers['F12'];
+      if (fn) {
+        const result = fn(e);
+        if (result !== false) e.preventDefault();
+      }
     }
   }
 
   function init(options = {}) {
     if (initialized) return;
     handlers = options.handlers || {};
-    onKeyDown = onKeyDownHandler;
+
+    // Window-level listener (F12, Ctrl-based)
+    onKeyDown = (e) => dispatch(e);
     window.addEventListener('keydown', onKeyDown);
+    windowListener = onKeyDown;
+
     initialized = true;
   }
 
+  function register(key, fn) {
+    if (typeof fn !== 'function') return;
+    handlers[key] = fn;
+  }
+
+  function unregister(key) {
+    delete handlers[key];
+  }
+
   function destroy() {
-    if (onKeyDown) {
-      window.removeEventListener('keydown', onKeyDown);
+    if (windowListener) {
+      window.removeEventListener('keydown', windowListener);
+    }
+    if (documentListener) {
+      document.removeEventListener('keydown', documentListener);
     }
     onKeyDown = null;
+    windowListener = null;
+    documentListener = null;
     handlers = {};
     initialized = false;
   }
 
   function getState() {
-    return { initialized, handlersCount: Object.keys(handlers).length };
+    return {
+      initialized,
+      handlersCount: Object.keys(handlers).length,
+      keys: Object.keys(handlers),
+    };
   }
 
-  return { init, destroy, getState };
+  return { init, register, unregister, destroy, getState };
 })();

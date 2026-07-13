@@ -197,6 +197,52 @@ if (document.readyState === 'loading') {
   });
 })();
 
+(function setupPlanToggle() {
+  const btn = $('planShowMore');
+  const list = $('planList');
+  if (!btn || !list) return;
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'planList');
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    btn.textContent = expanded ? '3단계 더 보기' : '접기';
+    btn.dataset.collapsed = expanded ? 'true' : 'false';
+    list.dataset.expanded = expanded ? 'false' : 'true';
+    applyPlanVisibility();
+  });
+  // Observe planList children changes (agentic workflow adds/removes items)
+  const obs = new MutationObserver(applyPlanVisibility);
+  obs.observe(list, { childList: true });
+  applyPlanVisibility();
+
+  function applyPlanVisibility() {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    const items = Array.from(list.querySelectorAll('.plan-item, .step, li, .ai-step'));
+    if (items.length === 0) {
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = '';
+    if (expanded) {
+      items.forEach(el => el.style.display = '');
+      return;
+    }
+    // Collapsed: show 3 items centered on current step
+    const currentIdx = items.findIndex(el => el.classList.contains('is-current') || el.classList.contains('active') || el.classList.contains('current'));
+    let centerIdx;
+    if (currentIdx === -1) {
+      centerIdx = 0;
+    } else {
+      centerIdx = currentIdx;
+    }
+    const start = Math.max(0, Math.min(items.length - 3, centerIdx - 1));
+    const end = Math.min(items.length, start + 3);
+    items.forEach((el, i) => {
+      el.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+  }
+})();
   $('railExpand')?.addEventListener('click', toggleLeftPanel);
   $('rightToggle').addEventListener('click', toggleRightPanel);
   $('findBtn').addEventListener('click', toggleFindBar);
@@ -245,7 +291,7 @@ if (document.readyState === 'loading') {
       log('segment-mode', action);
     });
   });
-  $('promptInput').addEventListener('input', () => { renderMentionBar(); });
+  $('promptInput').addEventListener('input', () => { autoResizePrompt(); renderMentionBar(); });
   $('promptInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPrompt(); } });
   $('addressInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { const v = e.target.value.trim(); if (v) window.hermes.browser.navigate(v); }
@@ -275,7 +321,8 @@ if (document.readyState === 'loading') {
   $('currentGoal')?.addEventListener('click', toggleGoalEdit);
   $('goalEditInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveGoalEdit(); } if (e.key === 'Escape') { state.goalEditing = false; toggleGoalEdit(); } });
   $('goalEditInput')?.addEventListener('blur', saveGoalEdit);
-  
+  document.addEventListener('keydown', handleGlobalShortcuts);
+
   // ============================================================
   // V12 Status bar + Bento + Theme toggle handlers
   // ============================================================
@@ -341,6 +388,22 @@ if (document.readyState === 'loading') {
   });
 }
 
+function handleGlobalShortcuts(e) {
+  if (e.key === 'Escape') {
+    if (SettingsPopover.isOpen()) { e.preventDefault(); SettingsPopover.close(); return; }
+    hideFindBar();
+    return;
+  }
+  if (!e.ctrlKey && !e.metaKey && e.key !== 'F12') return;
+  const key = e.key.toLowerCase();
+  if (key === 'f') { e.preventDefault(); toggleFindBar(); }
+  if (key === 'h') { e.preventDefault(); openHistory(); }
+  if (key === 'j') { e.preventDefault(); openDownloads(); }
+  if (key === 'd') { e.preventDefault(); addCurrentBookmark(); }
+  if (key === 'p') { e.preventDefault(); window.hermes.browser.print(); }
+  if (key === 'u') { e.preventDefault(); window.hermes.browser.viewSource(); }
+  if (e.key === 'F12') { e.preventDefault(); window.hermes.browser.devTools(); }
+}
 
 // V12: Provider presets — gatewayUrl + model 자동 채우기
 const PROVIDER_PRESETS = {
@@ -746,7 +809,7 @@ async function submitPrompt() {
   if (!text || state.running) return;
   const mentions = collectMentionContext(text);
   state.selectedMentions = mentions;
-  input.value = ''; window.HermesModules?.textareaAutosize?.resize?.(); renderMentionBar(true);
+  input.value = ''; autoResizePrompt(); renderMentionBar(true);
   addMessage('user', text);
   if (mentions.length) addMessage('assistant', `연결된 컨텍스트: ${mentions.map(m => m.label).join(', ')}`);
 
@@ -1174,7 +1237,7 @@ async function startResearch() {
   if (state.running) { addMessage('assistant', '이미 실행 중입니다.'); return; }
   const input = $('promptInput'); const text = input.value.trim();
   const goal = text || '현재 주제에 대해 공식 자료 중심으로 조사';
-  input.value = ''; window.HermesModules?.textareaAutosize?.resize?.();
+  input.value = ''; autoResizePrompt();
   addMessage('user', `🔍 조사: ${goal}`);
   const allTabs = await window.hermes.multiTab.getAllTabContexts().catch(() => []);
   if (allTabs.length > 1) {
@@ -2163,7 +2226,7 @@ function toggleVoiceInput() {
     let text = '';
     for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
     input.value = text;
-    window.HermesModules?.textareaAutosize?.resize?.();
+    autoResizePrompt();
   };
   voiceRecognition.onend = () => { voiceRecognition = null; log('voice', '완료'); };
   voiceRecognition.onerror = (e) => { log('voice', e.error, 'error'); voiceRecognition = null; };
@@ -2240,6 +2303,8 @@ async function clearHistory() {
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>\"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;' }[c])); }
+function autoResizePrompt() { const t = $('promptInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 92) + 'px'; }
 function safeStorageJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } }
 function domainOf(url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } }
 
@@ -5692,134 +5757,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   observer.observe(aiBody);
 });
-
-
-// === V42: Safe module extraction init ===
-// Pure-additive: original behavior preserved, modules add side-by-side
-// Modules self-check 'initialized' flag to prevent duplicate listeners
-// === V43: Real Module Ownership Migration init ===
-// Pure bootstrap: each module is the SINGLE SOURCE OF TRUTH for its feature.
-// renderer.js no longer owns textarea resize, plan toggle, or global shortcuts.
-(function initV43Modules() {
-  const initAll = () => {
-    // textareaAutosize — owns promptInput resize behavior
-    window.HermesModules?.textareaAutosize?.init?.({ maxHeight: 92 });
-
-    // planToggle — owns planShowMore click + planList expand/collapse
-    window.HermesModules?.planToggle?.init?.();
-
-    // keyboardShortcuts — owns global Escape/F12/Cmd/Ctrl handlers
-    // Replaces V41's handleGlobalShortcuts() which called toggleFindBar,
-    // openHistory, openDownloads, addCurrentBookmark, print, viewSource, devTools.
-    // These UI functions remain in renderer.js (their owners), but module is the dispatcher.
-    const ks = window.HermesModules?.keyboardShortcuts;
-    if (ks) {
-      ks.init({
-        handlers: {
-          // Escape: close topmost overlay/popover
-          'Escape': () => {
-            // Check AI overlay first
-            const aiOverlay = document.getElementById('aiOverlay');
-            if (aiOverlay && aiOverlay.classList.contains('visible')) {
-              aiOverlay.classList.remove('visible');
-              return true;
-            }
-            // Check workspace popover
-            const wsPopover = document.getElementById('workspaceSwitcherPopover');
-            if (wsPopover && wsPopover.style.display === 'block') {
-              wsPopover.style.display = 'none';
-              wsPopover.setAttribute('aria-hidden', 'true');
-              const trigger = document.getElementById('workspaceCardTrigger');
-              if (trigger) {
-                trigger.setAttribute('aria-expanded', 'false');
-                trigger.focus();
-              }
-              return true;
-            }
-            // Check settings popover
-            if (typeof SettingsPopover !== 'undefined' && SettingsPopover.isOpen && SettingsPopover.isOpen()) {
-              SettingsPopover.close();
-              return true;
-            }
-            // Find bar (preserved V41 behavior)
-            if (typeof hideFindBar === 'function') {
-              hideFindBar();
-              return true;
-            }
-            return false;
-          },
-          // Ctrl+F / Cmd+F: open find bar
-          'ctrl+f': () => {
-            if (typeof toggleFindBar === 'function') toggleFindBar();
-            return true;
-          },
-          'cmd+f': () => {
-            if (typeof toggleFindBar === 'function') toggleFindBar();
-            return true;
-          },
-          // Ctrl+H / Cmd+H: history
-          'ctrl+h': () => {
-            if (typeof openHistory === 'function') openHistory();
-            return true;
-          },
-          'cmd+h': () => {
-            if (typeof openHistory === 'function') openHistory();
-            return true;
-          },
-          // Ctrl+J / Cmd+J: downloads
-          'ctrl+j': () => {
-            if (typeof openDownloads === 'function') openDownloads();
-            return true;
-          },
-          'cmd+j': () => {
-            if (typeof openDownloads === 'function') openDownloads();
-            return true;
-          },
-          // Ctrl+D / Cmd+D: bookmark
-          'ctrl+d': () => {
-            if (typeof addCurrentBookmark === 'function') addCurrentBookmark();
-            return true;
-          },
-          'cmd+d': () => {
-            if (typeof addCurrentBookmark === 'function') addCurrentBookmark();
-            return true;
-          },
-          // Ctrl+P / Cmd+P: print
-          'ctrl+p': () => {
-            if (window.hermes?.browser?.print) window.hermes.browser.print();
-            return true;
-          },
-          'cmd+p': () => {
-            if (window.hermes?.browser?.print) window.hermes.browser.print();
-            return true;
-          },
-          // Ctrl+U / Cmd+U: view source
-          'ctrl+u': () => {
-            if (window.hermes?.browser?.viewSource) window.hermes.browser.viewSource();
-            return true;
-          },
-          'cmd+u': () => {
-            if (window.hermes?.browser?.viewSource) window.hermes.browser.viewSource();
-            return true;
-          },
-          // F12: devtools
-          'F12': () => {
-            if (window.hermes?.browser?.devTools) window.hermes.browser.devTools();
-            return true;
-          },
-        }
-      });
-    }
-
-    console.log('[V43] Modules initialized (ownership migrated):', {
-      textareaAutosize: window.HermesModules?.textareaAutosize?.getState(),
-      planToggle: window.HermesModules?.planToggle?.getState(),
-      keyboardShortcuts: window.HermesModules?.keyboardShortcuts?.getState(),
-    });
-  };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAll, { once: true });
-  } else {
-    initAll();
-  }
-})();

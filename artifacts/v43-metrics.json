@@ -1,0 +1,18 @@
+{
+  "commit_v42": "e2e5fdb",
+  "commit_v43": null,
+  "renderer_js": {
+    "before_v43": 214471,
+    "after_v43": 220563,
+    "functions_count": 110,
+    "lines": 5825,
+    "addEventListener_count": 144
+  },
+  "modules": {
+    "index": 481,
+    "textarea": 2011,
+    "plan": 3680,
+    "keyboard": 3171
+  },
+  "chrome_html": 269348
+}

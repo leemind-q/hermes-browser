@@ -1,0 +1,13 @@
+{
+  "commit_baseline": "f950205",
+  "chrome_html_bytes": 259927,
+  "renderer_js_bytes": 212522,
+  "renderer_js_lines": 5758,
+  "renderer_functions": 112,
+  "addEventListener_count": 145,
+  "ResizeObserver_count": 3,
+  "MutationObserver_count": 3,
+  "transition_all_count": 19,
+  "main_js_bytes": 80999,
+  "preload_js_bytes": 7651
+}
