@@ -5609,73 +5609,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// === V39: Workspace popover toggle ===
-document.addEventListener('DOMContentLoaded', () => {
-  const trigger = document.getElementById('workspaceCardTrigger');
-  const popover = document.getElementById('workspaceSwitcherPopover');
-  const wsName = document.getElementById('wsDropdownToggle');
-  if (!trigger || !popover) return;
-  
-  // Popover positioning helper
-  function positionPopover() {
-    if (popover.style.display === 'none' || popover.style.display === '') return;
-    const r = trigger.getBoundingClientRect();
-    const lp = document.getElementById('leftPanel');
-    const lpR = lp ? lp.getBoundingClientRect() : null;
-    popover.style.left = (r.right + 8) + 'px';
-    popover.style.top = r.top + 'px';
-    // If popover would overflow right edge, flip to left side
-    if (r.right + 8 + 200 > window.innerWidth) {
-      popover.style.left = (r.left - 200 - 8) + 'px';
-    }
-  }
-  
-  function showPopover() {
-    popover.style.display = 'block';
-    popover.setAttribute('aria-hidden', 'false');
-    trigger.setAttribute('aria-expanded', 'true');
-    positionPopover();
-  }
-  function hidePopover() {
-    popover.style.display = 'none';
-    popover.setAttribute('aria-hidden', 'true');
-    trigger.setAttribute('aria-expanded', 'false');
-  }
-  function togglePopover() {
-    if (popover.style.display === 'block') {
-      hidePopover();
-    } else {
-      showPopover();
-    }
-  }
-  
-  // Click on workspaceCardTrigger OR on the wsDropdownToggle (the existing workspace-name in sidebar header)
-  if (trigger) trigger.addEventListener('click', togglePopover);
-  if (wsName) wsName.addEventListener('click', (e) => {
-    e.stopPropagation();
-    togglePopover();
-  });
-  
-  // ESC closes
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popover.style.display === 'block') {
-      hidePopover();
-      if (trigger) trigger.focus();
-    }
-  });
-  
-  // Outside click closes
-  document.addEventListener('click', (e) => {
-    if (popover.style.display !== 'block') return;
-    if (popover.contains(e.target)) return;
-    if (trigger && trigger.contains(e.target)) return;
-    if (wsName && wsName.contains(e.target)) return;
-    hidePopover();
-  });
-  
-  // Reposition on resize
-  window.addEventListener('resize', positionPopover);
-});
 
 // === V39: ai-empty-state responsive (data-size attribute) ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -5697,124 +5630,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // === V42: Safe module extraction init ===
 // Pure-additive: original behavior preserved, modules add side-by-side
 // Modules self-check 'initialized' flag to prevent duplicate listeners
-// === V43: Real Module Ownership Migration init ===
-// Pure bootstrap: each module is the SINGLE SOURCE OF TRUTH for its feature.
-// renderer.js no longer owns textarea resize, plan toggle, or global shortcuts.
-(function initV43Modules() {
+// === V44: Application Bootstrap ===
+// renderer.js is now a pure bootstrap layer. Each module owns its feature.
+// Modules self-register on init(); keyboard handlers are built into the module.
+// renderer.js only wires modules together — no DOM manipulation, no key maps.
+(function initV44Modules() {
   const initAll = () => {
-    // textareaAutosize — owns promptInput resize behavior
+    window.HermesModules?.workspacePopover?.init?.();
     window.HermesModules?.textareaAutosize?.init?.({ maxHeight: 92 });
-
-    // planToggle — owns planShowMore click + planList expand/collapse
     window.HermesModules?.planToggle?.init?.();
+    window.HermesModules?.keyboardShortcuts?.init?.();
 
-    // keyboardShortcuts — owns global Escape/F12/Cmd/Ctrl handlers
-    // Replaces V41's handleGlobalShortcuts() which called toggleFindBar,
-    // openHistory, openDownloads, addCurrentBookmark, print, viewSource, devTools.
-    // These UI functions remain in renderer.js (their owners), but module is the dispatcher.
-    const ks = window.HermesModules?.keyboardShortcuts;
-    if (ks) {
-      ks.init({
-        handlers: {
-          // Escape: close topmost overlay/popover
-          'Escape': () => {
-            // Check AI overlay first
-            const aiOverlay = document.getElementById('aiOverlay');
-            if (aiOverlay && aiOverlay.classList.contains('visible')) {
-              aiOverlay.classList.remove('visible');
-              return true;
-            }
-            // Check workspace popover
-            const wsPopover = document.getElementById('workspaceSwitcherPopover');
-            if (wsPopover && wsPopover.style.display === 'block') {
-              wsPopover.style.display = 'none';
-              wsPopover.setAttribute('aria-hidden', 'true');
-              const trigger = document.getElementById('workspaceCardTrigger');
-              if (trigger) {
-                trigger.setAttribute('aria-expanded', 'false');
-                trigger.focus();
-              }
-              return true;
-            }
-            // Check settings popover
-            if (typeof SettingsPopover !== 'undefined' && SettingsPopover.isOpen && SettingsPopover.isOpen()) {
-              SettingsPopover.close();
-              return true;
-            }
-            // Find bar (preserved V41 behavior)
-            if (typeof hideFindBar === 'function') {
-              hideFindBar();
-              return true;
-            }
-            return false;
-          },
-          // Ctrl+F / Cmd+F: open find bar
-          'ctrl+f': () => {
-            if (typeof toggleFindBar === 'function') toggleFindBar();
-            return true;
-          },
-          'cmd+f': () => {
-            if (typeof toggleFindBar === 'function') toggleFindBar();
-            return true;
-          },
-          // Ctrl+H / Cmd+H: history
-          'ctrl+h': () => {
-            if (typeof openHistory === 'function') openHistory();
-            return true;
-          },
-          'cmd+h': () => {
-            if (typeof openHistory === 'function') openHistory();
-            return true;
-          },
-          // Ctrl+J / Cmd+J: downloads
-          'ctrl+j': () => {
-            if (typeof openDownloads === 'function') openDownloads();
-            return true;
-          },
-          'cmd+j': () => {
-            if (typeof openDownloads === 'function') openDownloads();
-            return true;
-          },
-          // Ctrl+D / Cmd+D: bookmark
-          'ctrl+d': () => {
-            if (typeof addCurrentBookmark === 'function') addCurrentBookmark();
-            return true;
-          },
-          'cmd+d': () => {
-            if (typeof addCurrentBookmark === 'function') addCurrentBookmark();
-            return true;
-          },
-          // Ctrl+P / Cmd+P: print
-          'ctrl+p': () => {
-            if (window.hermes?.browser?.print) window.hermes.browser.print();
-            return true;
-          },
-          'cmd+p': () => {
-            if (window.hermes?.browser?.print) window.hermes.browser.print();
-            return true;
-          },
-          // Ctrl+U / Cmd+U: view source
-          'ctrl+u': () => {
-            if (window.hermes?.browser?.viewSource) window.hermes.browser.viewSource();
-            return true;
-          },
-          'cmd+u': () => {
-            if (window.hermes?.browser?.viewSource) window.hermes.browser.viewSource();
-            return true;
-          },
-          // F12: devtools
-          'F12': () => {
-            if (window.hermes?.browser?.devTools) window.hermes.browser.devTools();
-            return true;
-          },
-        }
-      });
-    }
-
-    console.log('[V43] Modules initialized (ownership migrated):', {
-      textareaAutosize: window.HermesModules?.textareaAutosize?.getState(),
-      planToggle: window.HermesModules?.planToggle?.getState(),
-      keyboardShortcuts: window.HermesModules?.keyboardShortcuts?.getState(),
+    console.log('[V44] Bootstrap complete:', {
+      workspacePopover: window.HermesModules?.workspacePopover?.getState?.(),
+      textareaAutosize: window.HermesModules?.textareaAutosize?.getState?.(),
+      planToggle: window.HermesModules?.planToggle?.getState?.(),
+      keyboardShortcuts: window.HermesModules?.keyboardShortcuts?.getState?.(),
     });
   };
   if (document.readyState === 'loading') {
